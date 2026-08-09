@@ -7,12 +7,12 @@
  * @package   WebberZone\Image_Optimizer
  * @author    Ajay D'Souza
  * @license   GPL-2.0+
- * @link      https://webberzone.com
+ * @link      https://github.com/WebberZone/webberzone-image-optimizer
  * @copyright 2026 Ajay D'Souza
  *
  * @wordpress-plugin
  * Plugin Name: WebberZone Image Optimizer
- * Plugin URI: https://webberzone.com/plugins/webberzone-image-optimizer/
+ * Plugin URI: https://github.com/WebberZone/webberzone-image-optimizer
  * Description: Convert your media library to WebP and AVIF, and serve the best format each browser supports.
  * Version: 1.0.0
  * Author: WebberZone

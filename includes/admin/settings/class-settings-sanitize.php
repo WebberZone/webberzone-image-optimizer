@@ -2,7 +2,7 @@
 /**
  * Functions to sanitize settings.
  *
- * @link  https://webberzone.com
+ * @link  https://github.com/WebberZone/webberzone-image-optimizer
  *
  * @package WebberZone\Image_Optimizer
  */
