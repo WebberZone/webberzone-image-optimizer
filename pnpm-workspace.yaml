@@ -1,0 +1,12 @@
+# pnpm 11 blocks dependency install scripts by default (supply-chain hardening).
+allowBuilds:
+  '@parcel/watcher': true   # file watching for wp-scripts start
+  unrs-resolver: true       # native resolver for the eslint import plugins
+  esbuild: true             # platform binary
+  core-js: false            # funding banner only
+  core-js-pure: false       # funding banner only
+
+# terser@5.49.1 was published 2026-08-04 07:12 and sits inside pnpm's rolling
+# 24h minimum-release-age window. This line becomes unnecessary after that.
+minimumReleaseAgeExclude:
+  - terser@5.49.1

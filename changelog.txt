@@ -1,0 +1,16 @@
+= 1.0.0 =
+
+Release date: TBC
+
+* Features:
+    * Convert JPEG, PNG and GIF images in the media library to WebP and AVIF. Optimized copies are written alongside the original with the extension appended (`photo.jpg` becomes `photo.jpg.webp`) and originals are never modified.
+    * Bulk Optimize screen backed by a resumable queue. Closing the tab does not lose progress and a background worker continues the run.
+    * Images are served through a `<picture>` element so the browser chooses the format, which stays correct behind page caches and CDNs. Every `srcset` candidate is mapped, and an image falls back to the original unless every size converted.
+    * Automatic conversion of new uploads, and of thumbnails regenerated after an image edit.
+    * Images seen on the front end without an optimized copy are queued in the background. Nothing is ever encoded during a page render.
+    * Per-format quality, encoder effort, metadata stripping that preserves the colour profile, and lossless mode for PNG sources.
+    * An optimized copy that is not smaller than its source is discarded, decided per file.
+    * Generated Apache and nginx rules, including `Vary: Accept`, for images referenced from stylesheets.
+    * Per-image savings column and Optimize / Delete-copies actions in the Media library.
+    * Multisite aware, with a per-site queue table created automatically for new sites.
+    * WP-CLI commands: `wp wzio status`, `convert`, `queue`, `run` and `clean`.
