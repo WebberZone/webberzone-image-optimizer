@@ -28,7 +28,9 @@
         "php-stubs/wordpress-stubs": "^6",
         "php-stubs/wp-cli-stubs": "^2.12",
         "wp-coding-standards/wpcs": "^3",
-        "dealerdirect/phpcodesniffer-composer-installer": "^1"
+        "dealerdirect/phpcodesniffer-composer-installer": "^1",
+        "yoast/phpunit-polyfills": "^3",
+        "phpunit/phpunit": "^9 || ^10 || ^11 || ^12"
     },
     "config": {
         "allow-plugins": {
@@ -58,6 +60,7 @@
             "@phpcs",
             "@phpcompat",
             "@phpstan"
-        ]
+        ],
+        "zip": "./build-zip.sh"
     }
 }

@@ -34,9 +34,23 @@ composer phpcs       # Lint
 composer phpcbf      # Auto-fix code style
 composer phpstan     # Static analysis (level 5, clean)
 composer test        # phpcs + phpcompat + phpstan
+composer zip         # Build the distribution zip via build-zip.sh
+pnpm run build:assets   # Minify CSS/JS and generate RTL variants
 ```
 
-Assets in `includes/admin/{css,js}` need `.min` and RTL variants regenerated after edits (terser / cleancss / rtlcss).
+After adding or editing any `.css` or `.js` under `includes/admin/`, run `pnpm run build:assets` to regenerate the `.min` and RTL files.
+
+### Unit tests
+
+```bash
+bash phpunit/install.sh <db_name> <db_user> <db_pass> 127.0.0.1 latest
+vendor/bin/phpunit                 # single site
+WP_MULTISITE=1 vendor/bin/phpunit  # multisite
+```
+
+`install.sh` uses GNU `sed`, so on macOS its final rewrite of `wp-tests-config.php` fails and the ABSPATH and DB lines have to be filled in by hand. It works unmodified in CI.
+
+The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parseTestMethodAnnotations` was removed). Run against PHPUnit 9 locally — this is what `.github/workflows/unit-tests.yml` pins too. Test files are named for their class (`ConverterTest.php` → `ConverterTest`) because PHPUnit 10+ requires the match.
 
 ## Two decisions the whole design rests on
 

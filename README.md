@@ -57,9 +57,20 @@ wp wzio clean [<id>...]               # delete generated files
 
 ```bash
 composer install
-composer test          # phpcs + phpcompat + phpstan
-composer phpcbf        # auto-fix code style
+composer test             # phpcs + phpcompat + phpstan
+composer phpcbf           # auto-fix code style
+composer zip              # build the distribution zip
+pnpm install && pnpm run build:assets   # minify CSS/JS, generate RTL
 ```
+
+Unit tests need the WordPress test suite:
+
+```bash
+bash phpunit/install.sh wzio_tests root '' 127.0.0.1 latest
+vendor/bin/phpunit
+```
+
+34 tests cover path and URL mapping, traversal guards, `srcset` parsing, `<picture>` construction and its bail-out rules, buffered rewriting, and a real end-to-end conversion including the reuse, staleness, discard-if-larger and exclusion paths.
 
 ## Notable filters
 
