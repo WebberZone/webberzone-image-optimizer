@@ -15,7 +15,16 @@ Convert your media library to WebP and AVIF, and serve the best format each brow
 
 WebberZone Image Optimizer converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference.
 
-Everything happens on your own server. There is no external service, no API key, no monthly image quota and no account to create.
+Everything happens on your own server. Your images are never uploaded anywhere. The plugin makes no outbound network requests of any kind — there is no external service, no API key, no monthly image quota, no account to create and nothing that can stop working because a company shut down or changed its pricing.
+
+= What your server needs =
+
+Almost certainly nothing you do not already have. WordPress cannot crop or resize an uploaded image without either the **Imagick** or the **GD** extension, so every working WordPress install already has one of them, and both have been able to write WebP for years.
+
+* **WebP** works on virtually any current host. GD has supported it since PHP 5.5, Imagick since well before that.
+* **AVIF** is newer and less universal. It needs either PHP 8.1+ with GD built against libavif, or Imagick with an AVIF delegate. Plenty of hosts have it; plenty do not yet.
+
+You do not have to guess. The plugin tests your server by actually encoding a small image with each backend at activation, rather than trusting what the extension claims to support, and the settings screen shows you exactly which formats came back working. If AVIF is unavailable the option is simply marked as such and WebP carries on normally.
 
 = Your originals are never modified =
 
@@ -35,7 +44,7 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 
 = Features =
 
-* WebP and AVIF, generated together or separately
+* WebP and AVIF, generated together or separately (AVIF where the server supports it)
 * Bulk conversion of an existing media library, resumable and interruptible
 * Automatic conversion of new uploads
 * Lazy conversion: an image seen on the front end but not yet converted is queued, never encoded during the page render
@@ -77,6 +86,16 @@ AVIF produces noticeably smaller files than WebP and is understood by every curr
 = My server cannot encode WebP or AVIF =
 
 The settings screen marks any format your server cannot produce. Ask your host to enable the Imagick extension, which is the better backend, or GD compiled with WebP support.
+
+= One of my images is still being served as a JPEG or PNG =
+
+There are three common reasons, and the Media library column tells you which one applies.
+
+**The image is not hosted on your site.** Only files inside your own uploads directory can be optimized. Posts imported from another site often keep image URLs pointing back at the original domain, and those are left alone.
+
+**One size in the set could not be made smaller.** An optimized copy that comes out no smaller than the source is discarded rather than kept, and a responsive image is all-or-nothing: if any single size in its `srcset` has no optimized copy, the whole image falls back to the original. This is deliberate — offering the browser a set with a gap in it would let it request a file that does not exist. It happens most often on large photographs that were already heavily compressed, where the full-size version loses to the original even though every smaller size wins.
+
+**Your server cannot produce that format.** Check the settings screen, which marks any format your server cannot encode.
 
 = Does this work with a CDN or a caching plugin? =
 

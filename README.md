@@ -9,6 +9,19 @@ Convert your WordPress media library to WebP and AVIF, and serve the best format
 - Maps every `srcset` candidate, preserving width descriptors exactly, and falls back to the original if any candidate is missing.
 - Bulk-converts an existing library through a resumable, database-backed queue.
 
+## Requirements
+
+WordPress 6.6+, PHP 7.4+, and an image extension you already have — WordPress cannot resize an upload without **Imagick** or **GD**, so every working install has one.
+
+| Format | Needs |
+| --- | --- |
+| WebP | GD (PHP 5.5+) or Imagick. Effectively universal. |
+| AVIF | PHP 8.1+ with GD built against libavif, **or** Imagick with an AVIF delegate. Common, but not guaranteed. |
+
+`Capabilities` does not trust `Imagick::queryFormats()` or `function_exists()` alone — a registered delegate is not the same as a working encoder. Each driver/format pair is verified by encoding a bundled 64×64 PNG, and the result is cached in the `wzio_capabilities` option keyed on plugin version.
+
+Nothing leaves the server. There are no `wp_remote_*` calls, no `curl`, no external fonts or CDN assets in the admin screens — every dependency is bundled.
+
 ## Why the extension is appended, not replaced
 
 `photo.jpg.webp` rather than `photo.webp`. If two source files share a stem — `logo.jpg` and `logo.png` in one folder — replacing the extension collides on a single sidecar, and the delivery layer can no longer tell which original a sidecar belongs to.
