@@ -18,6 +18,7 @@ if ( ! defined( 'WPINC' ) ) {
  */
 abstract class Driver {
 
+
 	/**
 	 * Whether the underlying PHP extension is loaded.
 	 *
@@ -41,7 +42,7 @@ abstract class Driver {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $format Target format slug.
+	 * @param  string $format Target format slug.
 	 * @return bool True when encoding is supported.
 	 */
 	abstract public function supports( string $format ): bool;
@@ -54,10 +55,10 @@ abstract class Driver {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string               $source      Absolute path to the source image.
-	 * @param string               $destination Absolute path to write.
-	 * @param string               $format      Target format slug.
-	 * @param array<string, mixed> $args        Encoding arguments.
+	 * @param  string               $source      Absolute path to the source image.
+	 * @param  string               $destination Absolute path to write.
+	 * @param  string               $format      Target format slug.
+	 * @param  array<string, mixed> $args        Encoding arguments.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
 	abstract public function convert( string $source, string $destination, string $format, array $args );
@@ -67,7 +68,7 @@ abstract class Driver {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $args Raw arguments.
+	 * @param  array<string, mixed> $args Raw arguments.
 	 * @return array<string, mixed> Normalised arguments.
 	 */
 	protected function parse_args( array $args ): array {
@@ -99,8 +100,8 @@ abstract class Driver {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string   $destination Final destination path.
-	 * @param callable $writer      Receives the temporary path, returns bool.
+	 * @param  string   $destination Final destination path.
+	 * @param  callable $writer      Receives the temporary path, returns bool.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
 	protected function write_atomic( string $destination, callable $writer ) {
@@ -114,7 +115,11 @@ abstract class Driver {
 			);
 		}
 
-		$temp = wp_tempnam( basename( $destination ), $dir );
+		// wp_tempnam() concatenates its directory and filename with no separator,
+		// so a directory without a trailing slash puts the temporary file beside
+		// the target directory rather than inside it. That silently works where
+		// the parent happens to be writable and fails outright where it is not.
+		$temp = wp_tempnam( basename( $destination ), trailingslashit( $dir ) );
 
 		if ( ! $temp ) {
 			return new \WP_Error( 'wzio_tempfile_failed', __( 'Could not create a temporary file for the conversion.', 'webberzone-image-optimizer' ) );
@@ -134,7 +139,7 @@ abstract class Driver {
 			return new \WP_Error( 'wzio_encode_failed', __( 'The encoder did not produce an image.', 'webberzone-image-optimizer' ) );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename
+     // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename
 		if ( ! rename( $temp, $destination ) ) {
 			wp_delete_file( $temp );
 			return new \WP_Error( 'wzio_move_failed', __( 'Could not move the converted file into place.', 'webberzone-image-optimizer' ) );
