@@ -10,7 +10,7 @@ order: 2
 
 [kbtoc]
 
-The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts your existing media library. Find it at **Media → Bulk Optimize**.
+The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) converts your existing media library. Find it at **Media → Bulk Optimize**.
 
 ## How it works
 

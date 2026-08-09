@@ -10,7 +10,7 @@ order: 0
 
 [kbtoc]
 
-Reference for developers extending [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/). The plugin uses the namespace `WebberZone\Image_Optimizer` and the prefix `wzio` throughout.
+Reference for developers extending [WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/). The plugin uses the namespace `WebberZone\Image_Optimizer` and the prefix `wzio` throughout.
 
 ## Reading settings
 

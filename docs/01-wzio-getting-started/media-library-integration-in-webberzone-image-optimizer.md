@@ -10,7 +10,7 @@ order: 3
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
+[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
 
 ## The Optimized column
 

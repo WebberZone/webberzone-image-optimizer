@@ -10,7 +10,7 @@ order: 0
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
+[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
 
 ## What your server needs
 
@@ -29,7 +29,7 @@ The plugin does not trust what the extension claims to support — it tests your
 
 ## Installation
 
-1. Upload the `webberzone-image-optimizer` folder to `/wp-content/plugins/`, or install it from the [WordPress.org plugin directory](https://wordpress.org/plugins/webberzone-image-optimizer/).
+1. Download the latest release from [GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases/latest) and upload the `webberzone-image-optimizer` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the Plugins menu.
 3. Visit **Media → Image Optimizer** to choose your formats — see [Image Optimizer Settings](image-optimizer-settings.md).
 4. Visit **Media → Bulk Optimize** and press **Start optimizing** — see [Bulk Optimize in WebberZone Image Optimizer](bulk-optimize-in-webberzone-image-optimizer.md).
