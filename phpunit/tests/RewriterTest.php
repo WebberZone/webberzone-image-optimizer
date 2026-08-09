@@ -6,6 +6,7 @@
  */
 
 use WebberZone\Image_Optimizer\Capabilities;
+use WebberZone\Image_Optimizer\Frontend\Resolver;
 use WebberZone\Image_Optimizer\Frontend\Rewriter;
 use WebberZone\Image_Optimizer\Util\Helpers;
 
@@ -272,5 +273,25 @@ class RewriterTest extends WP_UnitTestCase {
 		$page = '<html><body><p>Nothing to see.</p></body></html>';
 
 		$this->assertSame( $page, $this->rewriter->filter_buffer( $page ) );
+	}
+
+	/**
+	 * A cache-busting query string must not end up between the filename and
+	 * the sidecar extension.
+	 */
+	public function test_resolver_preserves_query_string_position() {
+		$this->touch_upload( '2026/02/cached.jpg' );
+		$this->touch_upload( '2026/02/cached.jpg.webp' );
+
+		$url = Helpers::get_upload_baseurl() . '/2026/02/cached.jpg?v=42';
+
+		Resolver::flush_memo();
+		wp_cache_flush();
+
+		$sidecar_url = Resolver::resolve( $url, 'webp' );
+
+		$this->assertStringContainsString( 'cached.jpg.webp', $sidecar_url );
+		$this->assertStringNotContainsString( 'cached.jpg?v=42.webp', $sidecar_url );
+		$this->assertStringContainsString( 'cached.jpg.webp?v=42', $sidecar_url );
 	}
 }
