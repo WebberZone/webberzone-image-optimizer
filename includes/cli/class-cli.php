@@ -308,13 +308,21 @@ class CLI {
 			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		}
 
+		$is_full_clean = empty( $args );
+
 		$deleted = 0;
 
 		foreach ( $ids as $id ) {
 			$deleted += Converter::delete_sidecars( $id );
+
+			if ( ! $is_full_clean ) {
+				Queue::remove( $id );
+			}
 		}
 
-		Queue::clear();
+		if ( $is_full_clean ) {
+			Queue::clear();
+		}
 
 		\WP_CLI::success( sprintf( 'Deleted %d generated file(s).', $deleted ) );
 	}

@@ -81,10 +81,17 @@ class Resolver {
 			return '';
 		}
 
+		// Split the URL at the first query string or fragment so the extension
+		// is appended to the filename, not after the query string. A cache-busted
+		// URL like `photo.jpg?v=1` must become `photo.jpg.webp?v=1`, not
+		// `photo.jpg?v=1.webp` — the latter points back at the original file.
+		$url_path = substr( $url, 0, strcspn( $url, '?#' ) );
+		$url_tail = substr( $url, strlen( $url_path ) );
+
 		$key = $format . ':' . $path;
 
 		if ( isset( self::$memo[ $key ] ) ) {
-			return self::$memo[ $key ] ? $url . '.' . $format : '';
+			return self::$memo[ $key ] ? $url_path . '.' . $format . $url_tail : '';
 		}
 
 		$cache_key = md5( $key );
@@ -105,9 +112,7 @@ class Resolver {
 
 		self::$memo[ $key ] = $exists;
 
-		// The sidecar URL is the source URL with the extension appended, which
-		// keeps any query string handling identical to the original.
-		return $exists ? $url . '.' . $format : '';
+		return $exists ? $url_path . '.' . $format . $url_tail : '';
 	}
 
 	/**
