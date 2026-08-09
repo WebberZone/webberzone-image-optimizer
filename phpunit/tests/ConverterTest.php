@@ -29,8 +29,58 @@ class ConverterTest extends WP_UnitTestCase {
 		parent::set_up();
 
 		if ( ! Capabilities::supports( 'webp' ) ) {
-			$this->markTestSkipped( 'This server cannot encode WebP.' );
+			// A silent skip here would let CI go green while testing nothing, so
+			// say exactly what the server reported and why the probe rejected it.
+			$this->markTestSkipped(
+				'This server cannot encode WebP. ' . self::describe_capabilities()
+			);
 		}
+	}
+
+	/**
+	 * Summarise what the encoders reported, for a skip message worth reading.
+	 *
+	 * @return string Diagnostic line.
+	 */
+	private static function describe_capabilities() {
+		$report = Capabilities::get( true );
+
+		$parts = array(
+			'imagick_loaded=' . (int) extension_loaded( 'imagick' ),
+			'gd_loaded=' . (int) extension_loaded( 'gd' ),
+			'imagewebp=' . (int) function_exists( 'imagewebp' ),
+			'imageavif=' . (int) function_exists( 'imageavif' ),
+			'probe_image=' . ( '' === self::probe_image_path() ? 'FAILED' : 'ok' ),
+			'report=' . wp_json_encode( $report['drivers'] ),
+		);
+
+		if ( class_exists( '\Imagick' ) ) {
+			try {
+				$formats = array_intersect( array( 'WEBP', 'AVIF' ), array_map( 'strtoupper', \Imagick::queryFormats() ) );
+				$parts[] = 'imagick_delegates=' . implode( '/', $formats );
+			} catch ( \Throwable $e ) {
+				$parts[] = 'imagick_delegates=error:' . $e->getMessage();
+			}
+		}
+
+		return implode( ' ', $parts );
+	}
+
+	/**
+	 * Reproduce the probe's temporary file step on its own.
+	 *
+	 * @return string Absolute path, or an empty string when it could not be written.
+	 */
+	private static function probe_image_path() {
+		$path = wp_tempnam( 'wzio-probe.png' );
+
+		if ( ! $path ) {
+			return '';
+		}
+
+		wp_delete_file( $path );
+
+		return $path;
 	}
 
 	/**
