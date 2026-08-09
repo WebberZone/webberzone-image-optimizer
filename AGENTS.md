@@ -1,0 +1,58 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Response Rules
+
+- Return only the changed function or section, not the full file
+- No explanation unless asked
+- No suggestions outside the scope of what was asked
+- Skip preamble and trailing summaries
+
+## Attribution
+
+No AI attribution anywhere in this repository or on its GitHub.
+
+- Commit messages: never include a `Co-Authored-By:` line. A commit message ends with its body.
+- Pull request bodies, issue comments and review comments: no "Generated with Claude Code" footer or any equivalent.
+
+## Links
+
+- GitHub: <https://github.com/WebberZone/webberzone-image-optimizer>
+- webberzone.com: <https://webberzone.com/plugins/webberzone-image-optimizer/>
+
+## Plugin Overview
+
+**WebberZone Image Optimizer** (v1.0.0) converts media library images to WebP and AVIF and serves them via `<picture>`. Namespace: `WebberZone\Image_Optimizer`. Prefix: `wzio`. Constants: `WZIO_VERSION`, `WZIO_PLUGIN_FILE`, `WZIO_PLUGIN_DIR`, `WZIO_PLUGIN_URL`, `WZIO_PLUGIN_BASENAME`. Requires WordPress 6.6+, PHP 7.4+. GPL-2.0-or-later, fully free, no Freemius.
+
+Settings key: `wzio_settings`. Access via `wzio_get_option($key)` / `wzio_get_settings()`.
+
+## Commands
+
+```bash
+composer phpcs       # Lint
+composer phpcbf      # Auto-fix code style
+composer phpstan     # Static analysis (level 5, clean)
+composer test        # phpcs + phpcompat + phpstan
+```
+
+Assets in `includes/admin/{css,js}` need `.min` and RTL variants regenerated after edits (terser / cleancss / rtlcss).
+
+## Two decisions the whole design rests on
+
+1. **Sidecars with the extension appended.** `photo.jpg` → `photo.jpg.webp`, never `photo.webp`. Replacing the extension collides when `photo.jpg` and `photo.png` share a directory, and makes the sidecar→original mapping ambiguous in the delivery layer. Originals are never modified — this is a hard invariant, not a preference.
+2. **`<picture>` rewriting, not `Accept`-header rewriting.** An `Accept` rewrite returns different bytes per URL; a cache that ignores `Vary` then serves one visitor's format to everyone. `<picture>` puts the choice in the browser, so the HTML is identical for every visitor. The `Accept` rewrite exists only as *generated, hand-installed* server rules for CSS background images.
+
+Do not revisit either without a concrete reason.
+
+## Non-obvious implementation notes
+
+- **`Capabilities` probes, it does not trust.** `Imagick::queryFormats()` reporting AVIF means a delegate is registered, not that encoding works. Each driver/format pair is verified by actually encoding a bundled 64×64 PNG, and the result is cached in the `wzio_capabilities` option keyed on plugin version.
+- **`wp_content_img_tag` often passes `$attachment_id === 0`** — the ID comes from the `wp-image-{ID}` class, which content from other editors and older imports lacks. `Frontend\Resolver` is therefore keyed on URL, not attachment ID, with a request memo plus object cache (24h for hits, 5min for misses).
+- **`srcset` descriptors are copied verbatim**, never re-derived. A `<source>` is only emitted when *every* candidate resolved; one missing candidate would let the browser request a file that does not exist.
+- **The `-scaled` file is what gets served**, so it is converted; the true original kept aside by the big-image threshold is deliberately skipped.
+- **`wp_update_attachment_metadata` is the single conversion trigger.** It fires after upload sub-size generation *and* after edits, restores and regeneration, which is what makes stale `-e{timestamp}` sidecar cleanup work in one place.
+- **A sidecar that is not smaller than its source is deleted**, and the skip recorded per file. That is what makes `file_exists()` a self-consistent serving decision.
+- **Skip decisions are per file, not per attachment.** Mixed results inside one attachment are normal, especially with transparent PNGs.
+- **The queue table is per site** (`{$wpdb->prefix}wzio_queue`). `register_activation_hook` fires once for a network activation, so `Database::install_all()` loops sites and `wp_initialize_site` covers new ones.
+- **Nothing is ever encoded during a page render.** A front-end miss queues the attachment on `shutdown` and serves the original.
