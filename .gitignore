@@ -1,6 +1,11 @@
 # Dependencies
 /vendor/
 
+# Jekyll
+/_site/
+/.jekyll-cache/
+/.jekyll-metadata
+
 # Tooling
 /phpcompat-tools/
 /node_modules/

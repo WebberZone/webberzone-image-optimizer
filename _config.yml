@@ -1,0 +1,47 @@
+title: WebberZone Image Optimizer
+description: Documentation for WebberZone Image Optimizer — convert your media library to WebP and AVIF automatically.
+url: https://webberzone.github.io
+baseurl: /webberzone-image-optimizer
+
+plugin_name: WebberZone Image Optimizer
+plugin_slug: webberzone-image-optimizer
+product_url: https://webberzone.com/plugins/webberzone-image-optimizer/
+
+permalink: pretty
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+defaults:
+  - scope:
+      path: "docs"
+    values:
+      layout: doc
+
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: default
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - node_modules
+  - build
+  - phpunit
+  - phpcompat-tools
+  - includes
+  - languages
+  - build-zip.sh
+  - build-assets.js
+  - composer.json
+  - composer.lock
+  - package.json
+  - pnpm-workspace.yaml
+  - "*.php"
+  - README.md
+  - AGENTS.md
+  - CLAUDE.md
