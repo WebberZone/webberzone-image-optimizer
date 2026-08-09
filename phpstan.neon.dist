@@ -1,0 +1,15 @@
+parameters:
+    level: 5
+    paths:
+        - webberzone-image-optimizer.php
+        - uninstall.php
+        - includes/
+    scanFiles:
+        - webberzone-image-optimizer.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-tools-stubs.php
+    scanDirectories:
+        - includes
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    ignoreErrors:
