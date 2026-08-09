@@ -22,11 +22,12 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Queue {
 
+
 	/**
 	 * Waiting to be processed.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const PENDING = 'pending';
 
@@ -34,7 +35,7 @@ class Queue {
 	 * Claimed by a worker.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const PROCESSING = 'processing';
 
@@ -42,7 +43,7 @@ class Queue {
 	 * Finished successfully.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const DONE = 'done';
 
@@ -50,7 +51,7 @@ class Queue {
 	 * Finished with an error.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const FAILED = 'failed';
 
@@ -58,7 +59,7 @@ class Queue {
 	 * Nothing to do for this attachment.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const SKIPPED = 'skipped';
 
@@ -66,7 +67,7 @@ class Queue {
 	 * Maximum times a failing attachment is retried before it is left alone.
 	 *
 	 * @since 1.0.0
-	 * @var int
+	 * @var   int
 	 */
 	const MAX_ATTEMPTS = 3;
 
@@ -78,8 +79,8 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<int, int> $attachment_ids Attachment IDs.
-	 * @param bool            $force          Whether to requeue rows that already finished.
+	 * @param  array<int, int> $attachment_ids Attachment IDs.
+	 * @param  bool            $force          Whether to requeue rows that already finished.
 	 * @return int Number of rows written.
 	 */
 	public static function add( array $attachment_ids, bool $force = false ): int {
@@ -110,7 +111,7 @@ class Queue {
 			$sql .= 'ON DUPLICATE KEY UPDATE id = id';
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$result = $wpdb->query( $sql );
 
 		self::flush_counts();
@@ -123,7 +124,7 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $limit Maximum rows to claim.
+	 * @param  int $limit Maximum rows to claim.
 	 * @return array<int, object> Claimed rows.
 	 */
 	public static function claim( int $limit ): array {
@@ -135,7 +136,7 @@ class Queue {
 
 		$table = Database::get_table();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$ids = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT id FROM `{$table}` WHERE status = %s ORDER BY id ASC LIMIT %d",
@@ -163,7 +164,7 @@ class Queue {
 				$ids
 			)
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		self::flush_counts();
 
@@ -175,10 +176,10 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int    $id     Queue row ID.
-	 * @param string $status New status.
-	 * @param int    $saved  Bytes saved.
-	 * @param string $error  Error message, if any.
+	 * @param  int    $id     Queue row ID.
+	 * @param  string $status New status.
+	 * @param  int    $saved  Bytes saved.
+	 * @param  string $error  Error message, if any.
 	 * @return void
 	 */
 	public static function complete( int $id, string $status, int $saved = 0, string $error = '' ): void {
@@ -191,13 +192,13 @@ class Queue {
 		$table = Database::get_table();
 
 		if ( self::FAILED === $status ) {
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 			$attempts = (int) $wpdb->get_var( $wpdb->prepare( "SELECT attempts FROM `{$table}` WHERE id = %d", $id ) );
 
 			// Put it back in line until the retry budget runs out.
 			$status = ( $attempts + 1 ) < self::MAX_ATTEMPTS ? self::PENDING : self::FAILED;
 
-			// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 			$wpdb->query(
 				$wpdb->prepare(
 					"UPDATE `{$table}` SET status = %s, attempts = attempts + 1, error = %s, updated = %s WHERE id = %d",
@@ -207,14 +208,14 @@ class Queue {
 					$id
 				)
 			);
-			// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 			self::flush_counts();
 
 			return;
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->update(
 			$table,
 			array(
@@ -239,7 +240,7 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $older_than_seconds Age in seconds after which a claim is stale.
+	 * @param  int $older_than_seconds Age in seconds after which a claim is stale.
 	 * @return int Rows released.
 	 */
 	public static function release_stale( int $older_than_seconds = 600 ): int {
@@ -252,7 +253,7 @@ class Queue {
 		$table  = Database::get_table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', (int) current_time( 'timestamp' ) - $older_than_seconds ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$released = $wpdb->query(
 			$wpdb->prepare(
 				"UPDATE `{$table}` SET status = %s WHERE status = %s AND updated < %s",
@@ -261,7 +262,7 @@ class Queue {
 				$cutoff
 			)
 		);
-		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		if ( $released ) {
 			self::flush_counts();
@@ -301,7 +302,7 @@ class Queue {
 
 		$table = Database::get_table();
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results( "SELECT status, COUNT(*) AS num, SUM(saved) AS saved FROM `{$table}` GROUP BY status" );
 
 		$counts                = $empty;
@@ -352,7 +353,7 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $attachment_id Attachment ID.
+	 * @param  int $attachment_id Attachment ID.
 	 * @return void
 	 */
 	public static function remove( int $attachment_id ): void {
@@ -362,7 +363,7 @@ class Queue {
 			return;
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->delete( Database::get_table(), array( 'attachment_id' => $attachment_id ), array( '%d' ) );
 
 		self::flush_counts();
@@ -384,7 +385,7 @@ class Queue {
 
 		$table = Database::get_table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->query( "DELETE FROM `{$table}`" );
 
 		self::flush_counts();
@@ -395,7 +396,7 @@ class Queue {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $limit Maximum rows to return.
+	 * @param  int $limit Maximum rows to return.
 	 * @return array<int, object> Failed rows.
 	 */
 	public static function get_failures( int $limit = 20 ): array {
@@ -407,7 +408,7 @@ class Queue {
 
 		$table = Database::get_table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT attachment_id, error, attempts, updated FROM `{$table}` WHERE status = %s ORDER BY updated DESC LIMIT %d",
@@ -415,6 +416,7 @@ class Queue {
 				$limit
 			)
 		);
+     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		return is_array( $rows ) ? $rows : array();
 	}

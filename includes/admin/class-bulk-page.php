@@ -217,7 +217,7 @@ class Bulk_Page {
 				<button type="button" class="button button-link-delete" id="wzio-reset"><?php esc_html_e( 'Clear queue', 'webberzone-image-optimizer' ); ?></button>
 				<label class="wzio-force">
 					<input type="checkbox" id="wzio-force" />
-		<?php esc_html_e( 'Re-encode images that are already done', 'webberzone-image-optimizer' ); ?>
+		<?php esc_html_e( 'Re-optimize images that are already done', 'webberzone-image-optimizer' ); ?>
 				</label>
 			</p>
 
