@@ -94,14 +94,39 @@ class HelpersTest extends WP_UnitTestCase {
 
 	/**
 	 * The memory guard rejects an image that cannot fit in the limit.
+	 *
+	 * The limit is pinned here rather than read from the environment, so the
+	 * test asserts the same thing everywhere instead of skipping itself wherever
+	 * memory happens to be unlimited.
 	 */
 	public function test_memory_guard_rejects_an_impossible_image() {
-		if ( 0 === Helpers::get_memory_limit() ) {
-			$this->markTestSkipped( 'Memory is unlimited on this environment.' );
-		}
+		$original = ini_get( 'memory_limit' );
 
-		$this->assertTrue( Helpers::can_allocate_image( 100, 100 ) );
-		$this->assertFalse( Helpers::can_allocate_image( 100000, 100000 ) );
+		ini_set( 'memory_limit', '128M' ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Blacklisted
+
+		try {
+			$this->assertSame( 128 * MB_IN_BYTES, Helpers::get_memory_limit() );
+			$this->assertTrue( Helpers::can_allocate_image( 100, 100 ) );
+			$this->assertFalse( Helpers::can_allocate_image( 100000, 100000 ) );
+		} finally {
+			ini_set( 'memory_limit', (string) $original ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Blacklisted
+		}
+	}
+
+	/**
+	 * An unlimited memory limit never blocks a conversion.
+	 */
+	public function test_memory_guard_allows_everything_when_memory_is_unlimited() {
+		$original = ini_get( 'memory_limit' );
+
+		ini_set( 'memory_limit', '-1' ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Blacklisted
+
+		try {
+			$this->assertSame( 0, Helpers::get_memory_limit() );
+			$this->assertTrue( Helpers::can_allocate_image( 100000, 100000 ) );
+		} finally {
+			ini_set( 'memory_limit', (string) $original ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Blacklisted
+		}
 	}
 
 	/**
