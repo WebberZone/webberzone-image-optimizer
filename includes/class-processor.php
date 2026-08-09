@@ -33,12 +33,12 @@ class Processor {
 	const CRON_HOOK = 'wzio_process_queue';
 
 	/**
-	 * Transient guarding against two workers running at once.
+	 * MySQL advisory lock name guarding against two workers running at once.
 	 *
 	 * @since 1.0.0
 	 * @var string
 	 */
-	const LOCK = 'wzio_processor_lock';
+	const LOCK = 'wzio_processor';
 
 	/**
 	 * Constructor.
@@ -220,18 +220,22 @@ class Processor {
 	/**
 	 * Take the worker lock.
 	 *
+	 * MySQL advisory locks are atomic: GET_LOCK returns 1 when the lock was
+	 * acquired, 0 when another session holds it (with a timeout of 0), or NULL
+	 * on error. The lock is tied to the connection, so a fatal error or timeout
+	 * releases it automatically — there is no stale lock to clean up.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return bool True when the lock was acquired.
 	 */
 	private static function acquire_lock(): bool {
-		if ( get_transient( self::LOCK ) ) {
-			return false;
-		}
+		global $wpdb;
 
-		set_transient( self::LOCK, 1, 10 * MINUTE_IN_SECONDS );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$result = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, 0 )', self::LOCK ) );
 
-		return true;
+		return '1' === (string) $result;
 	}
 
 	/**
@@ -242,6 +246,9 @@ class Processor {
 	 * @return void
 	 */
 	private static function release_lock(): void {
-		delete_transient( self::LOCK );
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query( $wpdb->prepare( 'SELECT RELEASE_LOCK( %s )', self::LOCK ) );
 	}
 }

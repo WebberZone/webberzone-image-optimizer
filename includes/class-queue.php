@@ -151,17 +151,27 @@ class Queue {
 
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 
-		$wpdb->query(
+		// The status guard makes the claim safe under concurrency: InnoDB
+		// serialises concurrent UPDATEs on the same rows, so a second worker
+		// that selected the same IDs finds them already PROCESSING and its
+		// UPDATE affects zero rows.
+		$claimed = $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE `{$table}` SET status = %s, updated = %s WHERE id IN ({$placeholders})",
-				array_merge( array( self::PROCESSING, current_time( 'mysql' ) ), $ids )
+				"UPDATE `{$table}` SET status = %s, updated = %s WHERE id IN ({$placeholders}) AND status = %s",
+				array_merge( array( self::PROCESSING, current_time( 'mysql' ) ), $ids, array( self::PENDING ) )
 			)
 		);
 
+		if ( 0 === (int) $claimed ) {
+			self::flush_counts();
+
+			return array();
+		}
+
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM `{$table}` WHERE id IN ({$placeholders}) ORDER BY id ASC",
-				$ids
+				"SELECT * FROM `{$table}` WHERE id IN ({$placeholders}) AND status = %s ORDER BY id ASC",
+				array_merge( $ids, array( self::PROCESSING ) )
 			)
 		);
      // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
