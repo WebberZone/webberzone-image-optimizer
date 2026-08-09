@@ -5,6 +5,7 @@
  * @package WebberZone\Image_Optimizer
  */
 
+use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Frontend\Rewriter;
 use WebberZone\Image_Optimizer\Util\Helpers;
 
@@ -166,6 +167,38 @@ class RewriterTest extends WP_UnitTestCase {
 			. $base . 'partial.jpg 1200w" alt="" />';
 
 		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
+	}
+
+	/**
+	 * Delivery does not depend on this server being able to encode.
+	 *
+	 * The optimized files may have been generated elsewhere, or the encoder may
+	 * have been disabled since. Either way the files on disk are still valid and
+	 * still worth serving.
+	 */
+	public function test_delivery_survives_without_an_encoder() {
+		$this->touch_upload( '2026/02/noencoder.jpg' );
+		$this->touch_upload( '2026/02/noencoder.jpg.webp' );
+
+		$strip_drivers = static function () {
+			return array();
+		};
+
+		add_filter( 'wzio_driver_classes', $strip_drivers );
+		Capabilities::flush();
+
+		$this->assertSame( array(), Capabilities::get( true )['formats'] );
+
+		$url  = Helpers::get_upload_baseurl() . '/2026/02/noencoder.jpg';
+		$html = '<img src="' . $url . '" alt="" />';
+		$out  = $this->rewriter->wrap( $html, 0 );
+
+		remove_filter( 'wzio_driver_classes', $strip_drivers );
+		Capabilities::flush();
+
+		$this->assertStringContainsString( '<picture>', $out );
+		$this->assertStringContainsString( 'noencoder.jpg.webp', $out );
+		$this->assertTrue( $this->rewriter->is_enabled() );
 	}
 
 	/**

@@ -51,7 +51,10 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mysqli
+          # gd and imagick are what the conversion tests exercise. Without them
+          # the whole converter suite skips itself and CI stays green while
+          # testing nothing.
+          extensions: mysqli, gd, imagick
           coverage: none
 
       - name: Set PHPUnit version

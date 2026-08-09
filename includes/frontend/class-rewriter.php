@@ -7,7 +7,6 @@
 
 namespace WebberZone\Image_Optimizer\Frontend;
 
-use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Converter;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
@@ -80,6 +79,13 @@ class Rewriter {
 	 *
 	 * @since 1.0.0
 	 *
+	 * Deliberately not conditional on what this server can encode. An optimized
+	 * file that already exists is valid and worth serving whether or not the
+	 * encoder that produced it is still installed — the files may have been
+	 * generated on another server, or the extension may have been disabled since.
+	 * Whether a sidecar exists is the only question that matters, and
+	 * {@see Resolver} answers it.
+	 *
 	 * @return bool True when rewriting is on.
 	 */
 	public function is_enabled(): bool {
@@ -91,8 +97,7 @@ class Rewriter {
 			&& ! wp_is_json_request()
 			&& ! ( defined( 'REST_REQUEST' ) && REST_REQUEST )
 			&& ! wp_doing_cron()
-			&& (bool) \wzio_get_option( 'enable_delivery', true )
-			&& ! empty( Capabilities::get_supported_formats() );
+			&& (bool) \wzio_get_option( 'enable_delivery', true );
 
 		/**
 		 * Filter whether images are rewritten on this request.
@@ -229,7 +234,9 @@ class Rewriter {
 
 		$sources = array();
 
-		foreach ( Capabilities::get_supported_formats() as $format ) {
+		// Every format the plugin knows about, not just the ones this server can
+		// encode: a sidecar is offered whenever the file is on disk.
+		foreach ( Helpers::get_formats() as $format ) {
 			$mapped = array();
 
 			foreach ( $candidates as $candidate ) {
