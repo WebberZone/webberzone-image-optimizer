@@ -10,7 +10,7 @@ permalink: /
   <p class="lead">WebberZone Image Optimizer converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Typically 40&ndash;60% smaller, with no visible difference.</p>
   <div class="hero-ctas">
     <a href="{{ '/docs/' | relative_url }}" class="btn-primary">Read the Docs</a>
-    <a href="https://wordpress.org/plugins/webberzone-image-optimizer/" target="_blank" class="btn-outline">Get it on WordPress.org</a>
+    <a href="https://github.com/WebberZone/webberzone-image-optimizer/releases/latest" target="_blank" class="btn-outline">Download Latest Release</a>
     <a href="https://github.com/WebberZone/webberzone-image-optimizer" target="_blank" class="btn-outline">View on GitHub</a>
   </div>
 </div>

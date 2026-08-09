@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="quick-links">
 				<ul class="subsub">
 					<li>
-						<a href="https://webberzone.com/plugins/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
+						<a href="https://webberzone.github.io/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
 					</li>
 
 					<li>
@@ -29,11 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</li>
 
 					<li>
-						<a href="https://wordpress.org/support/plugin/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'Support', 'webberzone-image-optimizer' ); ?></a>
-					</li>
-
-					<li>
-						<a href="https://wordpress.org/support/plugin/webberzone-image-optimizer/reviews/" target="_blank"><?php esc_html_e( 'Reviews', 'webberzone-image-optimizer' ); ?></a>
+						<a href="https://github.com/WebberZone/webberzone-image-optimizer/issues" target="_blank"><?php esc_html_e( 'Support', 'webberzone-image-optimizer' ); ?></a>
 					</li>
 
 					<li>

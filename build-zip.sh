@@ -30,6 +30,15 @@ dev-tools/
 wporg-assets/
 test-tools/
 docs/
+_layouts/
+_includes/
+_plugins/
+/assets/
+/_site/
+Gemfile
+Gemfile.lock
+favicon.ico
+/index.md
 build-assets.js
 *.dist
 *.yml

@@ -10,7 +10,7 @@ order: 1
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
+[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
 
 ## Per-site queues
 

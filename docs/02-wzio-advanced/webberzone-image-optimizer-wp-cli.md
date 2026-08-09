@@ -10,7 +10,7 @@ order: 0
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) registers WP-CLI commands under `wp wzio`, useful for converting a library from a script, cron job, or deployment step without opening the admin screens.
+[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) registers WP-CLI commands under `wp wzio`, useful for converting a library from a script, cron job, or deployment step without opening the admin screens.
 
 ## `wp wzio status`
 

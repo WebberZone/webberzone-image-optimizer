@@ -5,7 +5,7 @@ baseurl: /webberzone-image-optimizer
 
 plugin_name: WebberZone Image Optimizer
 plugin_slug: webberzone-image-optimizer
-product_url: https://webberzone.com/plugins/webberzone-image-optimizer/
+product_url: https://webberzone.github.io/webberzone-image-optimizer/
 
 permalink: pretty
 markdown: kramdown

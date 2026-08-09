@@ -12,7 +12,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WebberZone Image Optimizer
- * Plugin URI: https://webberzone.com/plugins/webberzone-image-optimizer/
+ * Plugin URI: https://webberzone.github.io/webberzone-image-optimizer/
  * Description: Convert your media library to WebP and AVIF, and serve the best format each browser supports.
  * Version: 1.0.0
  * Author: WebberZone
