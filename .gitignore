@@ -1,0 +1,27 @@
+# Dependencies
+/vendor/
+
+# Tooling
+/phpcompat-tools/
+/node_modules/
+/build/
+/@webberzone/
+
+# Lock files
+package-lock.json
+composer.lock
+
+# Claude AI
+.claude/
+.commandcode/
+
+.devin/
+
+# Testing
+/.playwright-mcp
+
+# macOS
+.DS_Store
+
+# PHPUnit
+.phpunit.result.cache
