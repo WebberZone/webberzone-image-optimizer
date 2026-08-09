@@ -67,7 +67,7 @@ function wzio_uninstall_site() {
 
 	$table = $wpdb->prefix . 'wzio_queue';
 
-	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 	$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
 
 	$timestamp = wp_next_scheduled( 'wzio_process_queue' );

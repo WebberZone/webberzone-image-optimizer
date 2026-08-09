@@ -3,6 +3,7 @@
 	<description>Generally-applicable sniffs for WordPress plugins</description>
 
 	<file>.</file>
+	<exclude-pattern>*/build/*</exclude-pattern>
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/phpunit/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
