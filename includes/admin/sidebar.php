@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="quick-links">
 				<ul class="subsub">
 					<li>
-						<a href="https://webberzone.com/plugins/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
+						<a href="https://github.com/WebberZone/webberzone-image-optimizer" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
 					</li>
 
 					<li>

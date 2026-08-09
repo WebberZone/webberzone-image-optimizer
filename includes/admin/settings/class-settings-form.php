@@ -2,7 +2,7 @@
 /**
  * Generates the settings form.
  *
- * @link https://webberzone.com
+ * @link https://github.com/WebberZone/webberzone-image-optimizer
  *
  * @package WebberZone\Image_Optimizer
  */
