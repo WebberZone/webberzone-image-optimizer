@@ -1,0 +1,63 @@
+{
+    "name": "webberzone/webberzone-image-optimizer",
+    "description": "Convert your WordPress media library to WebP and AVIF, and serve the best format each browser supports.",
+    "version": "1.0.0",
+    "type": "wordpress-plugin",
+    "keywords": [
+        "webp",
+        "avif",
+        "image optimization",
+        "convert",
+        "performance"
+    ],
+    "license": "gpl-2.0-or-later",
+    "homepage": "https://webberzone.com/plugins/webberzone-image-optimizer/",
+    "authors": [
+        {
+            "name": "WebberZone",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "szepeviktor/phpstan-wordpress": "^2",
+        "phpstan/extension-installer": "^1",
+        "phpstan/phpstan": "^2",
+        "php-stubs/wordpress-stubs": "^6",
+        "php-stubs/wp-cli-stubs": "^2.12",
+        "wp-coding-standards/wpcs": "^3",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "build:vendor": "composer install --no-dev --optimize-autoloader --classmap-authoritative",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=2048M",
+        "phpstan-baseline": "vendor/bin/phpstan analyse --memory-limit=2048M --generate-baseline",
+        "phpcs": "vendor/bin/phpcs -p -s --standard=phpcs.xml.dist",
+        "phpcbf": "vendor/bin/phpcbf -p -s --standard=phpcs.xml.dist",
+        "phpcompat:setup": [
+            "@php -r \"if (!is_dir('phpcompat-tools')) { mkdir('phpcompat-tools'); }\"",
+            "@composer config --working-dir=phpcompat-tools allow-plugins.dealerdirect/phpcodesniffer-composer-installer true 2>/dev/null || true",
+            "@composer require --working-dir=phpcompat-tools --dev --quiet --no-interaction squizlabs/php_codesniffer:^4.0 phpcompatibility/php-compatibility:dev-develop dealerdirect/phpcodesniffer-composer-installer:^1.0 2>/dev/null || true"
+        ],
+        "phpcompat": [
+            "@phpcompat:setup",
+            "phpcompat-tools/vendor/bin/phpcs -p --standard=PHPCompatibility --runtime-set testVersion 7.4-8.5 --extensions=php --ignore=*/vendor/*,*/node_modules/*,*/tests/*,*/phpunit/*,*/phpcompat-tools/* ."
+        ],
+        "phpcompat:clean": "rm -rf phpcompat-tools",
+        "test": [
+            "@phpcs",
+            "@phpcompat",
+            "@phpstan"
+        ]
+    }
+}

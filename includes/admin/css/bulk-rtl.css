@@ -1,0 +1,85 @@
+/**
+ * Bulk Optimize screen.
+ *
+ * @package WebberZone\Image_Optimizer
+ */
+
+.wzio-bulk .wzio-lede {
+	max-width: 46rem;
+	font-size: 14px;
+}
+
+.wzio-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 1rem;
+	margin: 1.5rem 0;
+	max-width: 60rem;
+}
+
+.wzio-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: 1rem 1.25rem;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+}
+
+.wzio-card__value {
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	color: #1d2327;
+}
+
+.wzio-card__label {
+	font-size: 0.8125rem;
+	color: #50575e;
+}
+
+.wzio-progress {
+	max-width: 60rem;
+	margin: 1.5rem 0;
+}
+
+.wzio-progress__bar {
+	height: 1.25rem;
+	background: #dcdcde;
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+.wzio-progress__bar span {
+	display: block;
+	width: 0;
+	height: 100%;
+	background: #2271b1;
+	transition: width 0.2s ease;
+}
+
+.wzio-progress__text {
+	margin: 0.5rem 0 0;
+	font-size: 0.875rem;
+	color: #50575e;
+}
+
+.wzio-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.wzio-force {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.875rem;
+}
+
+.wzio-failures {
+	max-width: 60rem;
+	margin-top: 0.5rem;
+}
