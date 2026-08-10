@@ -121,6 +121,6 @@ Forgets the positive existence cache for all sidecar formats associated with a s
 
 ## See also
 
-* [Image Optimizer Settings](../01-wzio-getting-started/image-optimizer-settings.md)
-* [How the Queue Works](../02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer.md)
-* [WebberZone Image Optimizer WP-CLI](../02-wzio-advanced/webberzone-image-optimizer-wp-cli.md)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
+* [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)
+* [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/)

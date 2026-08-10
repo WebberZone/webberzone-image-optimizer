@@ -72,7 +72,7 @@ The Delivery tab generates ready-to-paste Apache and nginx rules for images refe
 How many attachments to process in a single bulk step. Default: `10`. Range: `1`–`200`. Lower this if your server times out during a bulk run; raise it to finish faster on a fast server.
 
 **Process the queue in the background**
-Keep working through the queue on a schedule even when the Bulk Optimize screen is closed. Turn this off if you would rather the queue only advance while you watch it. Default: on. See [How the Queue Works](../02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer.md) for what runs a batch and how retries are handled.
+Keep working through the queue on a schedule even when the Bulk Optimize screen is closed. Turn this off if you would rather the queue only advance while you watch it. Default: on. See [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/) for what runs a batch and how retries are handled.
 
 **Queue images on first view**
 When a page references an image that has not been converted yet, serve the original immediately and add the image to the queue. Nothing is ever converted during a page render, so visitors never wait for an encode. Default: on.
@@ -88,6 +88,6 @@ Remove the settings, the queue table and the per-image conversion records when t
 
 ## See also
 
-* [Getting Started with WebberZone Image Optimizer](getting-started-with-webberzone-image-optimizer.md)
-* [Bulk Optimize in WebberZone Image Optimizer](bulk-optimize-in-webberzone-image-optimizer.md)
-* [How the Queue Works](../02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer.md)
+* [Getting Started with WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/getting-started-with-webberzone-image-optimizer/)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)

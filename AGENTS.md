@@ -20,6 +20,7 @@ No AI attribution anywhere in this repository or on its GitHub.
 
 - GitHub: <https://github.com/WebberZone/webberzone-image-optimizer>
 - Plugin homepage: <https://webberzone.github.io/webberzone-image-optimizer/>
+- Knowledge Base: <https://webberzone.github.io/webberzone-image-optimizer/docs/>
 
 ## Plugin Overview
 

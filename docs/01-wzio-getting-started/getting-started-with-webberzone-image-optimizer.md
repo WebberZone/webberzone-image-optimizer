@@ -31,13 +31,13 @@ The plugin does not trust what the extension claims to support — it tests your
 
 1. Download the latest release from [GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases/latest) and upload the `webberzone-image-optimizer` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the Plugins menu.
-3. Visit **Media → Image Optimizer** to choose your formats — see [Image Optimizer Settings](image-optimizer-settings.md).
-4. Visit **Media → Bulk Optimize** and press **Start optimizing** — see [Bulk Optimize in WebberZone Image Optimizer](bulk-optimize-in-webberzone-image-optimizer.md).
+3. Visit **Media → Image Optimizer** to choose your formats — see [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/).
+4. Visit **Media → Bulk Optimize** and press **Start optimizing** — see [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/).
 
 New uploads are converted automatically from then on, and existing images are optimized the first time they're viewed on the front end even if you never run the bulk screen, as long as **Queue images on first view** is enabled.
 
 ## See also
 
-* [Image Optimizer Settings](image-optimizer-settings.md)
-* [Bulk Optimize in WebberZone Image Optimizer](bulk-optimize-in-webberzone-image-optimizer.md)
-* [Media Library Integration in WebberZone Image Optimizer](media-library-integration-in-webberzone-image-optimizer.md)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [Media Library Integration in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/media-library-integration-in-webberzone-image-optimizer/)

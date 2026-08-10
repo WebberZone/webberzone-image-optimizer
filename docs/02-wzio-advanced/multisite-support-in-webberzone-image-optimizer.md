@@ -24,9 +24,9 @@ Sites created **after** the plugin is network-activated get their table automati
 
 ## Settings
 
-Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings — see [Image Optimizer Settings](../01-wzio-getting-started/image-optimizer-settings.md). Formats, quality and delivery choices set on one site have no effect on any other site in the network.
+Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings — see [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/). Formats, quality and delivery choices set on one site have no effect on any other site in the network.
 
 ## See also
 
-* [Bulk Optimize in WebberZone Image Optimizer](../01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer.md)
-* [Image Optimizer Settings](../01-wzio-getting-started/image-optimizer-settings.md)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)

@@ -56,6 +56,6 @@ Running `wp wzio clean` without attachment IDs empties the entire queue table (a
 
 ## See also
 
-* [Image Optimizer Settings](../01-wzio-getting-started/image-optimizer-settings.md)
-* [Bulk Optimize in WebberZone Image Optimizer](../01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer.md)
-* [WebberZone Image Optimizer WP-CLI](webberzone-image-optimizer-wp-cli.md)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/)
