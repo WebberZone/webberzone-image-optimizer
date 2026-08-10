@@ -109,6 +109,16 @@ apply_filters( 'wzio_memory_multiplier', float $multiplier )
 
 **`<picture>` rewriting, not `Accept`-header rewriting.** The HTML is identical for every visitor; the browser picks the source. Do not rely on server-side content negotiation when extending delivery — it is deliberately not how this plugin works.
 
+## Public methods
+
+### `Helpers::apply_sidecar_naming( string $path, string $format ): string`
+
+Applies the current **Optimized file naming** setting (`sidecar_naming`) to any path, filename or URL path. In append mode, `photo.jpg` + `webp` → `photo.jpg.webp`; in replace mode → `photo.webp`. Use this anywhere you need to construct or resolve a sidecar path so it agrees with the plugin's own naming — never concatenate an extension by hand.
+
+### `Resolver::invalidate_path( string $path )`
+
+Forgets the positive existence cache for all sidecar formats associated with a source file. Call this after creating or deleting a sidecar — the cache is deliberately long-lived, so leaving it stale could point `<picture>` markup at a file that no longer exists.
+
 ## See also
 
 * [Image Optimizer Settings](../01-wzio-getting-started/image-optimizer-settings.md)
