@@ -362,7 +362,7 @@ class Bulk_Page {
 	public function ajax_reset(): void {
 		$this->verify_request();
 
-		Queue::clear();
+		Queue::clear_pending();
 		Processor::unschedule();
 
 		wp_send_json_success( self::get_stats() );
