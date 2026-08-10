@@ -182,6 +182,98 @@ class Queue {
 	}
 
 	/**
+	 * Get the current status of an attachment's row.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return string Status, or an empty string when there is no row.
+	 */
+	public static function get_status( int $attachment_id ): string {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return '';
+		}
+
+		$table = Database::get_table();
+
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$status = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM `{$table}` WHERE attachment_id = %d", $attachment_id ) );
+
+		return null === $status ? '' : (string) $status;
+	}
+
+	/**
+	 * Get the row ID for an attachment.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return int Row ID, or 0 when there is no row.
+	 */
+	public static function get_id( int $attachment_id ): int {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return 0;
+		}
+
+		$table = Database::get_table();
+
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM `{$table}` WHERE attachment_id = %d", $attachment_id ) );
+	}
+
+	/**
+	 * Claim the pending row for one specific attachment, bypassing queue order.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return object|null Claimed row, or null when nothing was pending for it.
+	 */
+	public static function claim_attachment( int $attachment_id ) {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return null;
+		}
+
+		$table = Database::get_table();
+
+     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$claimed = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET status = %s, updated = %s WHERE attachment_id = %d AND status = %s",
+				self::PROCESSING,
+				current_time( 'mysql' ),
+				$attachment_id,
+				self::PENDING
+			)
+		);
+
+		if ( 0 === (int) $claimed ) {
+			self::flush_counts();
+
+			return null;
+		}
+
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM `{$table}` WHERE attachment_id = %d AND status = %s",
+				$attachment_id,
+				self::PROCESSING
+			)
+		);
+     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::flush_counts();
+
+		return $row;
+	}
+
+	/**
 	 * Record the outcome of a claimed row.
 	 *
 	 * @since 0.9.0

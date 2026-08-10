@@ -101,44 +101,19 @@ class Processor {
 			$limit = null === $limit ? (int) \wzio_get_option( 'batch_size', 10 ) : $limit;
 			$limit = max( 1, min( 200, $limit ) );
 
+			$result_keys = array(
+				Queue::DONE    => 'converted',
+				Queue::FAILED  => 'failed',
+				Queue::SKIPPED => 'skipped',
+			);
+
 			foreach ( Queue::claim( $limit ) as $row ) {
 				++$result['processed'];
 
-				$attachment_id = (int) $row->attachment_id;
+				$outcome = self::process_row( $row, array( 'force' => false ) );
 
-				// The attachment may have been deleted since it was queued.
-				if ( ! Converter::is_convertible_attachment( $attachment_id ) ) {
-					Queue::complete( (int) $row->id, Queue::SKIPPED );
-					++$result['skipped'];
-					continue;
-				}
-
-				$summary = Converter::convert_attachment( $attachment_id );
-
-				if ( is_wp_error( $summary ) ) {
-					Queue::complete( (int) $row->id, Queue::FAILED, 0, $summary->get_error_message() );
-					++$result['failed'];
-					continue;
-				}
-
-				$error = ! empty( $summary['errors'] ) ? (string) reset( $summary['errors'] ) : '';
-
-				if ( '' !== $error && 0 === $summary['converted'] ) {
-					Queue::complete( (int) $row->id, Queue::FAILED, 0, $error );
-					++$result['failed'];
-					continue;
-				}
-
-				if ( 0 === $summary['converted'] ) {
-					Queue::complete( (int) $row->id, Queue::SKIPPED, 0, $error );
-					++$result['skipped'];
-					continue;
-				}
-
-				Queue::complete( (int) $row->id, Queue::DONE, (int) $summary['saved'], $error, (int) $summary['source'] );
-
-				++$result['converted'];
-				$result['saved'] += (int) $summary['saved'];
+				++$result[ $result_keys[ $outcome['status'] ] ];
+				$result['saved'] += $outcome['saved'];
 			}
 		} finally {
 			self::release_lock();
@@ -153,6 +128,116 @@ class Processor {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Convert one attachment outside the batch cadence, for the "Optimize" action.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int  $attachment_id Attachment ID.
+	 * @param  bool $force         Whether to re-encode files that already have a valid sidecar.
+	 * @return array{status: string, saved: int, error: string, locked: bool} Result.
+	 */
+	public static function process_attachment( int $attachment_id, bool $force = false ): array {
+		if ( ! self::acquire_lock() ) {
+			return array(
+				'status' => '',
+				'saved'  => 0,
+				'error'  => '',
+				'locked' => true,
+			);
+		}
+
+		try {
+			Queue::release_stale();
+			// Always requeue: an on-demand click, not a scan.
+			Queue::add( array( $attachment_id ), true );
+
+			$row = Queue::claim_attachment( $attachment_id );
+
+			if ( null === $row ) {
+				return array(
+					'status' => '',
+					'saved'  => 0,
+					'error'  => '',
+					'locked' => true,
+				);
+			}
+
+			$outcome           = self::process_row( $row, array( 'force' => $force ) );
+			$outcome['locked'] = false;
+
+			return $outcome;
+		} finally {
+			self::release_lock();
+		}
+	}
+
+	/**
+	 * Convert the attachment behind one claimed queue row and record the outcome.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  object               $row       Claimed queue row.
+	 * @param  array<string, mixed> $overrides Conversion argument overrides.
+	 * @return array{status: string, saved: int, error: string} Result.
+	 */
+	private static function process_row( $row, array $overrides = array() ): array {
+		$attachment_id = (int) $row->attachment_id;
+
+		// The attachment may have been deleted since it was queued.
+		if ( ! Converter::is_convertible_attachment( $attachment_id ) ) {
+			Queue::complete( (int) $row->id, Queue::SKIPPED );
+
+			return array(
+				'status' => Queue::SKIPPED,
+				'saved'  => 0,
+				'error'  => '',
+			);
+		}
+
+		$summary = Converter::convert_attachment( $attachment_id, $overrides );
+
+		if ( is_wp_error( $summary ) ) {
+			Queue::complete( (int) $row->id, Queue::FAILED, 0, $summary->get_error_message() );
+
+			return array(
+				'status' => Queue::FAILED,
+				'saved'  => 0,
+				'error'  => $summary->get_error_message(),
+			);
+		}
+
+		$error = ! empty( $summary['errors'] ) ? (string) reset( $summary['errors'] ) : '';
+
+		if ( '' !== $error && 0 === $summary['converted'] ) {
+			Queue::complete( (int) $row->id, Queue::FAILED, 0, $error );
+
+			return array(
+				'status' => Queue::FAILED,
+				'saved'  => 0,
+				'error'  => $error,
+			);
+		}
+
+		if ( 0 === $summary['converted'] ) {
+			Queue::complete( (int) $row->id, Queue::SKIPPED, 0, $error );
+
+			return array(
+				'status' => Queue::SKIPPED,
+				'saved'  => 0,
+				'error'  => $error,
+			);
+		}
+
+		Queue::complete( (int) $row->id, Queue::DONE, (int) $summary['saved'], $error, (int) $summary['source'] );
+
+		return array(
+			'status' => Queue::DONE,
+			'saved'  => (int) $summary['saved'],
+			'error'  => $error,
+		);
 	}
 
 	/**

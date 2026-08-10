@@ -9,6 +9,8 @@ namespace WebberZone\Image_Optimizer\Admin;
 
 use WebberZone\Image_Optimizer\Attachment_Meta;
 use WebberZone\Image_Optimizer\Converter;
+use WebberZone\Image_Optimizer\Processor;
+use WebberZone\Image_Optimizer\Queue;
 use WebberZone\Image_Optimizer\Util\Helpers;
 use WebberZone\Image_Optimizer\Util\Hook_Registry;
 
@@ -33,9 +35,62 @@ class Media_Library {
 		Hook_Registry::add_filter( 'manage_media_columns', array( $this, 'add_column' ) );
 		Hook_Registry::add_action( 'manage_media_custom_column', array( $this, 'render_column' ), 10, 2 );
 		Hook_Registry::add_filter( 'media_row_actions', array( $this, 'add_row_actions' ), 10, 2 );
+		Hook_Registry::add_filter( 'bulk_actions-upload', array( $this, 'add_bulk_actions' ) );
+		Hook_Registry::add_filter( 'handle_bulk_actions-upload', array( $this, 'handle_bulk_restore' ), 10, 3 );
 		Hook_Registry::add_action( 'admin_post_wzio_optimize_attachment', array( $this, 'handle_optimize' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_restore_attachment', array( $this, 'handle_restore' ) );
+		Hook_Registry::add_action( 'wp_ajax_wzio_optimize_attachment', array( $this, 'ajax_optimize' ) );
 		Hook_Registry::add_action( 'admin_notices', array( $this, 'render_notice' ) );
+		Hook_Registry::add_action( 'attachment_submitbox_misc_actions', array( $this, 'render_submitbox' ) );
+		Hook_Registry::add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+	}
+
+	/**
+	 * Enqueue the script that drives the "Optimize" action over AJAX.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  string $hook_suffix Current admin page.
+	 * @return void
+	 */
+	public function enqueue_assets( $hook_suffix ): void {
+		if ( 'upload.php' !== $hook_suffix && 'post.php' !== $hook_suffix ) {
+			return;
+		}
+
+		if ( 'post.php' === $hook_suffix ) {
+			$screen = get_current_screen();
+
+			if ( ! $screen || 'attachment' !== $screen->id ) {
+				return;
+			}
+		}
+
+		$minimize = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+
+		wp_enqueue_script(
+			'wzio-optimize',
+			WZIO_PLUGIN_URL . 'includes/admin/js/optimize' . $minimize . '.js',
+			array(),
+			WZIO_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wzio-optimize',
+			'wzioOptimize',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'wzio_optimize' ),
+				'strings' => array(
+					'optimizing' => esc_html__( 'Optimizing', 'webberzone-image-optimizer' ),
+					'error'      => esc_html__( 'That image could not be optimized. Check the Bulk Optimize screen for the reason.', 'webberzone-image-optimizer' ),
+					'timeout'    => esc_html__( 'Connection interrupted. Progress so far was saved — click Optimize again to continue.', 'webberzone-image-optimizer' ),
+				),
+			)
+		);
+
+		wp_add_inline_style( 'wp-admin', '.wzio-optimize-error{color:#b32d2e}' );
 	}
 
 	/**
@@ -46,6 +101,22 @@ class Media_Library {
 	 * @return void
 	 */
 	public function render_notice(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['wzio_bulk_restored'] ) ) {
+			$count = absint( wp_unslash( $_GET['wzio_bulk_restored'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				esc_html(
+					sprintf(
+						/* translators: %d: number of images. */
+						_n( 'Optimized copies deleted for %d image. The originals are untouched.', 'Optimized copies deleted for %d images. The originals are untouched.', $count, 'webberzone-image-optimizer' ),
+						$count
+					)
+				)
+			);
+		}
+
      // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$message = isset( $_GET['wzio_message'] ) ? sanitize_key( wp_unslash( $_GET['wzio_message'] ) ) : '';
 
@@ -134,8 +205,9 @@ class Media_Library {
 		}
 
 		$actions['wzio_optimize'] = sprintf(
-			'<a href="%s">%s</a>',
+			'<a href="%s" class="wzio-optimize-attachment" data-id="%d">%s</a>',
 			esc_url( self::get_action_url( 'wzio_optimize_attachment', (int) $post->ID ) ),
+			(int) $post->ID,
 			esc_html__( 'Optimize', 'webberzone-image-optimizer' )
 		);
 
@@ -150,6 +222,121 @@ class Media_Library {
 		}
 
 		return $actions;
+	}
+
+	/**
+	 * Add the bulk action to delete optimized copies.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  array<string, string> $actions Existing bulk actions.
+	 * @return array<string, string> Bulk actions.
+	 */
+	public function add_bulk_actions( $actions ) {
+		$actions['wzio_restore'] = esc_html__( 'Delete optimized copies', 'webberzone-image-optimizer' );
+
+		return $actions;
+	}
+
+	/**
+	 * Handle the bulk action to delete optimized copies.
+	 *
+	 * The nonce and capability for the media list bulk actions are already
+	 * verified by WordPress core before this filter runs.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  string          $redirect_to Redirect URL.
+	 * @param  string          $doaction    Bulk action name.
+	 * @param  array<int, int> $post_ids  Selected attachment IDs.
+	 * @return string Redirect URL.
+	 */
+	public function handle_bulk_restore( $redirect_to, $doaction, $post_ids ) {
+		if ( 'wzio_restore' !== $doaction ) {
+			return $redirect_to;
+		}
+
+		$count = 0;
+
+		foreach ( $post_ids as $post_id ) {
+			$post_id = (int) $post_id;
+
+			if ( ! current_user_can( 'edit_post', $post_id ) || ! Converter::is_convertible_attachment( $post_id ) ) {
+				continue;
+			}
+
+			Converter::delete_sidecars( $post_id );
+			++$count;
+		}
+
+		return add_query_arg( 'wzio_bulk_restored', $count, $redirect_to );
+	}
+
+	/**
+	 * Show optimization status and actions in the attachment edit Save box.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  \WP_Post $post Attachment.
+	 * @return void
+	 */
+	public function render_submitbox( $post ): void {
+		$attachment_id = (int) $post->ID;
+
+		if ( ! Converter::is_convertible_attachment( $attachment_id ) ) {
+			return;
+		}
+
+		$totals = Attachment_Meta::get_totals( $attachment_id );
+		$record = Attachment_Meta::get( $attachment_id );
+
+		echo '<div class="misc-pub-section misc-pub-wzio">';
+		echo '<strong>' . esc_html__( 'Image optimization', 'webberzone-image-optimizer' ) . '</strong><br />';
+
+		if ( 0 === $totals['files'] ) {
+			esc_html_e( 'Not yet optimized.', 'webberzone-image-optimizer' );
+		} else {
+			$percent = $totals['source'] > 0 ? round( ( $totals['saved'] / $totals['source'] ) * 100 ) : 0;
+
+			printf(
+			/* translators: 1: number of files, 2: bytes saved, 3: percentage saved. */
+				esc_html__( '%1$d files, %2$s smaller (%3$d%%).', 'webberzone-image-optimizer' ),
+				(int) $totals['files'],
+				esc_html( Helpers::format_bytes( $totals['saved'] ) ),
+				(int) $percent
+			);
+
+			if ( ! empty( $totals['formats'] ) ) {
+				echo '<ul class="wzio-submitbox-formats">';
+				foreach ( $totals['formats'] as $format => $bytes ) {
+					printf(
+						'<li>%1$s: %2$s</li>',
+						esc_html( strtoupper( $format ) ),
+						esc_html( Helpers::format_bytes( $bytes ) )
+					);
+				}
+				echo '</ul>';
+			}
+		}
+
+		echo '<p class="wzio-submitbox-actions">';
+		printf(
+			'<a href="%s" class="wzio-optimize-attachment" data-id="%d">%s</a>',
+			esc_url( self::get_action_url( 'wzio_optimize_attachment', $attachment_id ) ),
+			(int) $attachment_id,
+			esc_html__( 'Optimize', 'webberzone-image-optimizer' )
+		);
+
+		if ( ! empty( $record['files'] ) ) {
+			printf(
+				' | <a href="%s" class="submitdelete">%s</a>',
+				esc_url( self::get_action_url( 'wzio_restore_attachment', $attachment_id ) ),
+				esc_html__( 'Delete optimized copies', 'webberzone-image-optimizer' )
+			);
+		}
+		echo '</p>';
+
+		echo '</div>';
 	}
 
 	/**
@@ -195,7 +382,7 @@ class Media_Library {
 	}
 
 	/**
-	 * Convert a single attachment and return to the media library.
+	 * Convert a single attachment and return to the media library. No-JS fallback.
 	 *
 	 * @since 0.9.0
 	 *
@@ -204,9 +391,48 @@ class Media_Library {
 	public function handle_optimize(): void {
 		$attachment_id = $this->validate_action( 'wzio_optimize_attachment' );
 
-		$summary = Converter::convert_attachment( $attachment_id, array( 'force' => true ) );
+		$outcome = Processor::process_attachment( $attachment_id, false );
 
-		$this->redirect_back( is_wp_error( $summary ) ? 'failed' : 'optimized' );
+		$this->redirect_back( $outcome['locked'] || Queue::FAILED === $outcome['status'] ? 'failed' : 'optimized' );
+	}
+
+	/**
+	 * Convert the next file of an attachment over AJAX, one file per call.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @return void
+	 */
+	public function ajax_optimize(): void {
+		check_ajax_referer( 'wzio_optimize', 'nonce' );
+
+		$attachment_id = isset( $_POST['id'] ) ? absint( wp_unslash( $_POST['id'] ) ) : 0;
+
+		if ( ! current_user_can( 'edit_post', $attachment_id ) || ! Converter::is_convertible_attachment( $attachment_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to optimize this image.', 'webberzone-image-optimizer' ) ), 403 );
+		}
+
+		if ( Queue::PROCESSING !== Queue::get_status( $attachment_id ) ) {
+			Queue::add( array( $attachment_id ), true );
+
+			if ( null === Queue::claim_attachment( $attachment_id ) ) {
+				wp_send_json_error( array( 'message' => __( 'Another optimization is already running. Try again in a moment.', 'webberzone-image-optimizer' ) ), 409 );
+			}
+		}
+
+		$step = Converter::convert_next_file( $attachment_id );
+
+		if ( is_wp_error( $step ) ) {
+			Queue::complete( Queue::get_id( $attachment_id ), Queue::FAILED, 0, $step->get_error_message() );
+			wp_send_json_error( array( 'message' => $step->get_error_message() ) );
+		}
+
+		if ( $step['done'] ) {
+			$totals = Attachment_Meta::get_totals( $attachment_id );
+			Queue::complete( Queue::get_id( $attachment_id ), Queue::DONE, $totals['saved'], '', $totals['source'] );
+		}
+
+		wp_send_json_success( $step );
 	}
 
 	/**
