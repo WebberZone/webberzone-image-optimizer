@@ -48,10 +48,7 @@ abstract class Driver {
 	abstract public function supports( string $format ): bool;
 
 	/**
-	 * Encode a source image into the target format.
-	 *
-	 * Implementations must preserve the source dimensions exactly. Resizing here
-	 * would desynchronise the sidecar from the `srcset` candidate it replaces.
+	 * Encode without changing dimensions to preserve `srcset` alignment.
 	 *
 	 * @since 0.9.0
 	 *
@@ -93,10 +90,7 @@ abstract class Driver {
 	}
 
 	/**
-	 * Write to a temporary file and move it into place atomically.
-	 *
-	 * A half-written sidecar served to a visitor is worse than no sidecar at
-	 * all, so nothing lands at the destination path until the encode succeeded.
+	 * Write atomically so incomplete sidecars are never served.
 	 *
 	 * @since 0.9.0
 	 *
@@ -115,10 +109,7 @@ abstract class Driver {
 			);
 		}
 
-		// wp_tempnam() concatenates its directory and filename with no separator,
-		// so a directory without a trailing slash puts the temporary file beside
-		// the target directory rather than inside it. That silently works where
-		// the parent happens to be writable and fails outright where it is not.
+		// wp_tempnam() requires a trailing slash to place the file in the directory.
 		$temp = wp_tempnam( basename( $destination ), trailingslashit( $dir ) );
 
 		if ( ! $temp ) {

@@ -14,11 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Works through the conversion queue in bounded batches.
- *
- * The same batch routine backs the bulk screen, the background cron and WP-CLI,
- * so all three share one definition of what a unit of work is and cannot
- * disagree about progress.
+ * Processes the conversion queue in bounded batches for all entry points.
  *
  * @since 0.9.0
  */
@@ -39,6 +35,14 @@ class Processor {
 	 * @var string
 	 */
 	const LOCK = 'wzio_processor';
+
+	/**
+	 * Wall-clock batch budget, checked between attachments without `set_time_limit()`.
+	 *
+	 * @since 0.9.0
+	 * @var int
+	 */
+	const MAX_BATCH_SECONDS = 20;
 
 	/**
 	 * Constructor.
@@ -107,10 +111,23 @@ class Processor {
 				Queue::SKIPPED => 'skipped',
 			);
 
-			foreach ( Queue::claim( $limit ) as $row ) {
+			// Claim individually so the deadline leaves remaining rows pending.
+			$deadline = microtime( true ) + self::MAX_BATCH_SECONDS;
+
+			for ( $claimed = 0; $claimed < $limit; $claimed++ ) {
+				if ( microtime( true ) >= $deadline ) {
+					break;
+				}
+
+				$rows = Queue::claim( 1 );
+
+				if ( empty( $rows ) ) {
+					break;
+				}
+
 				++$result['processed'];
 
-				$outcome = self::process_row( $row, array( 'force' => false ) );
+				$outcome = self::process_row( $rows[0], array( 'force' => false ) );
 
 				++$result[ $result_keys[ $outcome['status'] ] ];
 				$result['saved'] += $outcome['saved'];
@@ -303,12 +320,7 @@ class Processor {
 	}
 
 	/**
-	 * Take the worker lock.
-	 *
-	 * MySQL advisory locks are atomic: GET_LOCK returns 1 when the lock was
-	 * acquired, 0 when another session holds it (with a timeout of 0), or NULL
-	 * on error. The lock is tied to the connection, so a fatal error or timeout
-	 * releases it automatically — there is no stale lock to clean up.
+	 * Acquire a connection-scoped MySQL lock without waiting.
 	 *
 	 * @since 0.9.0
 	 *

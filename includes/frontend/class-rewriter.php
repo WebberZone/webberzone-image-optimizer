@@ -18,14 +18,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Wraps images in a `<picture>` element so the browser picks the format.
- *
- * Putting the choice in the browser rather than in the web server is what makes
- * this safe behind a full page cache or a CDN. A server that varies on the
- * `Accept` header returns different bytes for one URL, and any cache in front of
- * it that ignores `Vary` will happily serve a WebP file to a browser that cannot
- * read it. A `<picture>` element has no such failure mode: every visitor gets
- * identical HTML and each browser downloads only what it understands.
+ * Uses `<picture>` so browser format selection remains safe behind caches.
  *
  * @since 0.9.0
  */
@@ -77,14 +70,9 @@ class Rewriter {
 	/**
 	 * Whether images should be rewritten for this request.
 	 *
-	 * @since 0.9.0
+	 * Existing sidecars remain valid even if their encoder is unavailable.
 	 *
-	 * Deliberately not conditional on what this server can encode. An optimized
-	 * file that already exists is valid and worth serving whether or not the
-	 * encoder that produced it is still installed — the files may have been
-	 * generated on another server, or the extension may have been disabled since.
-	 * Whether a sidecar exists is the only question that matters, and
-	 * {@see Resolver} answers it.
+	 * @since 0.9.0
 	 *
 	 * @return bool True when rewriting is on.
 	 */
@@ -139,10 +127,7 @@ class Rewriter {
 	}
 
 	/**
-	 * Rewrite every image in a buffered page.
-	 *
-	 * Markup already inside a `<picture>` element is passed through untouched,
-	 * whether this plugin produced it or the theme did.
+	 * Rewrite buffered images outside existing `<picture>` elements.
 	 *
 	 * @since 0.9.0
 	 *
@@ -219,9 +204,7 @@ class Rewriter {
 			return $html;
 		}
 
-		// The candidate list the browser would choose from, with the width and
-		// density descriptors copied verbatim so the `<source>` cannot drift
-		// out of step with the `<img>` it is replacing.
+		// Preserve descriptors so `<source>` remains aligned with `<img>`.
 		$candidates = '' !== $srcset ? self::parse_srcset( $srcset ) : array( array( $src, '' ) );
 
 		if ( empty( $candidates ) ) {
@@ -242,8 +225,7 @@ class Rewriter {
 			foreach ( $candidates as $candidate ) {
 				$sidecar = Resolver::resolve( $candidate[0], $format );
 
-				// One missing candidate disqualifies the whole format: a partial
-				// `<source>` would let the browser pick a size that does not exist.
+				// Require every candidate to prevent requests for missing sizes.
 				if ( '' === $sidecar ) {
 					$mapped = array();
 					break;
@@ -312,11 +294,7 @@ class Rewriter {
 	}
 
 	/**
-	 * Note an attachment that has no optimized copy yet.
-	 *
-	 * Nothing is converted here. The visitor gets the original immediately and
-	 * the work happens later in the background, because an encode inside a page
-	 * render is a request that times out under load.
+	 * Queue missing sidecars for background conversion after rendering.
 	 *
 	 * @since 0.9.0
 	 *

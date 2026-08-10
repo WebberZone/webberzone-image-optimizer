@@ -12,11 +12,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Creates and upgrades the conversion queue table.
- *
- * The table is per site rather than network wide. A queue row is meaningless
- * without the attachment it points at, and attachment IDs only make sense
- * inside one site's posts table.
+ * Manages the per-site conversion queue table.
  *
  * @since 0.9.0
  */

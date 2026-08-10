@@ -15,11 +15,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Turns attachments into sidecar images.
- *
- * Sidecars are written next to the source with the target extension appended,
- * so `photo.jpg` gains `photo.jpg.webp`. Nothing about the original file is
- * modified: every conversion here is additive and reversible.
+ * Creates reversible sidecar images without modifying originals.
  *
  * @since 0.9.0
  */
@@ -68,10 +64,7 @@ class Converter {
 	}
 
 	/**
-	 * Convert every deliverable file belonging to an attachment.
-	 *
-	 * The true original kept aside by the big-image threshold is deliberately
-	 * skipped: WordPress never serves it, so a sidecar for it is wasted disk.
+	 * Convert every served attachment file, excluding the unserved big-image original.
 	 *
 	 * @since 0.9.0
 	 *
@@ -128,16 +121,9 @@ class Converter {
 	}
 
 	/**
-	 * Convert the next not-yet-attempted file of an attachment, one file per call.
+	 * Convert one unsettled attachment file per call for bounded progress.
 	 *
-	 * Each call does at most one file's worth of encoding, which stays well
-	 * under a typical PHP execution time limit even at the slowest AVIF
-	 * effort setting. Callers loop this until `done` to drive a progress UI.
-	 *
-	 * Progress is measured by what the record already settles, so `force` is
-	 * deliberately not honoured here: forcing every call would re-encode the
-	 * first file forever and never reach `done`. Re-encode through
-	 * `convert_attachment()` instead.
+	 * Force is unsupported because it would repeatedly select the first file.
 	 *
 	 * @since 0.9.0
 	 *
@@ -199,10 +185,7 @@ class Converter {
 	}
 
 	/**
-	 * Summarise a conversion record over the files an attachment currently owns.
-	 *
-	 * Both the batch and the stepped path report through this, so the summary
-	 * passed to `wzio_attachment_converted` has one shape whichever ran.
+	 * Summarise current attachment files consistently across conversion paths.
 	 *
 	 * @since 0.9.0
 	 *
@@ -285,8 +268,7 @@ class Converter {
 	 * @return void
 	 */
 	private static function prune_orphans( int $attachment_id, array $record, array $files ): void {
-		// Editing or re-cropping an image leaves the previous sub-size files
-		// behind as `-e{timestamp}` variants. Their sidecars are now orphans.
+		// Remove sidecars for stale `-e{timestamp}` edit variants.
 		$orphans = array_diff_key( $record['files'], $files );
 
 		if ( empty( $orphans ) ) {
@@ -321,9 +303,7 @@ class Converter {
 	public static function convert_file( string $path, array $args, array $existing = array() ): array {
 		$record = array( 'size' => 0 );
 
-		// Every requested format is recorded even here, so the file counts as
-		// attempted. A record with no format entries would make the stepped
-		// conversion offer the same file on every call and never finish.
+		// Record every format so stepped conversion cannot retry this file forever.
 		if ( ! is_readable( $path ) ) {
 			foreach ( $args['formats'] as $format ) {
 				$record[ $format ] = Attachment_Meta::error_entry(
@@ -395,12 +375,6 @@ class Converter {
 				$driver_args['effort'] = (int) $args['effort_avif'];
 			}
 
-			// Reset the time limit per file so one slow encode cannot exhaust
-			// the entire batch. A separate limit is enforced inside the driver.
-			if ( function_exists( 'set_time_limit' ) ) {
-				set_time_limit( 30 );
-			}
-
 			$result = $driver->convert(
 				$path,
 				$destination,
@@ -415,8 +389,7 @@ class Converter {
 
 			$converted_bytes = (int) filesize( $destination );
 
-			// Keeping a sidecar that is no smaller than its source costs disk
-			// and gains nothing, so it is discarded and remembered as skipped.
+			// Discard sidecars below the minimum saving.
 			$threshold = (int) ( $source_bytes * ( 100 - (int) $args['min_saving'] ) / 100 );
 
 			if ( $converted_bytes >= $threshold ) {

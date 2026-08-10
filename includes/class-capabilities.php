@@ -17,11 +17,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Detects which drivers and target formats actually work on this server.
- *
- * A registered delegate is not proof that encoding works, so each driver and
- * format pair is verified once by encoding a small bundled probe image. The
- * result is cached because that probe costs real CPU time.
+ * Verifies and caches driver support by encoding a bundled probe image.
  *
  * @since 0.9.0
  */

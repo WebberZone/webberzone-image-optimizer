@@ -14,9 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Reusable admin banner helper that is configured via constructor values.
- *
- * Copy-paste friendly: adjust namespaces and configuration per plugin.
+ * Renders a reusable, configurable admin banner.
  *
  * @since 0.9.0
  */

@@ -38,10 +38,7 @@ class Helpers {
 	);
 
 	/**
-	 * Get the list of target formats in delivery preference order.
-	 *
-	 * AVIF is listed first because a `<picture>` element serves the first
-	 * `<source>` the browser understands, and AVIF is the smaller format.
+	 * Get target formats in `<picture>` delivery preference order.
 	 *
 	 * @since 0.9.0
 	 *
@@ -98,11 +95,7 @@ class Helpers {
 	}
 
 	/**
-	 * Convert a URL inside the uploads directory to an absolute file path.
-	 *
-	 * Protocol-relative and scheme-mismatched URLs are normalised so that a site
-	 * served over HTTPS still resolves content saved with an HTTP base URL. URLs
-	 * outside the uploads directory return an empty string.
+	 * Convert an uploads URL to a path, normalizing scheme differences.
 	 *
 	 * @since 0.9.0
 	 *
@@ -208,9 +201,7 @@ class Helpers {
 	}
 
 	/**
-	 * Apply the `sidecar_naming` setting to any extension-bearing string.
-	 *
-	 * Shared by `sidecar_path()` and `Resolver::resolve()` so a file and its URL always agree.
+	 * Apply shared sidecar naming so filesystem paths and URLs agree.
 	 *
 	 * @since 0.9.0
 	 *
@@ -246,10 +237,7 @@ class Helpers {
 	}
 
 	/**
-	 * Estimate whether an image of the given dimensions can be decoded safely.
-	 *
-	 * Both Imagick and GD hold a decoded bitmap in memory at roughly four bytes
-	 * per pixel. A multiplier covers the intermediate copies made while encoding.
+	 * Estimate decode headroom, including intermediate bitmap copies.
 	 *
 	 * @since 0.9.0
 	 *

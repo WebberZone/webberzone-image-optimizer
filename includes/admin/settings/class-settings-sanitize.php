@@ -545,7 +545,7 @@ class Settings_Sanitize {
 	}
 
 	/**
-	 * Processes category/taxonomy slugs and adds a new element to the settings array containing the term taxonomy IDs.
+	 * Resolve taxonomy slugs to term taxonomy IDs.
 	 *
 	 * @param array  $settings The settings array containing the taxonomy slugs to sanitize.
 	 * @param string $source_key The key in the settings array containing the slugs. Pattern is Name (taxonomy:term_taxonomy_id).

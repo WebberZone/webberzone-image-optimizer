@@ -26,19 +26,14 @@ class Attachment_Hooks {
 	 * @since 0.9.0
 	 */
 	public function __construct() {
-		// Runs after an upload generates its sub-sizes, and again after an edit,
-		// a restore, or a thumbnail regeneration replaces them.
+		// Runs after uploads and any operation that regenerates attachment files.
 		Hook_Registry::add_filter( 'wp_update_attachment_metadata', array( $this, 'on_metadata_updated' ), 9999, 2 );
 
 		Hook_Registry::add_action( 'delete_attachment', array( $this, 'on_delete_attachment' ) );
 	}
 
 	/**
-	 * Convert or queue an attachment whose files have just changed.
-	 *
-	 * The metadata is passed straight through: the sidecars live beside the
-	 * originals and are never referenced from the attachment metadata, so there
-	 * is nothing here to add to it.
+	 * Convert or queue changed files without modifying attachment metadata.
 	 *
 	 * @since 0.9.0
 	 *
@@ -66,10 +61,7 @@ class Attachment_Hooks {
 	}
 
 	/**
-	 * Remove the sidecars and the queue row when an attachment is deleted.
-	 *
-	 * This fires before the original files are removed, which is exactly when
-	 * the sidecar paths can still be derived from the attachment metadata.
+	 * Remove sidecars and the queue row before attachment files disappear.
 	 *
 	 * @since 0.9.0
 	 *

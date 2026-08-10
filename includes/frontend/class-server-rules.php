@@ -14,16 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Generates the optional server rules for content-negotiated delivery.
- *
- * The `<picture>` rewrite cannot reach an image referenced from a stylesheet,
- * because the browser never sees markup it could choose from. Content
- * negotiation on the `Accept` header covers that case, at the cost of caring
- * about caches: the rules below always send `Vary: Accept` so that a proxy
- * cannot hand a WebP response to a browser that did not ask for one.
- *
- * The rules are printed for the administrator to install by hand, or, on
- * Apache/LiteSpeed, written to `.htaccess` with one click — never automatically.
+ * Generates optional `Vary: Accept` rules for stylesheet images.
  *
  * @since 0.9.0
  */

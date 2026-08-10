@@ -240,10 +240,7 @@ class Media_Library {
 	}
 
 	/**
-	 * Handle the bulk action to delete optimized copies.
-	 *
-	 * The nonce and capability for the media list bulk actions are already
-	 * verified by WordPress core before this filter runs.
+	 * Handle deletion after WordPress verifies the bulk action.
 	 *
 	 * @since 0.9.0
 	 *
@@ -387,7 +384,7 @@ class Media_Library {
 	}
 
 	/**
-	 * Convert a single attachment and return to the media library. No-JS fallback.
+	 * Convert one attachment as the no-JS fallback.
 	 *
 	 * @since 0.9.0
 	 *
@@ -460,7 +457,7 @@ class Media_Library {
 	}
 
 	/**
-	 * Send the administrator back where they came from.
+	 * Redirect to the referring admin page.
 	 *
 	 * @since 0.9.0
 	 *

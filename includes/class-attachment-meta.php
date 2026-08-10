@@ -14,15 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Reads and writes the conversion record stored against each attachment.
- *
- * The record tracks each file's conversion result for administration, cleanup
- * and repeat conversions. Delivery checks sidecar existence through Resolver's
- * request and object caches, avoiding repeated filesystem stats on a page.
- *
- * Records are keyed by file basename, because one attachment owns the scaled
- * original plus every registered sub-size, and each of those converts (or fails
- * to convert) independently.
+ * Stores per-file conversion results keyed by basename for each attachment.
  *
  * @since 0.9.0
  */
@@ -134,9 +126,6 @@ class Attachment_Meta {
 	/**
 	 * Whether a usable sidecar was produced for a file and format.
 	 *
-	 * Skipped files (the sidecar came out larger than the source) and failures
-	 * both return false: the delivery layer must fall back to the original.
-	 *
 	 * @since 0.9.0
 	 *
 	 * @param array<string, mixed> $file_record File record.
@@ -215,8 +204,7 @@ class Attachment_Meta {
 
 				$totals['formats'][ $format ] = ( $totals['formats'][ $format ] ?? 0 ) + $bytes;
 
-				// The saving is measured against the format a browser actually
-				// receives, which is the smallest sidecar it can decode.
+				// Measure savings against the smallest delivered sidecar.
 				if ( 0 === $best || $bytes < $best ) {
 					$best = $bytes;
 				}

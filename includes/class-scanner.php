@@ -14,11 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Finds the attachments that still need converting and fills the queue.
- *
- * Scanning runs directly against the posts table. Loading 10,000 attachments
- * through `WP_Query` just to read their IDs would exhaust memory long before
- * any image was converted.
+ * Finds convertible attachments via direct queries to avoid loading post objects.
  *
  * @since 0.9.0
  */
