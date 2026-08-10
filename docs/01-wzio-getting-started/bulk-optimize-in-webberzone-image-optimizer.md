@@ -14,7 +14,7 @@ The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.gith
 
 ## How it works
 
-The screen works through a database-backed queue one batch at a time rather than in a single long request, so a large library cannot trip the PHP time limit. Closing the tab loses nothing — the queue lives in the database, and if **Process the queue in the background** is enabled on the Advanced settings tab, a background worker carries on and reopening the screen resumes exactly where it stopped. See [How the Queue Works](../02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer.md) for the full mechanics.
+The screen works through a database-backed queue one batch at a time rather than in a single long request, so a large library cannot trip the PHP time limit. Closing the tab loses nothing — the queue lives in the database, and if **Process the queue in the background** is enabled on the Advanced settings tab, a background worker carries on and reopening the screen resumes exactly where it stopped. See [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/) for the full mechanics.
 
 ## The screen
 
@@ -33,10 +33,10 @@ An image that fails is retried a few times and then listed under **Images that c
 
 ## Configuring the run
 
-**Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen — see [Image Optimizer Settings](image-optimizer-settings.md).
+**Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen — see [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/).
 
 ## See also
 
-* [Image Optimizer Settings](image-optimizer-settings.md)
-* [How the Queue Works](../02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer.md)
-* [WebberZone Image Optimizer WP-CLI](../02-wzio-advanced/webberzone-image-optimizer-wp-cli.md)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
+* [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)
+* [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/)

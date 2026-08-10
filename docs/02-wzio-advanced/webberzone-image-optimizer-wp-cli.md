@@ -70,6 +70,6 @@ wp wzio clean 7214
 
 ## See also
 
-* [Bulk Optimize in WebberZone Image Optimizer](../01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer.md)
-* [How the Queue Works](how-the-queue-works-in-webberzone-image-optimizer.md)
-* [WebberZone Image Optimizer Developer Reference](../03-wzio-developer-docs/webberzone-image-optimizer-developer-reference.md)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)
+* [WebberZone Image Optimizer Developer Reference](https://webberzone.github.io/webberzone-image-optimizer/docs/03-wzio-developer-docs/webberzone-image-optimizer-developer-reference/)

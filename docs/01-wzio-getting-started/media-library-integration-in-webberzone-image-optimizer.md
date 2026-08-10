@@ -32,5 +32,5 @@ Both actions require the `edit_post` capability for that attachment and show a c
 
 ## See also
 
-* [Bulk Optimize in WebberZone Image Optimizer](bulk-optimize-in-webberzone-image-optimizer.md)
-* [Image Optimizer Settings](image-optimizer-settings.md)
+* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
+* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
