@@ -105,7 +105,7 @@ apply_filters( 'wzio_memory_multiplier', float $multiplier )
 
 ## Two design decisions to know before extending the plugin
 
-**Sidecar files, not extension replacement.** `photo.jpg` produces `photo.jpg.webp`, never `photo.webp`. Originals are never modified — treat this as a hard invariant when hooking into conversion.
+**Sidecar files, named via `Helpers::apply_sidecar_naming()` — never by string concatenation.** Default is `photo.jpg` → `photo.jpg.webp`; the `sidecar_naming` setting can switch a site to `photo.webp` instead, and code that assumes append-only will 404 there. Originals are never modified — that part is a hard invariant when hooking into conversion.
 
 **`<picture>` rewriting, not `Accept`-header rewriting.** The HTML is identical for every visitor; the browser picks the source. Do not rely on server-side content negotiation when extending delivery — it is deliberately not how this plugin works.
 

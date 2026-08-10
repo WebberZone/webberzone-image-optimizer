@@ -22,11 +22,12 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Database {
 
+
 	/**
 	 * Option holding the installed schema version.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
 	const VERSION_OPTION = 'wzio_db_version';
 
@@ -34,9 +35,9 @@ class Database {
 	 * Current schema version.
 	 *
 	 * @since 1.0.0
-	 * @var string
+	 * @var   string
 	 */
-	const VERSION = '1.0';
+	const VERSION = '1.1';
 
 	/**
 	 * Get the queue table name for the current site.
@@ -69,6 +70,7 @@ class Database {
 			attachment_id bigint(20) UNSIGNED NOT NULL,
 			status varchar(20) NOT NULL DEFAULT 'pending',
 			attempts tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+			source_bytes bigint(20) NOT NULL DEFAULT 0,
 			saved bigint(20) NOT NULL DEFAULT 0,
 			error varchar(255) NOT NULL DEFAULT '',
 			created datetime NOT NULL,
@@ -87,7 +89,7 @@ class Database {
 	 * @return void
 	 */
 	public static function install(): void {
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		include_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		dbDelta( self::get_schema() );
 
@@ -103,7 +105,7 @@ class Database {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param bool $network_wide Whether the plugin was network activated.
+	 * @param  bool $network_wide Whether the plugin was network activated.
 	 * @return void
 	 */
 	public static function install_all( bool $network_wide = false ): void {
@@ -147,7 +149,7 @@ class Database {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param \WP_Site $site New site object.
+	 * @param  \WP_Site $site New site object.
 	 * @return void
 	 */
 	public static function on_new_site( $site ): void {
@@ -193,7 +195,7 @@ class Database {
 			return $cache[ $table ];
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
 
 		$cache[ $table ] = ( $found === $table );
@@ -213,7 +215,7 @@ class Database {
 
 		$table = self::get_table();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
 
 		delete_option( self::VERSION_OPTION );

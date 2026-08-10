@@ -85,6 +85,11 @@
 		if (typeof stats.saved_human !== 'undefined') {
 			els.saved.textContent = stats.saved_human;
 		}
+		if (els.savedLabel && stats.source > 0) {
+			els.savedLabel.textContent = strings.savedOf
+				.replace('%1$s', stats.source_human)
+				.replace('%2$s', stats.saved_percent);
+		}
 	}
 
 	function status(message) {
@@ -191,6 +196,7 @@
 			optimized: byId('wzio-stat-optimized'),
 			remaining: byId('wzio-stat-remaining'),
 			saved: byId('wzio-stat-saved'),
+			savedLabel: byId('wzio-stat-saved-label'),
 		};
 
 		if (!els.start) {

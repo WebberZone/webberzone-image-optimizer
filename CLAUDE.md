@@ -48,13 +48,13 @@ vendor/bin/phpunit                 # single site
 WP_MULTISITE=1 vendor/bin/phpunit  # multisite
 ```
 
-`install.sh` uses GNU `sed`, so on macOS its final rewrite of `wp-tests-config.php` fails and the ABSPATH and DB lines have to be filled in by hand. It works unmodified in CI.
+`install.sh` uses GNU `sed`, so on macOS its final rewrite of `wp-tests-config.php` fails and the ABSPATH and DB lines have to be filled in by hand. It works unmodified in CI. Because of this, don't run PHPUnit locally — `.github/workflows/unit-tests.yml` runs it on every push, and that's sufficient.
 
 The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parseTestMethodAnnotations` was removed). Run against PHPUnit 9 locally — this is what `.github/workflows/unit-tests.yml` pins too. Test files are named for their class (`ConverterTest.php` → `ConverterTest`) because PHPUnit 10+ requires the match.
 
 ## Two decisions the whole design rests on
 
-1. **Sidecars with the extension appended.** `photo.jpg` → `photo.jpg.webp`, never `photo.webp`. Replacing the extension collides when `photo.jpg` and `photo.png` share a directory, and makes the sidecar→original mapping ambiguous in the delivery layer. Originals are never modified — this is a hard invariant, not a preference.
+1. **Sidecars named via `Helpers::apply_sidecar_naming()`, never by string concatenation.** Default is append (`photo.jpg` → `photo.jpg.webp`); the `sidecar_naming` setting can switch a site to `replace` (`photo.webp`, collision risk explained on the settings screen). Both the filesystem path and the delivered URL must resolve through this one function or they can disagree and a visitor gets a 404. Originals are never modified — that part is a hard invariant.
 2. **`<picture>` rewriting, not `Accept`-header rewriting.** An `Accept` rewrite returns different bytes per URL; a cache that ignores `Vary` then serves one visitor's format to everyone. `<picture>` puts the choice in the browser, so the HTML is identical for every visitor. The `Accept` rewrite exists only as *generated, hand-installed* server rules for CSS background images.
 
 Do not revisit either without a concrete reason.

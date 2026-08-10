@@ -135,7 +135,7 @@ class Processor {
 					continue;
 				}
 
-				Queue::complete( (int) $row->id, Queue::DONE, (int) $summary['saved'], $error );
+				Queue::complete( (int) $row->id, Queue::DONE, (int) $summary['saved'], $error, (int) $summary['source'] );
 
 				++$result['converted'];
 				$result['saved'] += (int) $summary['saved'];

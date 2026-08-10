@@ -28,7 +28,7 @@ You do not have to guess. The plugin tests your server by actually encoding a sm
 
 = Your originals are never modified =
 
-Each optimized copy is written alongside the original with the new extension appended, so `photo.jpg` gains `photo.jpg.webp`. Nothing overwrites, replaces or re-saves your original file. Deactivating the plugin returns your site to serving the originals immediately, and no URL ever breaks.
+By default, each optimized copy is written alongside the original with the new extension appended, so `photo.jpg` gains `photo.jpg.webp`. The *File naming* setting can switch this to replacing the extension instead (`photo.webp`) — see the settings screen for the trade-off before turning it on. Either way, nothing overwrites, replaces or re-saves your original file. Deactivating the plugin returns your site to serving the originals immediately, and no URL ever breaks.
 
 = Delivery that survives caching =
 

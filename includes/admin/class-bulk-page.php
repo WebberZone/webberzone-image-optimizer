@@ -133,6 +133,8 @@ class Bulk_Page {
 					'confirm'   => esc_html__( 'Clear the queue? Images already optimized stay optimized.', 'webberzone-image-optimizer' ),
 					'remaining' => esc_html__( 'remaining', 'webberzone-image-optimizer' ),
 					'saved'     => esc_html__( 'saved', 'webberzone-image-optimizer' ),
+					/* translators: 1: original total size, 2: percentage saved. */
+					'savedOf'   => esc_html__( 'Bandwidth saved of %1$s originally (%2$s%)', 'webberzone-image-optimizer' ),
 				),
 			)
 		);
@@ -202,7 +204,20 @@ class Bulk_Page {
 				</div>
 				<div class="wzio-card">
 					<span class="wzio-card__value" id="wzio-stat-saved"><?php echo esc_html( $stats['saved_human'] ); ?></span>
-					<span class="wzio-card__label"><?php esc_html_e( 'Bandwidth saved', 'webberzone-image-optimizer' ); ?></span>
+					<span class="wzio-card__label" id="wzio-stat-saved-label">
+			<?php
+			if ( $stats['source'] > 0 ) {
+				printf(
+					/* translators: 1: original total size, 2: percentage saved. */
+					esc_html__( 'Bandwidth saved of %1$s originally (%2$s%%)', 'webberzone-image-optimizer' ),
+					esc_html( $stats['source_human'] ),
+					esc_html( (string) $stats['saved_percent'] )
+				);
+			} else {
+				esc_html_e( 'Bandwidth saved', 'webberzone-image-optimizer' );
+			}
+			?>
+					</span>
 				</div>
 			</div>
 
@@ -254,19 +269,23 @@ class Bulk_Page {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, done: int} Stats.
+	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int} Stats.
 	 */
 	public static function get_stats(): array {
 		$counts = Queue::get_counts();
 		$saved  = (int) ( $counts['bytes_saved'] ?? 0 );
+		$source = (int) ( $counts['bytes_source'] ?? 0 );
 
 		return array(
-			'total'       => Scanner::count_candidates(),
-			'optimized'   => Scanner::count_optimized(),
-			'remaining'   => Processor::get_remaining(),
-			'done'        => (int) $counts[ Queue::DONE ] + (int) $counts[ Queue::SKIPPED ],
-			'saved'       => $saved,
-			'saved_human' => Helpers::format_bytes( $saved ),
+			'total'         => Scanner::count_candidates(),
+			'optimized'     => Scanner::count_optimized(),
+			'remaining'     => Processor::get_remaining(),
+			'done'          => (int) $counts[ Queue::DONE ] + (int) $counts[ Queue::SKIPPED ],
+			'saved'         => $saved,
+			'saved_human'   => Helpers::format_bytes( $saved ),
+			'source'        => $source,
+			'source_human'  => Helpers::format_bytes( $source ),
+			'saved_percent' => $source > 0 ? round( ( $saved / $source ) * 100, 1 ) : 0.0,
 		);
 	}
 
