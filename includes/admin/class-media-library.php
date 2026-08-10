@@ -124,6 +124,7 @@ class Media_Library {
 			'optimized' => array( 'success', __( 'Optimized copies regenerated. The original image was not modified.', 'webberzone-image-optimizer' ) ),
 			'restored'  => array( 'success', __( 'Optimized copies deleted. The original image is untouched and is being served again.', 'webberzone-image-optimizer' ) ),
 			'failed'    => array( 'error', __( 'That image could not be optimized. Check the Bulk Optimize screen for the reason.', 'webberzone-image-optimizer' ) ),
+			'busy'      => array( 'warning', __( 'Another optimization run is in progress, so this image was left alone. Try again in a moment.', 'webberzone-image-optimizer' ) ),
 		);
 
 		if ( ! isset( $notices[ $message ] ) ) {
@@ -269,6 +270,10 @@ class Media_Library {
 			++$count;
 		}
 
+		if ( 0 === $count ) {
+			return $redirect_to;
+		}
+
 		return add_query_arg( 'wzio_bulk_restored', $count, $redirect_to );
 	}
 
@@ -393,7 +398,11 @@ class Media_Library {
 
 		$outcome = Processor::process_attachment( $attachment_id, false );
 
-		$this->redirect_back( $outcome['locked'] || Queue::FAILED === $outcome['status'] ? 'failed' : 'optimized' );
+		if ( $outcome['locked'] ) {
+			$this->redirect_back( 'busy' );
+		}
+
+		$this->redirect_back( Queue::FAILED === $outcome['status'] ? 'failed' : 'optimized' );
 	}
 
 	/**

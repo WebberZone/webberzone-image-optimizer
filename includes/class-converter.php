@@ -52,7 +52,7 @@ class Converter {
 					'webp' => (int) \wzio_get_option( 'quality_webp', 82 ),
 					'avif' => (int) \wzio_get_option( 'quality_avif', 50 ),
 				),
-				'lossless'    => (bool) \wzio_get_option( 'lossless_png', false ),
+				'lossless'    => (bool) \wzio_get_option( 'lossless_png', true ),
 			)
 		);
 
@@ -98,52 +98,18 @@ class Converter {
 			);
 		}
 
-		$record  = Attachment_Meta::get( $attachment_id );
-		$summary = array(
-			'files'     => 0,
-			'converted' => 0,
-			'skipped'   => 0,
-			'failed'    => 0,
-			'source'    => 0,
-			'saved'     => 0,
-			'errors'    => array(),
-		);
+		$record = Attachment_Meta::get( $attachment_id );
 
 		foreach ( $files as $basename => $path ) {
 			$existing = $record['files'][ $basename ] ?? array();
-			$result   = self::convert_file( $path, $args, $existing );
 
-			$record['files'][ $basename ] = $result;
+			$record['files'][ $basename ] = self::convert_file( $path, $args, $existing );
 			// Saved per file so a timeout mid-loop doesn't discard finished work.
 			Attachment_Meta::set( $attachment_id, $record );
 			Resolver::invalidate_path( $path );
-			++$summary['files'];
-
-			$source = (int) ( $result['size'] ?? 0 );
-			$best   = 0;
-
-			foreach ( $args['formats'] as $format ) {
-				$entry = $result[ $format ] ?? array();
-
-				if ( isset( $entry['bytes'] ) ) {
-					++$summary['converted'];
-
-					if ( 0 === $best || $entry['bytes'] < $best ) {
-						$best = (int) $entry['bytes'];
-					}
-				} elseif ( isset( $entry['error'] ) ) {
-					++$summary['failed'];
-					$summary['errors'][] = $basename . ': ' . $entry['error'];
-				} else {
-					++$summary['skipped'];
-				}
-			}
-
-			if ( $best > 0 ) {
-				$summary['source'] += $source;
-				$summary['saved']  += max( 0, $source - $best );
-			}
 		}
+
+		$summary = self::summarise( $record, $files, $args['formats'] );
 
 		self::prune_orphans( $attachment_id, $record, $files );
 
@@ -167,6 +133,11 @@ class Converter {
 	 * Each call does at most one file's worth of encoding, which stays well
 	 * under a typical PHP execution time limit even at the slowest AVIF
 	 * effort setting. Callers loop this until `done` to drive a progress UI.
+	 *
+	 * Progress is measured by what the record already settles, so `force` is
+	 * deliberately not honoured here: forcing every call would re-encode the
+	 * first file forever and never reach `done`. Re-encode through
+	 * `convert_attachment()` instead.
 	 *
 	 * @since 0.9.0
 	 *
@@ -200,7 +171,7 @@ class Converter {
 			++$index;
 			$existing = $record['files'][ $basename ] ?? array();
 
-			if ( empty( $args['force'] ) && self::file_is_settled( $existing, $args['formats'] ) ) {
+			if ( self::file_is_settled( $existing, $args['formats'] ) ) {
 				continue;
 			}
 
@@ -218,13 +189,70 @@ class Converter {
 		self::prune_orphans( $attachment_id, $record, $files );
 
 		/** This action is documented in includes/class-converter.php */
-		do_action( 'wzio_attachment_converted', $attachment_id, Attachment_Meta::get_totals( $attachment_id ), $args );
+		do_action( 'wzio_attachment_converted', $attachment_id, self::summarise( $record, $files, $args['formats'] ), $args );
 
 		return array(
 			'done'  => true,
 			'index' => $total,
 			'total' => $total,
 		);
+	}
+
+	/**
+	 * Summarise a conversion record over the files an attachment currently owns.
+	 *
+	 * Both the batch and the stepped path report through this, so the summary
+	 * passed to `wzio_attachment_converted` has one shape whichever ran.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  array<string, mixed>  $record  Conversion record.
+	 * @param  array<string, string> $files   Basename to path map.
+	 * @param  array<int, string>    $formats Requested formats.
+	 * @return array{files: int, converted: int, skipped: int, failed: int, source: int, saved: int, errors: array<int, string>} Summary.
+	 */
+	private static function summarise( array $record, array $files, array $formats ): array {
+		$summary = array(
+			'files'     => 0,
+			'converted' => 0,
+			'skipped'   => 0,
+			'failed'    => 0,
+			'source'    => 0,
+			'saved'     => 0,
+			'errors'    => array(),
+		);
+
+		foreach ( array_keys( $files ) as $basename ) {
+			$result = $record['files'][ $basename ] ?? array();
+			$source = (int) ( $result['size'] ?? 0 );
+			$best   = 0;
+
+			++$summary['files'];
+
+			foreach ( $formats as $format ) {
+				$entry = $result[ $format ] ?? array();
+
+				if ( isset( $entry['bytes'] ) ) {
+					++$summary['converted'];
+
+					if ( 0 === $best || $entry['bytes'] < $best ) {
+						$best = (int) $entry['bytes'];
+					}
+				} elseif ( isset( $entry['error'] ) ) {
+					++$summary['failed'];
+					$summary['errors'][] = $basename . ': ' . $entry['error'];
+				} else {
+					++$summary['skipped'];
+				}
+			}
+
+			if ( $best > 0 ) {
+				$summary['source'] += $source;
+				$summary['saved']  += max( 0, $source - $best );
+			}
+		}
+
+		return $summary;
 	}
 
 	/**
@@ -293,7 +321,16 @@ class Converter {
 	public static function convert_file( string $path, array $args, array $existing = array() ): array {
 		$record = array( 'size' => 0 );
 
+		// Every requested format is recorded even here, so the file counts as
+		// attempted. A record with no format entries would make the stepped
+		// conversion offer the same file on every call and never finish.
 		if ( ! is_readable( $path ) ) {
+			foreach ( $args['formats'] as $format ) {
+				$record[ $format ] = Attachment_Meta::error_entry(
+					__( 'The source file could not be read.', 'webberzone-image-optimizer' )
+				);
+			}
+
 			return $record;
 		}
 

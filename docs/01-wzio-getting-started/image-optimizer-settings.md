@@ -37,8 +37,11 @@ Between 1 and 100. Default: `82`, which is visually indistinguishable from the o
 **AVIF quality**
 Between 1 and 100. Default: `50`. AVIF and WebP quality numbers are not comparable: AVIF at 50 looks about the same as WebP at 82 while producing a noticeably smaller file.
 
-**Encoder effort**
+**WebP encoder effort**
 Between 0 and 6. Default: `6`. Higher values spend more CPU time searching for a smaller file at identical visual quality. Because conversion happens once and the result is served many times, the highest setting is usually the right trade — lower it if bulk runs are timing out.
+
+**AVIF encoder effort**
+Between 0 and 6. Default: `4`. AVIF encoding is much slower than WebP, so the default is lower. Very large images are also stepped down automatically, because the file-size gain per pixel at high effort is small once an image runs into the tens of megapixels. Raise this for smaller files at the cost of longer conversion times.
 
 **Strip metadata**
 Remove EXIF, GPS and embedded thumbnails from the optimized copies. The color profile is always kept, so colors will not shift. Your original files are never modified either way. Default: on.
