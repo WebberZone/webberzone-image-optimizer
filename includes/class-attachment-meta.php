@@ -16,9 +16,9 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Reads and writes the conversion record stored against each attachment.
  *
- * The record is the source of truth for the delivery layer. Serving decisions
- * are made from post meta rather than from `file_exists()` calls so that a page
- * with fifty images does not perform a hundred filesystem stats.
+ * The record tracks each file's conversion result for administration, cleanup
+ * and repeat conversions. Delivery checks sidecar existence through Resolver's
+ * request and object caches, avoiding repeated filesystem stats on a page.
  *
  * Records are keyed by file basename, because one attachment owns the scaled
  * original plus every registered sub-size, and each of those converts (or fails

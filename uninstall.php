@@ -31,24 +31,44 @@ function wzio_uninstall_site() {
 	$delete_data  = ! empty( $settings['delete_data_on_uninstall'] );
 
 	if ( $delete_files ) {
-		$uploads = wp_get_upload_dir();
-		$basedir = empty( $uploads['error'] ) ? $uploads['basedir'] : '';
+		$sidecar_naming = ( $settings['sidecar_naming'] ?? 'append' ) === 'replace' ? 'replace' : 'append';
 
-		if ( $basedir && is_dir( $basedir ) ) {
-			$iterator = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator( $basedir, FilesystemIterator::SKIP_DOTS ),
-				RecursiveIteratorIterator::CHILD_FIRST
-			);
+		// A filesystem-wide filename scan can remove a file created by another
+		// plugin or uploaded by the administrator. Restrict removal to successful
+		// conversion records created by this plugin instead.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$records = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s",
+				'_wzio_data'
+			)
+		);
 
-			foreach ( $iterator as $file ) {
-				if ( ! $file->isFile() ) {
+		foreach ( (array) $records as $row ) {
+			$record = maybe_unserialize( $row->meta_value );
+			$main   = get_attached_file( (int) $row->post_id );
+
+			if ( ! is_array( $record ) || ! is_string( $main ) || '' === $main || empty( $record['files'] ) ) {
+				continue;
+			}
+
+			foreach ( $record['files'] as $basename => $file_record ) {
+				if ( ! is_array( $file_record ) ) {
 					continue;
 				}
 
-				// Only the appended-extension sidecars this plugin wrote, never
-				// a WebP or AVIF the user uploaded themselves.
-				if ( preg_match( '/\.(jpe?g|png|gif)\.(webp|avif)$/i', $file->getFilename() ) ) {
-					wp_delete_file( $file->getPathname() );
+				$source = dirname( $main ) . '/' . wp_basename( (string) $basename );
+
+				foreach ( array( 'webp', 'avif' ) as $format ) {
+					if ( empty( $file_record[ $format ]['bytes'] ) ) {
+						continue;
+					}
+
+					$sidecar = 'replace' === $sidecar_naming
+						? preg_replace( '/\.[^.\/\\\\]+$/', '', $source ) . '.' . $format
+						: $source . '.' . $format;
+
+					wp_delete_file( $sidecar );
 				}
 			}
 		}

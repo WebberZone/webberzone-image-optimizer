@@ -88,7 +88,9 @@ class Resolver {
 		$url_path = substr( $url, 0, strcspn( $url, '?#' ) );
 		$url_tail = substr( $url, strlen( $url_path ) );
 
-		$key = $format . ':' . $path;
+		// Include the resolved sidecar path so changing the naming strategy cannot
+		// reuse an existence result for a different file.
+		$key = $format . ':' . Helpers::sidecar_path( $path, $format );
 
 		if ( isset( self::$memo[ $key ] ) ) {
 			return self::$memo[ $key ] ? Helpers::apply_sidecar_naming( $url_path, $format ) . $url_tail : '';
@@ -136,5 +138,26 @@ class Resolver {
 	 */
 	public static function flush_memo(): void {
 		self::$memo = array();
+	}
+
+	/**
+	 * Forget cached existence results for a source file.
+	 *
+	 * Conversion and deletion can create or remove a sidecar between requests.
+	 * The positive cache is deliberately long-lived, so those writers must clear
+	 * it or delivery could point browsers at a file that no longer exists.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $path Absolute source image path.
+	 * @return void
+	 */
+	public static function invalidate_path( string $path ): void {
+		foreach ( Helpers::get_formats() as $format ) {
+			$key = $format . ':' . Helpers::sidecar_path( $path, $format );
+
+			unset( self::$memo[ $key ] );
+			wp_cache_delete( md5( $key ), self::CACHE_GROUP );
+		}
 	}
 }

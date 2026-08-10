@@ -178,7 +178,9 @@ class Server_Rules {
 	public static function get_nginx_rules(): string {
 		$formats = Helpers::get_formats();
 		$lines   = array(
-			'# WebberZone Image Optimizer - add to the server block.',
+			'# WebberZone Image Optimizer.',
+			'# Add the map to the http block, then add the location block to the relevant server block.',
+			'# http context',
 			'map $http_accept $wzio_suffix {',
 			'	default "";',
 		);
@@ -190,6 +192,7 @@ class Server_Rules {
 
 		$lines[] = '}';
 		$lines[] = '';
+		$lines[] = '# server context';
 		$lines[] = 'location ~* ^(?<wzio_base>/.+\.(?:jpe?g|png|gif))$ {';
 		$lines[] = '	add_header Vary Accept;';
 		$lines[] = '	try_files $wzio_base$wzio_suffix $wzio_base =404;';
@@ -220,7 +223,7 @@ class Server_Rules {
 		. '<textarea rows="12" class="large-text code" readonly onclick="this.select();">' . esc_textarea( self::get_apache_rules() ) . '</textarea>'
 		. self::get_htaccess_controls();
 
-		$nginx = '<p><strong>' . esc_html__( 'nginx — add to your server configuration and reload', 'webberzone-image-optimizer' ) . '</strong></p>'
+		$nginx = '<p><strong>' . esc_html__( 'nginx — add the map to the http block, the location to the relevant server block, then reload', 'webberzone-image-optimizer' ) . '</strong></p>'
 		. '<textarea rows="10" class="large-text code" readonly onclick="this.select();">' . esc_textarea( self::get_nginx_rules() ) . '</textarea>'
 		. '<p class="description">' . esc_html__( 'nginx cannot reload its own configuration from PHP, so this block has to be added and reloaded by hand — there is no one-click option here.', 'webberzone-image-optimizer' ) . '</p>';
 
