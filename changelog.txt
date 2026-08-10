@@ -1,6 +1,6 @@
 = 0.9.0 =
 
-Release date: TBC
+Release date: August 10, 2026
 
 * Features:
     * Convert JPEG, PNG and GIF images in the media library to WebP and AVIF. Optimized copies are written alongside the original with the extension appended (`photo.jpg` becomes `photo.jpg.webp`) and originals are never modified.
