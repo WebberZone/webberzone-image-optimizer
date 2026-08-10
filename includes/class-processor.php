@@ -20,14 +20,14 @@ if ( ! defined( 'WPINC' ) ) {
  * so all three share one definition of what a unit of work is and cannot
  * disagree about progress.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Processor {
 
 	/**
 	 * Cron hook that advances the queue.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const CRON_HOOK = 'wzio_process_queue';
@@ -35,7 +35,7 @@ class Processor {
 	/**
 	 * MySQL advisory lock name guarding against two workers running at once.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const LOCK = 'wzio_processor';
@@ -43,7 +43,7 @@ class Processor {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		Hook_Registry::add_action( self::CRON_HOOK, array( __CLASS__, 'run_cron' ) );
@@ -53,7 +53,7 @@ class Processor {
 	/**
 	 * Register the one minute schedule used by the background worker.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<string, array<string, mixed>> $schedules Registered schedules.
 	 * @return array<string, array<string, mixed>> Schedules.
@@ -72,7 +72,7 @@ class Processor {
 	/**
 	 * Process one batch, sized from the settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int|null $limit Batch size, or null to read it from the settings.
 	 * @return array{processed: int, converted: int, failed: int, skipped: int, saved: int, remaining: int, locked: bool} Result.
@@ -158,7 +158,7 @@ class Processor {
 	/**
 	 * Cron callback.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -174,7 +174,7 @@ class Processor {
 	/**
 	 * Number of attachments still waiting.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return int Remaining count.
 	 */
@@ -187,7 +187,7 @@ class Processor {
 	/**
 	 * Schedule the background worker when there is work and it is enabled.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -204,7 +204,7 @@ class Processor {
 	/**
 	 * Remove the background worker schedule.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -225,7 +225,7 @@ class Processor {
 	 * on error. The lock is tied to the connection, so a fatal error or timeout
 	 * releases it automatically — there is no stale lock to clean up.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when the lock was acquired.
 	 */
@@ -241,7 +241,7 @@ class Processor {
 	/**
 	 * Release the worker lock.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

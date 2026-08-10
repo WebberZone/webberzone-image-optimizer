@@ -22,7 +22,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Manage WebP and AVIF conversion from the command line.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class CLI {
 
@@ -33,7 +33,7 @@ class CLI {
 	 *
 	 *     wp wzio status
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<int, string>    $args       Positional arguments.
 	 * @param array<string, string> $assoc_args Associative arguments.
@@ -99,7 +99,7 @@ class CLI {
 	 *     wp wzio convert 7214
 	 *     wp wzio convert --formats=webp,avif --force
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<int, string>    $args       Positional arguments.
 	 * @param array<string, string> $assoc_args Associative arguments.
@@ -193,7 +193,7 @@ class CLI {
 	 *
 	 *     wp wzio queue
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<int, string>    $args       Positional arguments.
 	 * @param array<string, string> $assoc_args Associative arguments.
@@ -225,7 +225,7 @@ class CLI {
 	 *
 	 *     wp wzio run
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<int, string>    $args       Positional arguments.
 	 * @param array<string, string> $assoc_args Associative arguments.
@@ -284,7 +284,7 @@ class CLI {
 	 *
 	 *     wp wzio clean 7214
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<int, string>    $args       Positional arguments.
 	 * @param array<string, string> $assoc_args Associative arguments.

@@ -19,14 +19,14 @@ if ( ! defined( 'WPINC' ) ) {
  * Imagick is preferred over GD: it encodes AVIF, keeps animated frames, and
  * exposes the encoder tuning options that make the output competitive.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Imagick_Driver extends Driver {
 
 	/**
 	 * Cache of the formats reported by the ImageMagick delegate list.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<string, bool>|null
 	 */
 	private static $format_support = null;
@@ -34,7 +34,7 @@ class Imagick_Driver extends Driver {
 	/**
 	 * Whether the Imagick extension is loaded.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when available.
 	 */
@@ -45,7 +45,7 @@ class Imagick_Driver extends Driver {
 	/**
 	 * Machine name of the driver.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Driver slug.
 	 */
@@ -60,7 +60,7 @@ class Imagick_Driver extends Driver {
 	 * sufficient — the delegate may still fail at encode time. Treat this as a
 	 * fast pre-filter; {@see Capabilities} performs the real encode probe.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $format Target format slug.
 	 * @return bool True when the delegate is registered.
@@ -90,7 +90,7 @@ class Imagick_Driver extends Driver {
 	/**
 	 * Encode a source image into the target format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string               $source      Absolute path to the source image.
 	 * @param string               $destination Absolute path to write.

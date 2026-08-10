@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://webberzone.com/donate/
-Stable tag: 1.0.0
+Stable tag: 0.9.0
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -110,11 +110,11 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.9.0 =
 
 * Initial release
 
 == Upgrade Notice ==
 
-= 1.0.0 =
+= 0.9.0 =
 Initial release.

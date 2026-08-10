@@ -2,7 +2,7 @@
 /**
  * Register Settings.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @package WebberZone\Image_Optimizer
  */
@@ -21,7 +21,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Class to register the settings.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Settings {
 
@@ -29,7 +29,7 @@ class Settings {
 	/**
 	 * Settings API.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @var object Settings API.
 	 */
@@ -38,7 +38,7 @@ class Settings {
 	/**
 	 * Prefix which is used for creating the unique filters and actions.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @var string Prefix.
 	 */
@@ -47,7 +47,7 @@ class Settings {
 	/**
 	 * Settings Key.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @var string Settings Key.
 	 */
@@ -56,7 +56,7 @@ class Settings {
 	/**
 	 * The slug name to refer to this menu by.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @var string Menu slug.
 	 */
@@ -65,7 +65,7 @@ class Settings {
 	/**
 	 * Main constructor class.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		$this->settings_key = 'wzio_settings';
@@ -86,7 +86,7 @@ class Settings {
 	/**
 	 * Enqueue the .htaccess install/remove button script on the settings screen.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $hook_suffix Current admin page.
 	 * @return void
@@ -123,7 +123,7 @@ class Settings {
 	/**
 	 * Write the Apache rules into `.htaccess`.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -144,7 +144,7 @@ class Settings {
 	/**
 	 * Remove this plugin's block from `.htaccess`.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -165,7 +165,7 @@ class Settings {
 	/**
 	 * Initialise the settings API.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -192,7 +192,7 @@ class Settings {
 	/**
 	 * Get settings defaults.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Default settings.
 	 */
@@ -251,7 +251,7 @@ class Settings {
 	/**
 	 * Array containing the translation strings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Translation strings.
 	 */
@@ -279,7 +279,7 @@ class Settings {
 	/**
 	 * Get the admin menus.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Admin menus.
 	 */
@@ -301,7 +301,7 @@ class Settings {
 	/**
 	 * Array containing the settings' sections.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Settings sections.
 	 */
@@ -319,7 +319,7 @@ class Settings {
 	/**
 	 * Array containing the settings' fields.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Settings fields.
 	 */
@@ -337,7 +337,7 @@ class Settings {
 	/**
 	 * General settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array General settings.
 	 */
@@ -395,7 +395,7 @@ class Settings {
 	/**
 	 * Quality settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Quality settings.
 	 */
@@ -453,7 +453,7 @@ class Settings {
 	/**
 	 * Delivery settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Delivery settings.
 	 */
@@ -501,7 +501,7 @@ class Settings {
 	/**
 	 * Advanced settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Advanced settings.
 	 */
@@ -560,7 +560,7 @@ class Settings {
 	/**
 	 * Get the selectable target formats, flagging any this server cannot encode.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<string, string> Format slug to label.
 	 */
@@ -587,7 +587,7 @@ class Settings {
 	/**
 	 * Get the registered image sizes as checkbox options.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<string, string> Size name to label.
 	 */
@@ -606,7 +606,7 @@ class Settings {
 	/**
 	 * Modify settings on save.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array $settings Settings array.
 	 * @return array Modified settings array.
@@ -626,7 +626,7 @@ class Settings {
 	/**
 	 * Get the help sidebar.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Help sidebar content.
 	 */
@@ -642,7 +642,7 @@ class Settings {
 	/**
 	 * Get the help tabs.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array Help tabs.
 	 */
@@ -669,7 +669,7 @@ class Settings {
 	/**
 	 * Get the admin footer text.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Admin footer text.
 	 */
@@ -685,7 +685,7 @@ class Settings {
 	/**
 	 * Add plugin action links.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array $links Array of links.
 	 * @return array Modified array of links.
@@ -703,7 +703,7 @@ class Settings {
 	/**
 	 * Add plugin row meta.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array  $links Array of links.
 	 * @param  string $file  Plugin file.

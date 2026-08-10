@@ -26,14 +26,14 @@ if ( ! defined( 'WPINC' ) ) {
  * kept, which is what makes `file_exists()` the single, self-consistent answer:
  * if the file is there, serving it is always the right call.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Resolver {
 
 	/**
 	 * Object cache group.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const CACHE_GROUP = 'wzio_sidecar';
@@ -41,7 +41,7 @@ class Resolver {
 	/**
 	 * How long a positive result is trusted.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var int
 	 */
 	const HIT_TTL = DAY_IN_SECONDS;
@@ -52,7 +52,7 @@ class Resolver {
 	 * Short, because a miss becomes a hit as soon as the queue reaches that
 	 * image, and nobody wants to wait a day to see the result of a bulk run.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var int
 	 */
 	const MISS_TTL = 5 * MINUTE_IN_SECONDS;
@@ -60,7 +60,7 @@ class Resolver {
 	/**
 	 * Request-level cache of resolved paths.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<string, string|false>
 	 */
 	private static $memo = array();
@@ -68,7 +68,7 @@ class Resolver {
 	/**
 	 * Resolve a source image URL to its sidecar URL.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $url    Source image URL.
 	 * @param string $format Target format slug.
@@ -120,7 +120,7 @@ class Resolver {
 	/**
 	 * Whether the URL points at a file inside this site's uploads directory.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $url Image URL.
 	 * @return bool True when the URL is local.
@@ -132,7 +132,7 @@ class Resolver {
 	/**
 	 * Forget everything cached for the current request.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -147,7 +147,7 @@ class Resolver {
 	 * The positive cache is deliberately long-lived, so those writers must clear
 	 * it or delivery could point browsers at a file that no longer exists.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $path Absolute source image path.
 	 * @return void

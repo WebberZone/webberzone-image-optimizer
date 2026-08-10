@@ -24,14 +24,14 @@ if ( ! defined( 'WPINC' ) ) {
  * original plus every registered sub-size, and each of those converts (or fails
  * to convert) independently.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Attachment_Meta {
 
 	/**
 	 * Post meta key holding the record.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const META_KEY = '_wzio_data';
@@ -39,7 +39,7 @@ class Attachment_Meta {
 	/**
 	 * Current record schema version.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var int
 	 */
 	const SCHEMA = 1;
@@ -47,7 +47,7 @@ class Attachment_Meta {
 	/**
 	 * Get the conversion record for an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return array{v: int, updated: int, files: array<string, array<string, mixed>>} Record.
@@ -76,7 +76,7 @@ class Attachment_Meta {
 	/**
 	 * An empty record.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array{v: int, updated: int, files: array<string, array<string, mixed>>} Record.
 	 */
@@ -91,7 +91,7 @@ class Attachment_Meta {
 	/**
 	 * Store the conversion record for an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int                                                                       $attachment_id Attachment ID.
 	 * @param array{v?: int, updated?: int, files: array<string, array<string, mixed>>} $record        Record.
@@ -107,7 +107,7 @@ class Attachment_Meta {
 	/**
 	 * Remove the conversion record for an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return void
@@ -119,7 +119,7 @@ class Attachment_Meta {
 	/**
 	 * Get the record for a single source file within an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int    $attachment_id Attachment ID.
 	 * @param string $basename      Source file basename.
@@ -137,7 +137,7 @@ class Attachment_Meta {
 	 * Skipped files (the sidecar came out larger than the source) and failures
 	 * both return false: the delivery layer must fall back to the original.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array<string, mixed> $file_record File record.
 	 * @param string               $format      Target format slug.
@@ -150,7 +150,7 @@ class Attachment_Meta {
 	/**
 	 * Build the record entry for a successful conversion.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $bytes Sidecar size in bytes.
 	 * @return array{bytes: int} Entry.
@@ -162,7 +162,7 @@ class Attachment_Meta {
 	/**
 	 * Build the record entry for a file that was deliberately not converted.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $reason Machine-readable reason.
 	 * @return array{skip: string} Entry.
@@ -174,7 +174,7 @@ class Attachment_Meta {
 	/**
 	 * Build the record entry for a failed conversion.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $message Error message.
 	 * @return array{error: string} Entry.
@@ -186,7 +186,7 @@ class Attachment_Meta {
 	/**
 	 * Summarise the bytes stored and saved for an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return array{source: int, converted: int, saved: int, files: int, formats: array<string, int>} Totals.

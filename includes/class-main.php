@@ -3,7 +3,7 @@
  * Main plugin class.
  *
  * @package WebberZone\Image_Optimizer
- * @since 1.0.0
+ * @since 0.9.0
  */
 
 namespace WebberZone\Image_Optimizer;
@@ -18,14 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Bootstraps the plugin.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Main {
 
 	/**
 	 * Plugin instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var Main|null
 	 */
 	private static $instance = null;
@@ -33,7 +33,7 @@ class Main {
 	/**
 	 * Admin instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var Admin\Admin|null
 	 */
 	public $admin = null;
@@ -41,7 +41,7 @@ class Main {
 	/**
 	 * Attachment hooks instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var Attachment_Hooks|null
 	 */
 	public $attachment_hooks = null;
@@ -49,7 +49,7 @@ class Main {
 	/**
 	 * Queue processor instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var Processor|null
 	 */
 	public $processor = null;
@@ -57,7 +57,7 @@ class Main {
 	/**
 	 * Frontend rewriter instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var Frontend\Rewriter|null
 	 */
 	public $rewriter = null;
@@ -65,7 +65,7 @@ class Main {
 	/**
 	 * Get the plugin instance.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return Main Instance.
 	 */
@@ -80,7 +80,7 @@ class Main {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	private function __construct() {
 		require_once WZIO_PLUGIN_DIR . 'includes/options-api.php';
@@ -94,7 +94,7 @@ class Main {
 	/**
 	 * Initialise the plugin components.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -111,7 +111,7 @@ class Main {
 	/**
 	 * Initialise the admin components.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

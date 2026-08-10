@@ -14,7 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Contract implemented by every conversion backend.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 abstract class Driver {
 
@@ -22,7 +22,7 @@ abstract class Driver {
 	/**
 	 * Whether the underlying PHP extension is loaded.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when the extension is present.
 	 */
@@ -31,7 +31,7 @@ abstract class Driver {
 	/**
 	 * Machine name of the driver.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Driver slug.
 	 */
@@ -40,7 +40,7 @@ abstract class Driver {
 	/**
 	 * Whether this driver can encode the given target format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $format Target format slug.
 	 * @return bool True when encoding is supported.
@@ -53,7 +53,7 @@ abstract class Driver {
 	 * Implementations must preserve the source dimensions exactly. Resizing here
 	 * would desynchronise the sidecar from the `srcset` candidate it replaces.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string               $source      Absolute path to the source image.
 	 * @param  string               $destination Absolute path to write.
@@ -66,7 +66,7 @@ abstract class Driver {
 	/**
 	 * Normalise the encoding arguments.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<string, mixed> $args Raw arguments.
 	 * @return array<string, mixed> Normalised arguments.
@@ -98,7 +98,7 @@ abstract class Driver {
 	 * A half-written sidecar served to a visitor is worse than no sidecar at
 	 * all, so nothing lands at the destination path until the encode succeeded.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string   $destination Final destination path.
 	 * @param  callable $writer      Receives the temporary path, returns bool.

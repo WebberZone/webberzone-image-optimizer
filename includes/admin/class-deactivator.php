@@ -17,7 +17,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Runs on deactivation.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Deactivator {
 
@@ -27,7 +27,7 @@ class Deactivator {
 	 * Nothing is deleted here. Deactivation should be reversible, and the
 	 * generated files simply stop being served the moment the plugin is off.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param bool $network_wide Whether the plugin was deactivated for the whole network.
 	 * @return void

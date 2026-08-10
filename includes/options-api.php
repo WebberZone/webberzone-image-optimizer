@@ -20,7 +20,7 @@ if ( ! class_exists( '\WebberZone\Image_Optimizer\Options_API' ) ) {
  *
  * Retrieves all plugin settings
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return array Settings
  */
 function wzio_get_settings() {
@@ -32,7 +32,7 @@ function wzio_get_settings() {
  *
  * Looks to see if the specified setting exists and returns the default value if it doesn't.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param string $key            Option to fetch.
  * @param mixed  $default_value  Default option.
@@ -50,7 +50,7 @@ function wzio_get_option( $key = '', $default_value = null ) {
  * Warning: Passing in an empty, false or null string value will remove
  *        the key from the wzio_settings array.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param  string          $key   The Key to update.
  * @param  string|bool|int $value The value to set the key to.
@@ -65,7 +65,7 @@ function wzio_update_option( $key = '', $value = false ) {
  *
  * Removes a setting value in both the db and the global variable.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param  string $key The Key to update.
  * @return boolean   True if updated, false if not.
@@ -77,7 +77,7 @@ function wzio_delete_option( $key = '' ) {
 /**
  * Default settings.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @return array Default settings
  */
@@ -88,7 +88,7 @@ function wzio_settings_defaults() {
 /**
  * Get the default option for a specific key
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param string $key Key of the option to fetch.
  * @return mixed
@@ -100,7 +100,7 @@ function wzio_get_default_option( $key = '' ) {
 /**
  * Reset settings.
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return bool Success status.
  */
 function wzio_settings_reset() {
@@ -110,7 +110,7 @@ function wzio_settings_reset() {
 /**
  * Update all settings at once.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param array $settings Settings array to save.
  * @param bool  $merge    Whether to merge with existing settings. Default true.

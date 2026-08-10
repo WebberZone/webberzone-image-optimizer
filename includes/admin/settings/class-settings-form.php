@@ -17,7 +17,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Generates the settings form.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Settings_Form {
 
