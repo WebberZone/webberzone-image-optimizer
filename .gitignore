@@ -15,6 +15,7 @@
 # Lock files
 package-lock.json
 composer.lock
+pnpm-lock.yaml
 
 # Claude AI
 .claude/
