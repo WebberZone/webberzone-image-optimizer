@@ -7,6 +7,7 @@
 
 namespace WebberZone\Image_Optimizer;
 
+use WebberZone\Image_Optimizer\Frontend\Resolver;
 use WebberZone\Image_Optimizer\Util\Helpers;
 
 if ( ! defined( 'WPINC' ) ) {
@@ -112,6 +113,7 @@ class Converter {
 			$result   = self::convert_file( $path, $args, $existing );
 
 			$record['files'][ $basename ] = $result;
+			Resolver::invalidate_path( $path );
 			++$summary['files'];
 
 			$source = (int) ( $result['size'] ?? 0 );
@@ -148,9 +150,11 @@ class Converter {
 			$dir = dirname( (string) reset( $files ) );
 
 			foreach ( array_keys( $orphans ) as $basename ) {
+				$path = $dir . '/' . $basename;
 				foreach ( Helpers::get_formats() as $format ) {
-					Helpers::delete_file( Helpers::sidecar_path( $dir . '/' . $basename, $format ) );
+					Helpers::delete_file( Helpers::sidecar_path( $path, $format ) );
 				}
+				Resolver::invalidate_path( $path );
 			}
 
 			$record['files'] = array_intersect_key( $record['files'], $files );
@@ -495,6 +499,8 @@ class Converter {
 					++$deleted;
 				}
 			}
+
+			Resolver::invalidate_path( $dir . '/' . $basename );
 		}
 
 		Attachment_Meta::delete( $attachment_id );
