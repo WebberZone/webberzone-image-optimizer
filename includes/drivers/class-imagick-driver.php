@@ -101,10 +101,42 @@ class Imagick_Driver extends Driver {
 	public function convert( string $source, string $destination, string $format, array $args ) {
 		$args = $this->parse_args( $args );
 
+		// Scale AVIF effort down for large images: a 24 MP photo at effort 6
+		// can lock up a PHP worker for 30+ seconds with almost no visual gain
+		// over effort 3 at that scale. The user's configured effort is respected
+		// for normal-sized images; megapixel bands step it back progressively.
+		if ( 'avif' === $format && isset( $args['dims'] ) ) {
+			$mp = (int) ( ( $args['dims']['width'] * $args['dims']['height'] ) / 1_000_000 );
+
+			if ( $mp > 8 ) {
+				$args['effort'] = max( 0, $args['effort'] - 3 );
+			} elseif ( $mp > 4 ) {
+				$args['effort'] = max( 0, $args['effort'] - 2 );
+			} elseif ( $mp > 1 ) {
+				$args['effort'] = max( 0, $args['effort'] - 1 );
+			}
+		}
+
 		return $this->write_atomic(
 			$destination,
 			function ( string $temp ) use ( $source, $format, $args ): bool {
 				$image = new \Imagick();
+
+				// Bound per-encode time. Most images finish well under this,
+				// but a pathological large encode at high effort should not
+				// exhaust the entire worker lifecycle.
+				if ( function_exists( 'set_time_limit' ) ) {
+					set_time_limit( 60 );
+				}
+
+				// Limit Imagick to one thread. Multi-threaded encoding can
+				// saturate a shared host; a single thread per image gives
+				// predictable memory use and leaves CPU for other processes.
+				try {
+					\Imagick::setResourceLimit( \Imagick::RESOURCETYPE_THREAD, 1 );
+				} catch ( \Throwable $e ) {
+					unset( $e );
+				}
 
 				try {
 					$image->readImage( $source );

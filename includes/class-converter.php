@@ -42,16 +42,17 @@ class Converter {
 		$args = wp_parse_args(
 			$overrides,
 			array(
-				'formats'    => $formats,
-				'force'      => false,
-				'strip'      => (bool) \wzio_get_option( 'strip_metadata', true ),
-				'effort'     => (int) \wzio_get_option( 'effort', 6 ),
-				'min_saving' => (int) \wzio_get_option( 'min_saving', 5 ),
-				'quality'    => array(
+				'formats'     => $formats,
+				'force'       => false,
+				'strip'       => (bool) \wzio_get_option( 'strip_metadata', true ),
+				'effort_webp' => (int) \wzio_get_option( 'effort_webp', 6 ),
+				'effort_avif' => (int) \wzio_get_option( 'effort_avif', 4 ),
+				'min_saving'  => (int) \wzio_get_option( 'min_saving', 5 ),
+				'quality'     => array(
 					'webp' => (int) \wzio_get_option( 'quality_webp', 82 ),
 					'avif' => (int) \wzio_get_option( 'quality_avif', 50 ),
 				),
-				'lossless'   => (bool) \wzio_get_option( 'lossless_png', false ),
+				'lossless'    => (bool) \wzio_get_option( 'lossless_png', false ),
 			)
 		);
 
@@ -113,6 +114,8 @@ class Converter {
 			$result   = self::convert_file( $path, $args, $existing );
 
 			$record['files'][ $basename ] = $result;
+			// Saved per file so a timeout mid-loop doesn't discard finished work.
+			Attachment_Meta::set( $attachment_id, $record );
 			Resolver::invalidate_path( $path );
 			++$summary['files'];
 
@@ -142,25 +145,7 @@ class Converter {
 			}
 		}
 
-		// Editing or re-cropping an image leaves the previous sub-size files
-		// behind as `-e{timestamp}` variants. Their sidecars are now orphans.
-		$orphans = array_diff_key( $record['files'], $files );
-
-		if ( ! empty( $orphans ) ) {
-			$dir = dirname( (string) reset( $files ) );
-
-			foreach ( array_keys( $orphans ) as $basename ) {
-				$path = $dir . '/' . $basename;
-				foreach ( Helpers::get_formats() as $format ) {
-					Helpers::delete_file( Helpers::sidecar_path( $path, $format ) );
-				}
-				Resolver::invalidate_path( $path );
-			}
-
-			$record['files'] = array_intersect_key( $record['files'], $files );
-		}
-
-		Attachment_Meta::set( $attachment_id, $record );
+		self::prune_orphans( $attachment_id, $record, $files );
 
 		/**
 		 * Fires after an attachment has been processed.
@@ -174,6 +159,125 @@ class Converter {
 		do_action( 'wzio_attachment_converted', $attachment_id, $summary, $args );
 
 		return $summary;
+	}
+
+	/**
+	 * Convert the next not-yet-attempted file of an attachment, one file per call.
+	 *
+	 * Each call does at most one file's worth of encoding, which stays well
+	 * under a typical PHP execution time limit even at the slowest AVIF
+	 * effort setting. Callers loop this until `done` to drive a progress UI.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int                  $attachment_id Attachment ID.
+	 * @param  array<string, mixed> $overrides     Argument overrides.
+	 * @return array{done: bool, index: int, total: int}|\WP_Error Progress, or error.
+	 */
+	public static function convert_next_file( int $attachment_id, array $overrides = array() ) {
+		if ( ! self::is_convertible_attachment( $attachment_id ) ) {
+			return new \WP_Error(
+				'wzio_not_convertible',
+				__( 'This attachment is not an image the plugin can convert.', 'webberzone-image-optimizer' )
+			);
+		}
+
+		$args  = self::get_args( $overrides );
+		$files = self::get_attachment_files( $attachment_id );
+
+		if ( empty( $files ) ) {
+			return new \WP_Error(
+				'wzio_no_files',
+				__( 'No image files were found on disk for this attachment.', 'webberzone-image-optimizer' )
+			);
+		}
+
+		$record = Attachment_Meta::get( $attachment_id );
+		$total  = count( $files );
+		$index  = 0;
+
+		foreach ( $files as $basename => $path ) {
+			++$index;
+			$existing = $record['files'][ $basename ] ?? array();
+
+			if ( empty( $args['force'] ) && self::file_is_settled( $existing, $args['formats'] ) ) {
+				continue;
+			}
+
+			$record['files'][ $basename ] = self::convert_file( $path, $args, $existing );
+			Attachment_Meta::set( $attachment_id, $record );
+			Resolver::invalidate_path( $path );
+
+			return array(
+				'done'  => false,
+				'index' => $index,
+				'total' => $total,
+			);
+		}
+
+		self::prune_orphans( $attachment_id, $record, $files );
+
+		/** This action is documented in includes/class-converter.php */
+		do_action( 'wzio_attachment_converted', $attachment_id, Attachment_Meta::get_totals( $attachment_id ), $args );
+
+		return array(
+			'done'  => true,
+			'index' => $total,
+			'total' => $total,
+		);
+	}
+
+	/**
+	 * Whether every requested format has already been attempted for a file.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  array<string, mixed> $existing Previous record for the file.
+	 * @param  array<int, string>   $formats  Requested formats.
+	 * @return bool True when nothing further would be attempted.
+	 */
+	private static function file_is_settled( array $existing, array $formats ): bool {
+		foreach ( $formats as $format ) {
+			if ( ! isset( $existing[ $format ] ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Delete sidecars for files no longer produced by the attachment, and save the record.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param  int                   $attachment_id Attachment ID.
+	 * @param  array<string, mixed>  $record        Conversion record.
+	 * @param  array<string, string> $files         Current basename to path map.
+	 * @return void
+	 */
+	private static function prune_orphans( int $attachment_id, array $record, array $files ): void {
+		// Editing or re-cropping an image leaves the previous sub-size files
+		// behind as `-e{timestamp}` variants. Their sidecars are now orphans.
+		$orphans = array_diff_key( $record['files'], $files );
+
+		if ( empty( $orphans ) ) {
+			Attachment_Meta::set( $attachment_id, $record );
+			return;
+		}
+
+		$dir = dirname( (string) reset( $files ) );
+
+		foreach ( array_keys( $orphans ) as $basename ) {
+			$path = $dir . '/' . $basename;
+			foreach ( Helpers::get_formats() as $format ) {
+				Helpers::delete_file( Helpers::sidecar_path( $path, $format ) );
+			}
+			Resolver::invalidate_path( $path );
+		}
+
+		$record['files'] = array_intersect_key( $record['files'], $files );
+		Attachment_Meta::set( $attachment_id, $record );
 	}
 
 	/**
@@ -242,16 +346,29 @@ class Converter {
 				continue;
 			}
 
+			$driver_args = array(
+				'quality'  => (int) ( $args['quality'][ $format ] ?? 82 ),
+				'lossless' => ! empty( $args['lossless'] ) && 'image/png' === $mime,
+				'strip'    => ! empty( $args['strip'] ),
+				'effort'   => (int) ( $args['effort_webp'] ?? 6 ),
+				'dims'     => compact( 'width', 'height' ),
+			);
+
+			if ( 'avif' === $format && isset( $args['effort_avif'] ) ) {
+				$driver_args['effort'] = (int) $args['effort_avif'];
+			}
+
+			// Reset the time limit per file so one slow encode cannot exhaust
+			// the entire batch. A separate limit is enforced inside the driver.
+			if ( function_exists( 'set_time_limit' ) ) {
+				set_time_limit( 30 );
+			}
+
 			$result = $driver->convert(
 				$path,
 				$destination,
 				$format,
-				array(
-					'quality'  => (int) ( $args['quality'][ $format ] ?? 82 ),
-					'lossless' => ! empty( $args['lossless'] ) && 'image/png' === $mime,
-					'strip'    => ! empty( $args['strip'] ),
-					'effort'   => (int) ( $args['effort'] ?? 6 ),
-				)
+				$driver_args
 			);
 
 			if ( is_wp_error( $result ) ) {
