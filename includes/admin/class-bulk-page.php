@@ -28,7 +28,7 @@ if ( ! defined( 'WPINC' ) ) {
  * tab loses nothing: the queue is in the database and the background worker
  * picks up where the screen left off.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Bulk_Page {
 
@@ -36,7 +36,7 @@ class Bulk_Page {
 	/**
 	 * Menu slug.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const SLUG = 'wzio-bulk';
@@ -44,7 +44,7 @@ class Bulk_Page {
 	/**
 	 * Capability required to run a bulk conversion.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const CAPABILITY = 'manage_options';
@@ -52,7 +52,7 @@ class Bulk_Page {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		// The settings screen registers its menu at priority 11, so this runs
@@ -67,7 +67,7 @@ class Bulk_Page {
 	/**
 	 * Register the screen under the Media menu.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -89,7 +89,7 @@ class Bulk_Page {
 	/**
 	 * Enqueue the screen assets.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $hook_suffix Current admin page.
 	 * @return void
@@ -143,7 +143,7 @@ class Bulk_Page {
 	/**
 	 * Render the screen.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -267,7 +267,7 @@ class Bulk_Page {
 	/**
 	 * Collect the numbers shown on the screen.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int} Stats.
 	 */
@@ -292,7 +292,7 @@ class Bulk_Page {
 	/**
 	 * Verify the request before touching anything.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -307,7 +307,7 @@ class Bulk_Page {
 	/**
 	 * Build the queue.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -327,7 +327,7 @@ class Bulk_Page {
 	/**
 	 * Process one batch.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -342,7 +342,7 @@ class Bulk_Page {
 	/**
 	 * Report the current numbers.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -355,7 +355,7 @@ class Bulk_Page {
 	/**
 	 * Empty the queue.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

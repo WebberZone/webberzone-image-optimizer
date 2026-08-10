@@ -23,7 +23,7 @@ No AI attribution anywhere in this repository or on its GitHub.
 
 ## Plugin Overview
 
-**WebberZone Image Optimizer** (v1.0.0) converts media library images to WebP and AVIF and serves them via `<picture>`. Namespace: `WebberZone\Image_Optimizer`. Prefix: `wzio`. Constants: `WZIO_VERSION`, `WZIO_PLUGIN_FILE`, `WZIO_PLUGIN_DIR`, `WZIO_PLUGIN_URL`, `WZIO_PLUGIN_BASENAME`. Requires WordPress 6.6+, PHP 7.4+. GPL-2.0-or-later, fully free, no Freemius.
+**WebberZone Image Optimizer** (v0.9.0) converts media library images to WebP and AVIF and serves them via `<picture>`. Namespace: `WebberZone\Image_Optimizer`. Prefix: `wzio`. Constants: `WZIO_VERSION`, `WZIO_PLUGIN_FILE`, `WZIO_PLUGIN_DIR`, `WZIO_PLUGIN_URL`, `WZIO_PLUGIN_BASENAME`. Requires WordPress 6.6+, PHP 7.4+. GPL-2.0-or-later, fully free, no Freemius.
 
 Settings key: `wzio_settings`. Access via `wzio_get_option($key)` / `wzio_get_settings()`.
 

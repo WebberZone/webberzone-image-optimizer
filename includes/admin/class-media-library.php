@@ -19,7 +19,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Adds per-image status and actions to the media list table.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Media_Library {
 
@@ -27,7 +27,7 @@ class Media_Library {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		Hook_Registry::add_filter( 'manage_media_columns', array( $this, 'add_column' ) );
@@ -41,7 +41,7 @@ class Media_Library {
 	/**
 	 * Confirm the outcome of a per-image action.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -69,7 +69,7 @@ class Media_Library {
 	/**
 	 * Add the status column.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<string, string> $columns Existing columns.
 	 * @return array<string, string> Columns.
@@ -83,7 +83,7 @@ class Media_Library {
 	/**
 	 * Render the status column.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $column_name Column key.
 	 * @param  int    $post_id     Attachment ID.
@@ -122,7 +122,7 @@ class Media_Library {
 	/**
 	 * Add the per-image actions.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<string, string> $actions Existing actions.
 	 * @param  \WP_Post              $post    Attachment.
@@ -155,7 +155,7 @@ class Media_Library {
 	/**
 	 * Build a nonced admin-post URL for an attachment action.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $action        Action name.
 	 * @param  int    $attachment_id Attachment ID.
@@ -177,7 +177,7 @@ class Media_Library {
 	/**
 	 * Validate an incoming attachment action.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $action Action name.
 	 * @return int Attachment ID.
@@ -197,7 +197,7 @@ class Media_Library {
 	/**
 	 * Convert a single attachment and return to the media library.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -212,7 +212,7 @@ class Media_Library {
 	/**
 	 * Delete the generated copies for a single attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -227,7 +227,7 @@ class Media_Library {
 	/**
 	 * Send the administrator back where they came from.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $message Message key.
 	 * @return void

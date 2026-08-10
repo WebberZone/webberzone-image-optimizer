@@ -23,14 +23,14 @@ if ( ! defined( 'WPINC' ) ) {
  * format pair is verified once by encoding a small bundled probe image. The
  * result is cached because that probe costs real CPU time.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Capabilities {
 
 	/**
 	 * Option holding the cached probe results.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const OPTION = 'wzio_capabilities';
@@ -38,7 +38,7 @@ class Capabilities {
 	/**
 	 * A 64x64 PNG with an alpha channel, used to probe the encoders.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const PROBE_IMAGE = 'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAb0lEQVR42u3QwQkAIAwEwTOk'
@@ -48,7 +48,7 @@ class Capabilities {
 	/**
 	 * In-request cache of the probe results.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<string, mixed>|null
 	 */
 	private static $cache = null;
@@ -56,7 +56,7 @@ class Capabilities {
 	/**
 	 * Get the capability report.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param bool $force Whether to discard the cached report and probe again.
 	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>} Report.
@@ -81,7 +81,7 @@ class Capabilities {
 	/**
 	 * Run the encoder probes.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>} Report.
 	 */
@@ -134,7 +134,7 @@ class Capabilities {
 	/**
 	 * Write the bundled probe image to a temporary file.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Absolute path, or an empty string on failure.
 	 */
@@ -163,7 +163,7 @@ class Capabilities {
 	/**
 	 * Driver classes in order of preference.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, class-string<Driver>> Driver class names.
 	 */
@@ -171,7 +171,7 @@ class Capabilities {
 		/**
 		 * Filter the conversion drivers and the order they are tried in.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param array<int, class-string<Driver>> $classes Driver class names.
 		 */
@@ -184,7 +184,7 @@ class Capabilities {
 	/**
 	 * Get a working driver for the given format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $format Target format slug.
 	 * @return Driver|null Driver instance, or null when the format is unsupported.
@@ -209,7 +209,7 @@ class Capabilities {
 	/**
 	 * Whether the server can encode the given format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $format Target format slug.
 	 * @return bool True when supported.
@@ -223,7 +223,7 @@ class Capabilities {
 	/**
 	 * Formats this server can encode, in delivery preference order.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, string> Format slugs.
 	 */
@@ -234,7 +234,7 @@ class Capabilities {
 	/**
 	 * Discard the cached report so the next call probes again.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

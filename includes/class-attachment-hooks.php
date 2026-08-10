@@ -16,14 +16,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Keeps the sidecars in step with the attachments they belong to.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Attachment_Hooks {
 
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		// Runs after an upload generates its sub-sizes, and again after an edit,
@@ -40,7 +40,7 @@ class Attachment_Hooks {
 	 * originals and are never referenced from the attachment metadata, so there
 	 * is nothing here to add to it.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param mixed $data          Attachment metadata about to be stored.
 	 * @param int   $attachment_id Attachment ID.
@@ -71,7 +71,7 @@ class Attachment_Hooks {
 	 * This fires before the original files are removed, which is exactly when
 	 * the sidecar paths can still be derived from the attachment metadata.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return void

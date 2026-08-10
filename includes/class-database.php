@@ -18,7 +18,7 @@ if ( ! defined( 'WPINC' ) ) {
  * without the attachment it points at, and attachment IDs only make sense
  * inside one site's posts table.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Database {
 
@@ -26,7 +26,7 @@ class Database {
 	/**
 	 * Option holding the installed schema version.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const VERSION_OPTION = 'wzio_db_version';
@@ -34,7 +34,7 @@ class Database {
 	/**
 	 * Current schema version.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const VERSION = '1.1';
@@ -42,7 +42,7 @@ class Database {
 	/**
 	 * Get the queue table name for the current site.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Table name.
 	 */
@@ -55,7 +55,7 @@ class Database {
 	/**
 	 * The CREATE TABLE statement for the queue table.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string SQL.
 	 */
@@ -84,7 +84,7 @@ class Database {
 	/**
 	 * Create or update the queue table on the current site.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -103,7 +103,7 @@ class Database {
 	 * this loop every site except the one activating would be left without a
 	 * table.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  bool $network_wide Whether the plugin was network activated.
 	 * @return void
@@ -124,7 +124,7 @@ class Database {
 	/**
 	 * Get every site ID in the network.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, int> Site IDs.
 	 */
@@ -147,7 +147,7 @@ class Database {
 	/**
 	 * Create the table when a new site is added to the network.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  \WP_Site $site New site object.
 	 * @return void
@@ -165,7 +165,7 @@ class Database {
 	/**
 	 * Create the table if the stored schema version is missing or stale.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -180,7 +180,7 @@ class Database {
 	/**
 	 * Whether the queue table exists on the current site.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when installed.
 	 */
@@ -206,7 +206,7 @@ class Database {
 	/**
 	 * Drop the queue table on the current site.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

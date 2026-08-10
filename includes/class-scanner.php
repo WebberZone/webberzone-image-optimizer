@@ -20,14 +20,14 @@ if ( ! defined( 'WPINC' ) ) {
  * through `WP_Query` just to read their IDs would exhaust memory long before
  * any image was converted.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Scanner {
 
 	/**
 	 * How many IDs to insert into the queue per statement.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var int
 	 */
 	const CHUNK = 500;
@@ -35,7 +35,7 @@ class Scanner {
 	/**
 	 * Count the attachments the plugin could convert.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return int Attachment count.
 	 */
@@ -58,7 +58,7 @@ class Scanner {
 	/**
 	 * Count the attachments that already carry a conversion record.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return int Attachment count.
 	 */
@@ -77,7 +77,7 @@ class Scanner {
 	/**
 	 * Get a page of attachment IDs that could be converted.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int  $limit          Maximum IDs to return.
 	 * @param int  $after_id       Only return IDs greater than this.
@@ -125,7 +125,7 @@ class Scanner {
 	/**
 	 * Fill the queue with every attachment that still needs work.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param bool $force Whether to include attachments that already have a record.
 	 * @return int Number of attachments queued.

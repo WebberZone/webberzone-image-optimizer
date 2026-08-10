@@ -18,7 +18,7 @@ if ( ! defined( 'WPINC' ) ) {
  * an attachment's scaled original and every sub-size together, and a per-file
  * queue would be an order of magnitude larger for no extra resolution.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Queue {
 
@@ -26,7 +26,7 @@ class Queue {
 	/**
 	 * Waiting to be processed.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const PENDING = 'pending';
@@ -34,7 +34,7 @@ class Queue {
 	/**
 	 * Claimed by a worker.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const PROCESSING = 'processing';
@@ -42,7 +42,7 @@ class Queue {
 	/**
 	 * Finished successfully.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const DONE = 'done';
@@ -50,7 +50,7 @@ class Queue {
 	/**
 	 * Finished with an error.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const FAILED = 'failed';
@@ -58,7 +58,7 @@ class Queue {
 	/**
 	 * Nothing to do for this attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   string
 	 */
 	const SKIPPED = 'skipped';
@@ -66,7 +66,7 @@ class Queue {
 	/**
 	 * Maximum times a failing attachment is retried before it is left alone.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var   int
 	 */
 	const MAX_ATTEMPTS = 3;
@@ -77,7 +77,7 @@ class Queue {
 	 * Attachments already queued are reset to pending only when `$force` is set,
 	 * so re-running a scan does not undo completed work.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<int, int> $attachment_ids Attachment IDs.
 	 * @param  bool            $force          Whether to requeue rows that already finished.
@@ -122,7 +122,7 @@ class Queue {
 	/**
 	 * Claim the next batch of pending rows.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $limit Maximum rows to claim.
 	 * @return array<int, object> Claimed rows.
@@ -184,7 +184,7 @@ class Queue {
 	/**
 	 * Record the outcome of a claimed row.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int    $id     Queue row ID.
 	 * @param  string $status New status.
@@ -250,7 +250,7 @@ class Queue {
 	 * A worker killed by a fatal error or a timeout leaves its rows claimed
 	 * forever, which would silently stall the queue.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $older_than_seconds Age in seconds after which a claim is stale.
 	 * @return int Rows released.
@@ -286,7 +286,7 @@ class Queue {
 	/**
 	 * Count the rows in each status.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<string, int> Status to count, plus a `total` key.
 	 */
@@ -341,7 +341,7 @@ class Queue {
 	/**
 	 * Discard the cached status counts.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -352,7 +352,7 @@ class Queue {
 	/**
 	 * Whether any row is waiting to be processed.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when work remains.
 	 */
@@ -365,7 +365,7 @@ class Queue {
 	/**
 	 * Remove rows for a single attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return void
@@ -386,7 +386,7 @@ class Queue {
 	/**
 	 * Empty the queue.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -411,7 +411,7 @@ class Queue {
 	 * Completed rows are retained because they provide the final conversion
 	 * totals displayed on the bulk optimization screen.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -435,7 +435,7 @@ class Queue {
 	/**
 	 * Get the most recent failures.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $limit Maximum rows to return.
 	 * @return array<int, object> Failed rows.

@@ -25,7 +25,7 @@ if ( ! defined( 'WPINC' ) ) {
  * The rules are printed for the administrator to install by hand, or, on
  * Apache/LiteSpeed, written to `.htaccess` with one click — never automatically.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Server_Rules {
 
@@ -33,7 +33,7 @@ class Server_Rules {
 	/**
 	 * `.htaccess` marker name, per `insert_with_markers()`'s BEGIN/END convention.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var string
 	 */
 	const MARKER = 'WebberZone Image Optimizer';
@@ -41,7 +41,7 @@ class Server_Rules {
 	/**
 	 * Build the Apache rule lines, without the surrounding marker comments.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, string> Rule lines.
 	 */
@@ -77,7 +77,7 @@ class Server_Rules {
 	/**
 	 * Build the Apache rules, including the marker comments, for display.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Rules block.
 	 */
@@ -94,7 +94,7 @@ class Server_Rules {
 	/**
 	 * Absolute path to the site's `.htaccess` file.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Path.
 	 */
@@ -107,7 +107,7 @@ class Server_Rules {
 	/**
 	 * Whether this plugin's marker block is currently present in `.htaccess`.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when installed.
 	 */
@@ -126,7 +126,7 @@ class Server_Rules {
 	/**
 	 * Whether `.htaccess` exists and is writable, or can be created.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True when the file can be written to.
 	 */
@@ -141,7 +141,7 @@ class Server_Rules {
 	/**
 	 * Write this plugin's marker block into `.htaccess`.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True on success.
 	 */
@@ -154,7 +154,7 @@ class Server_Rules {
 	/**
 	 * Remove this plugin's marker block from `.htaccess`, leaving the rest alone.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return bool True on success.
 	 */
@@ -171,7 +171,7 @@ class Server_Rules {
 	/**
 	 * Build the nginx rules.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Rules block.
 	 */
@@ -204,7 +204,7 @@ class Server_Rules {
 	/**
 	 * The description rendered on the Delivery settings tab.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string HTML.
 	 */
@@ -233,7 +233,7 @@ class Server_Rules {
 	/**
 	 * The one-click install/remove controls shown under the Apache textarea.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string HTML.
 	 */

@@ -17,7 +17,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 /**
  * Remove the plugin's data from the current site.
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @return void
  */

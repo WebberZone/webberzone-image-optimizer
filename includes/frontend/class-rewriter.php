@@ -27,14 +27,14 @@ if ( ! defined( 'WPINC' ) ) {
  * read it. A `<picture>` element has no such failure mode: every visitor gets
  * identical HTML and each browser downloads only what it understands.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Rewriter {
 
 	/**
 	 * Attachment IDs queued for conversion during this request.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<int, int>
 	 */
 	private $lazy_queue = array();
@@ -42,7 +42,7 @@ class Rewriter {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 */
 	public function __construct() {
 		Hook_Registry::add_action( 'template_redirect', array( $this, 'register_output_hooks' ), 1 );
@@ -52,7 +52,7 @@ class Rewriter {
 	/**
 	 * Attach the rewriting filters, once it is clear this is a page we serve.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */
@@ -77,7 +77,7 @@ class Rewriter {
 	/**
 	 * Whether images should be rewritten for this request.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * Deliberately not conditional on what this server can encode. An optimized
 	 * file that already exists is valid and worth serving whether or not the
@@ -102,7 +102,7 @@ class Rewriter {
 		/**
 		 * Filter whether images are rewritten on this request.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param bool $enabled Whether rewriting is enabled.
 		 */
@@ -112,7 +112,7 @@ class Rewriter {
 	/**
 	 * Rewrite an image embedded in post content.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $filtered_image The `<img>` markup.
 	 * @param string $context        Filter context.
@@ -128,7 +128,7 @@ class Rewriter {
 	/**
 	 * Rewrite an image rendered through `wp_get_attachment_image()`.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $html          The `<img>` markup.
 	 * @param int    $attachment_id Attachment ID.
@@ -144,7 +144,7 @@ class Rewriter {
 	 * Markup already inside a `<picture>` element is passed through untouched,
 	 * whether this plugin produced it or the theme did.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $html Page markup.
 	 * @return string Markup.
@@ -190,7 +190,7 @@ class Rewriter {
 	/**
 	 * Wrap a single `<img>` tag in a `<picture>` element.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $html          The `<img>` markup.
 	 * @param int    $attachment_id Attachment ID, or 0 when unknown.
@@ -281,7 +281,7 @@ class Rewriter {
 	/**
 	 * Split a `srcset` attribute into URL and descriptor pairs.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $srcset Attribute value.
 	 * @return array<int, array{0: string, 1: string}> Candidates.
@@ -318,7 +318,7 @@ class Rewriter {
 	 * the work happens later in the background, because an encode inside a page
 	 * render is a request that times out under load.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return void
@@ -338,7 +338,7 @@ class Rewriter {
 	/**
 	 * Write the lazily noted attachments to the queue after the page is sent.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return void
 	 */

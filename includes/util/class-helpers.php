@@ -14,14 +14,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Helper utilities used across the plugin.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Helpers {
 
 	/**
 	 * Source MIME types the plugin is able to convert.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<int, string>
 	 */
 	const SOURCE_MIME_TYPES = array( 'image/jpeg', 'image/png', 'image/gif' );
@@ -29,7 +29,7 @@ class Helpers {
 	/**
 	 * Target formats keyed by format slug.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @var array<string, string>
 	 */
 	const TARGET_MIME_TYPES = array(
@@ -43,7 +43,7 @@ class Helpers {
 	 * AVIF is listed first because a `<picture>` element serves the first
 	 * `<source>` the browser understands, and AVIF is the smaller format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, string> Format slugs.
 	 */
@@ -54,7 +54,7 @@ class Helpers {
 	/**
 	 * Get the MIME type for a target format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $format Format slug.
 	 * @return string MIME type, or an empty string when unknown.
@@ -66,7 +66,7 @@ class Helpers {
 	/**
 	 * Get the uploads base directory, without the year/month subdirectory.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string Absolute path with no trailing slash, or an empty string on failure.
 	 */
@@ -83,7 +83,7 @@ class Helpers {
 	/**
 	 * Get the uploads base URL, without the year/month subdirectory.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return string URL with no trailing slash, or an empty string on failure.
 	 */
@@ -104,7 +104,7 @@ class Helpers {
 	 * served over HTTPS still resolves content saved with an HTTP base URL. URLs
 	 * outside the uploads directory return an empty string.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $url Image URL.
 	 * @return string Absolute path, or an empty string when the URL is not local.
@@ -149,7 +149,7 @@ class Helpers {
 	/**
 	 * Convert an absolute file path inside the uploads directory to a URL.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $path Absolute file path.
 	 * @return string URL, or an empty string when the path is outside the uploads directory.
@@ -176,7 +176,7 @@ class Helpers {
 	/**
 	 * Strip traversal segments from a relative path.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $relative Relative path.
 	 * @return string Sanitised relative path.
@@ -197,7 +197,7 @@ class Helpers {
 	 *
 	 * Default is append (`photo.jpg` → `photo.jpg.webp`); see the `sidecar_naming` setting.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $file   Absolute path or filename of the source image.
 	 * @param string $format Target format slug.
@@ -212,7 +212,7 @@ class Helpers {
 	 *
 	 * Shared by `sidecar_path()` and `Resolver::resolve()` so a file and its URL always agree.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $path   Absolute path, filename, or URL path.
 	 * @param string $format Target format slug.
@@ -229,7 +229,7 @@ class Helpers {
 	/**
 	 * Get the PHP memory limit in bytes.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return int Memory limit in bytes. `0` means unlimited.
 	 */
@@ -251,7 +251,7 @@ class Helpers {
 	 * Both Imagick and GD hold a decoded bitmap in memory at roughly four bytes
 	 * per pixel. A multiplier covers the intermediate copies made while encoding.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $width  Image width in pixels.
 	 * @param int $height Image height in pixels.
@@ -268,7 +268,7 @@ class Helpers {
 		/**
 		 * Filter the multiplier applied to the estimated bitmap size.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param float $multiplier Multiplier applied to width * height * 4 bytes.
 		 */
@@ -283,7 +283,7 @@ class Helpers {
 	/**
 	 * Determine whether a GIF file contains more than one frame.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $file Absolute path to the file.
 	 * @return bool True when the GIF is animated.
@@ -316,7 +316,7 @@ class Helpers {
 	/**
 	 * Format a byte count for display.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param int $bytes Number of bytes.
 	 * @return string Human readable size.
@@ -328,7 +328,7 @@ class Helpers {
 	/**
 	 * Delete a file through the WordPress filesystem hooks.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $file Absolute path to the file.
 	 * @return bool True when the file no longer exists.

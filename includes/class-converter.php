@@ -21,7 +21,7 @@ if ( ! defined( 'WPINC' ) ) {
  * so `photo.jpg` gains `photo.jpg.webp`. Nothing about the original file is
  * modified: every conversion here is additive and reversible.
  *
- * @since 1.0.0
+ * @since 0.9.0
  */
 class Converter {
 
@@ -29,7 +29,7 @@ class Converter {
 	/**
 	 * Resolve the conversion arguments, layering overrides over the settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<string, mixed> $overrides Argument overrides.
 	 * @return array<string, mixed> Arguments.
@@ -58,7 +58,7 @@ class Converter {
 		/**
 		 * Filter the conversion arguments.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param array<string, mixed> $args      Conversion arguments.
 		 * @param array<string, mixed> $overrides Overrides supplied by the caller.
@@ -72,7 +72,7 @@ class Converter {
 	 * The true original kept aside by the big-image threshold is deliberately
 	 * skipped: WordPress never serves it, so a sidecar for it is wasted disk.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int                       $attachment_id Attachment ID.
 	 * @param  array<string, mixed>      $overrides     Argument overrides.
@@ -165,7 +165,7 @@ class Converter {
 		/**
 		 * Fires after an attachment has been processed.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param int                  $attachment_id Attachment ID.
 		 * @param array<string, mixed> $summary       Conversion summary.
@@ -179,7 +179,7 @@ class Converter {
 	/**
 	 * Convert one source file into every requested format.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string               $path     Absolute path to the source image.
 	 * @param  array<string, mixed> $args     Conversion arguments.
@@ -280,7 +280,7 @@ class Converter {
 	/**
 	 * List the deliverable files belonging to an attachment.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int                       $attachment_id Attachment ID.
 	 * @param  array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
@@ -332,7 +332,7 @@ class Converter {
 	/**
 	 * Apply the source MIME allow-list and the exclusion filter to a file list.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  array<string, string> $files         Basename to absolute path.
 	 * @param  int                   $attachment_id Attachment ID.
@@ -348,7 +348,7 @@ class Converter {
 		/**
 		 * Filter the files that will be converted for an attachment.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param array<string, string> $files         Basename to absolute path.
 		 * @param int                   $attachment_id Attachment ID.
@@ -362,7 +362,7 @@ class Converter {
 	 * Matching is done against the path relative to the uploads directory so
 	 * that a fragment such as `2019/07` behaves the same on every install.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $path Absolute file path.
 	 * @return bool True when the file should be left alone.
@@ -400,7 +400,7 @@ class Converter {
 		/**
 		 * Filter whether a file is excluded from conversion.
 		 *
-		 * @since 1.0.0
+		 * @since 0.9.0
 		 *
 		 * @param bool   $excluded Whether the file is excluded.
 		 * @param string $path     Absolute file path.
@@ -411,7 +411,7 @@ class Converter {
 	/**
 	 * Get the image sizes selected in the settings.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @return array<int, string>|null Size names, or null when every size is enabled.
 	 */
@@ -428,7 +428,7 @@ class Converter {
 	/**
 	 * Whether an attachment is an image the plugin can convert.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return bool True when convertible.
@@ -446,7 +446,7 @@ class Converter {
 	/**
 	 * Read the MIME type of a file from its contents.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  string $path Absolute file path.
 	 * @return string MIME type, or an empty string when it cannot be determined.
@@ -464,7 +464,7 @@ class Converter {
 	/**
 	 * Delete every sidecar belonging to an attachment and clear its record.
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return int Number of files deleted.
