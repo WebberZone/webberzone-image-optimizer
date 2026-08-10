@@ -21,12 +21,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * The Bulk Optimize screen and the AJAX endpoints that drive it.
- *
- * The browser drives the run one batch at a time rather than in a single long
- * request, so a large library cannot trip the PHP time limit, and closing the
- * tab loses nothing: the queue is in the database and the background worker
- * picks up where the screen left off.
+ * Provides the resumable Bulk Optimize screen and AJAX endpoints.
  *
  * @since 0.9.0
  */
@@ -55,8 +50,7 @@ class Bulk_Page {
 	 * @since 0.9.0
 	 */
 	public function __construct() {
-		// The settings screen registers its menu at priority 11, so this runs
-		// after it and lands below it in the Media menu.
+		// Run after the settings menu so this item appears below it.
 		Hook_Registry::add_action( 'admin_menu', array( $this, 'register_page' ), 12 );
 		Hook_Registry::add_action( 'wp_ajax_wzio_bulk_scan', array( $this, 'ajax_scan' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_bulk_step', array( $this, 'ajax_step' ) );

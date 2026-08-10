@@ -12,11 +12,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Row operations on the conversion queue.
- *
- * One row per attachment rather than per file: the converter always processes
- * an attachment's scaled original and every sub-size together, and a per-file
- * queue would be an order of magnitude larger for no extra resolution.
+ * Manages one queue row per attachment and its files.
  *
  * @since 0.9.0
  */
@@ -72,10 +68,7 @@ class Queue {
 	const MAX_ATTEMPTS = 3;
 
 	/**
-	 * Add attachments to the queue.
-	 *
-	 * Attachments already queued are reset to pending only when `$force` is set,
-	 * so re-running a scan does not undo completed work.
+	 * Add attachments, resetting existing rows only when forced.
 	 *
 	 * @since 0.9.0
 	 *
@@ -151,10 +144,7 @@ class Queue {
 
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 
-		// The status guard makes the claim safe under concurrency: InnoDB
-		// serialises concurrent UPDATEs on the same rows, so a second worker
-		// that selected the same IDs finds them already PROCESSING and its
-		// UPDATE affects zero rows.
+		// The status guard lets only the first concurrent InnoDB update claim rows.
 		$claimed = $wpdb->query(
 			$wpdb->prepare(
 				"UPDATE `{$table}` SET status = %s, updated = %s WHERE id IN ({$placeholders}) AND status = %s",
@@ -337,10 +327,7 @@ class Queue {
 	}
 
 	/**
-	 * Return rows stuck in processing to the pending pool.
-	 *
-	 * A worker killed by a fatal error or a timeout leaves its rows claimed
-	 * forever, which would silently stall the queue.
+	 * Requeue stale claims left by terminated workers.
 	 *
 	 * @since 0.9.0
 	 *
@@ -498,10 +485,7 @@ class Queue {
 	}
 
 	/**
-	 * Remove attachments that are still awaiting conversion.
-	 *
-	 * Completed rows are retained because they provide the final conversion
-	 * totals displayed on the bulk optimization screen.
+	 * Remove pending claims while retaining completed totals.
 	 *
 	 * @since 0.9.0
 	 *

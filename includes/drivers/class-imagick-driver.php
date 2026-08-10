@@ -14,10 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Converts images using the Imagick extension.
- *
- * Imagick is preferred over GD: it encodes AVIF, keeps animated frames, and
- * exposes the encoder tuning options that make the output competitive.
+ * Converts images, including animations, with the preferred Imagick extension.
  *
  * @since 0.9.0
  */
@@ -54,11 +51,7 @@ class Imagick_Driver extends Driver {
 	}
 
 	/**
-	 * Whether Imagick can encode the given format.
-	 *
-	 * `queryFormats()` reports registered delegates, which is necessary but not
-	 * sufficient — the delegate may still fail at encode time. Treat this as a
-	 * fast pre-filter; {@see Capabilities} performs the real encode probe.
+	 * Whether Imagick reports the format; capability probes verify actual encoding.
 	 *
 	 * @since 0.9.0
 	 *
@@ -101,10 +94,7 @@ class Imagick_Driver extends Driver {
 	public function convert( string $source, string $destination, string $format, array $args ) {
 		$args = $this->parse_args( $args );
 
-		// Scale AVIF effort down for large images: a 24 MP photo at effort 6
-		// can lock up a PHP worker for 30+ seconds with almost no visual gain
-		// over effort 3 at that scale. The user's configured effort is respected
-		// for normal-sized images; megapixel bands step it back progressively.
+		// Reduce AVIF effort by megapixel bands to bound large-image encoding time.
 		if ( 'avif' === $format && isset( $args['dims'] ) ) {
 			$mp = (int) ( ( $args['dims']['width'] * $args['dims']['height'] ) / 1_000_000 );
 
@@ -122,16 +112,7 @@ class Imagick_Driver extends Driver {
 			function ( string $temp ) use ( $source, $format, $args ): bool {
 				$image = new \Imagick();
 
-				// Bound per-encode time. Most images finish well under this,
-				// but a pathological large encode at high effort should not
-				// exhaust the entire worker lifecycle.
-				if ( function_exists( 'set_time_limit' ) ) {
-					set_time_limit( 60 );
-				}
-
-				// Limit Imagick to one thread. Multi-threaded encoding can
-				// saturate a shared host; a single thread per image gives
-				// predictable memory use and leaves CPU for other processes.
+				// Limit Imagick to one thread for predictable shared-host resource use.
 				try {
 					\Imagick::setResourceLimit( \Imagick::RESOURCETYPE_THREAD, 1 );
 				} catch ( \Throwable $e ) {
@@ -147,8 +128,7 @@ class Imagick_Driver extends Driver {
 						$image = $image->coalesceImages();
 					}
 
-					// Keep the colour profile so conversion does not shift colours,
-					// but drop EXIF, IPTC and thumbnails.
+					// Preserve colour profiles while stripping other metadata.
 					$profiles = array();
 
 					if ( $args['strip'] ) {

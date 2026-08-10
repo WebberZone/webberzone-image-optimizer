@@ -14,17 +14,9 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Answers "is there an optimized copy of this URL?" quickly and repeatedly.
+ * Resolves sidecars by URL with request and object caching.
  *
- * The delivery layer cannot rely on attachment metadata alone. `wp_content_img_tag`
- * only knows an attachment ID when the markup carries a `wp-image-{ID}` class,
- * and content written by other editors, older posts and many page builders does
- * not. So the lookup is keyed on the URL, backed by a request-level cache and
- * the object cache, and only touches the filesystem on a genuine miss.
- *
- * A sidecar that came out no smaller than its source is deleted rather than
- * kept, which is what makes `file_exists()` the single, self-consistent answer:
- * if the file is there, serving it is always the right call.
+ * File existence is authoritative because unusable sidecars are deleted.
  *
  * @since 0.9.0
  */
@@ -47,10 +39,7 @@ class Resolver {
 	const HIT_TTL = DAY_IN_SECONDS;
 
 	/**
-	 * How long a negative result is trusted.
-	 *
-	 * Short, because a miss becomes a hit as soon as the queue reaches that
-	 * image, and nobody wants to wait a day to see the result of a bulk run.
+	 * How long a negative result is trusted before queued conversion may complete.
 	 *
 	 * @since 0.9.0
 	 * @var int
@@ -81,15 +70,11 @@ class Resolver {
 			return '';
 		}
 
-		// Split the URL at the first query string or fragment so the extension
-		// is appended to the filename, not after the query string. A cache-busted
-		// URL like `photo.jpg?v=1` must become `photo.jpg.webp?v=1`, not
-		// `photo.jpg?v=1.webp` — the latter points back at the original file.
+		// Append the extension before any query string or fragment.
 		$url_path = substr( $url, 0, strcspn( $url, '?#' ) );
 		$url_tail = substr( $url, strlen( $url_path ) );
 
-		// Include the resolved sidecar path so changing the naming strategy cannot
-		// reuse an existence result for a different file.
+		// Key by sidecar path to isolate naming strategies.
 		$key = $format . ':' . Helpers::sidecar_path( $path, $format );
 
 		if ( isset( self::$memo[ $key ] ) ) {
@@ -141,11 +126,7 @@ class Resolver {
 	}
 
 	/**
-	 * Forget cached existence results for a source file.
-	 *
-	 * Conversion and deletion can create or remove a sidecar between requests.
-	 * The positive cache is deliberately long-lived, so those writers must clear
-	 * it or delivery could point browsers at a file that no longer exists.
+	 * Invalidate cached existence after sidecar creation or deletion.
 	 *
 	 * @since 0.9.0
 	 *

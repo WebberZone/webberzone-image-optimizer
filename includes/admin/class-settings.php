@@ -19,7 +19,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Class to register the settings.
+ * Registers plugin settings.
  *
  * @since 0.9.0
  */

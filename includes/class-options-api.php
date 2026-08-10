@@ -45,9 +45,7 @@ class Options_API {
 	private static $settings;
 
 	/**
-	 * Get Settings.
-	 *
-	 * Retrieves all plugin settings
+	 * Get all plugin settings.
 	 *
 	 * @since 0.9.0
 	 * @return array WebberZone Image Optimizer settings
@@ -73,9 +71,7 @@ class Options_API {
 	}
 
 	/**
-	 * Get an option
-	 *
-	 * Looks to see if the specified setting exists, returns default if not
+	 * Get an option or its default.
 	 *
 	 * @since 0.9.0
 	 *
@@ -121,11 +117,7 @@ class Options_API {
 	}
 
 	/**
-	 * Update an option
-	 *
-	 * Updates a setting value in both the db and the global variable.
-	 * Warning: Passing in an empty, false or null string value will remove
-	 *        the key from the settings array.
+	 * Update an option and the in-request cache.
 	 *
 	 * @since 0.9.0
 	 *
@@ -181,9 +173,7 @@ class Options_API {
 	}
 
 	/**
-	 * Remove an option
-	 *
-	 * Removes a WebberZone Image Optimizer setting value in both the db and the static variable.
+	 * Remove an option and update the in-request cache.
 	 *
 	 * @since 0.9.0
 	 *

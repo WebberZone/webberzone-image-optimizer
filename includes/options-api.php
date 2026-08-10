@@ -10,15 +10,13 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-// Include the Options_API class if not already loaded.
+// Load the Options API when needed.
 if ( ! class_exists( '\WebberZone\Image_Optimizer\Options_API' ) ) {
 	require_once __DIR__ . '/class-options-api.php';
 }
 
 /**
- * Get Settings.
- *
- * Retrieves all plugin settings
+ * Get all plugin settings.
  *
  * @since 0.9.0
  * @return array Settings
@@ -28,9 +26,7 @@ function wzio_get_settings() {
 }
 
 /**
- * Get an option.
- *
- * Looks to see if the specified setting exists and returns the default value if it doesn't.
+ * Get an option or its default.
  *
  * @since 0.9.0
  *
@@ -44,11 +40,7 @@ function wzio_get_option( $key = '', $default_value = null ) {
 }
 
 /**
- * Update an option
- *
- * Updates a setting value in both the db and the global variable.
- * Warning: Passing in an empty, false or null string value will remove
- *        the key from the wzio_settings array.
+ * Update an option.
  *
  * @since 0.9.0
  *
@@ -61,9 +53,7 @@ function wzio_update_option( $key = '', $value = false ) {
 }
 
 /**
- * Remove an option
- *
- * Removes a setting value in both the db and the global variable.
+ * Remove an option.
  *
  * @since 0.9.0
  *

@@ -22,10 +22,7 @@ if ( ! defined( 'WPINC' ) ) {
 class Deactivator {
 
 	/**
-	 * Stop the background worker.
-	 *
-	 * Nothing is deleted here. Deactivation should be reversible, and the
-	 * generated files simply stop being served the moment the plugin is off.
+	 * Stop background work without deleting generated files.
 	 *
 	 * @since 0.9.0
 	 *

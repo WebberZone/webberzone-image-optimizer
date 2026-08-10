@@ -42,8 +42,7 @@ class Activator {
 			self::seed_settings();
 		}
 
-		// Probe the encoders now so the settings screen can tell the
-		// administrator which formats this server can actually produce.
+		// Probe now so settings can report supported formats.
 		Capabilities::get( true );
 	}
 
@@ -63,8 +62,7 @@ class Activator {
 
 		$defaults = Settings::settings_defaults();
 
-		// Offer only what this server can encode. Defaulting to a format that
-		// always fails would fill the queue with errors on first run.
+		// Default only to formats this server can encode.
 		$supported = Capabilities::get_supported_formats();
 
 		if ( ! empty( $supported ) ) {

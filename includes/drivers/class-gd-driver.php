@@ -12,10 +12,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Converts images using the GD extension.
- *
- * GD is the fallback for hosts without Imagick. It cannot preserve animation,
- * so animated GIFs are rejected rather than silently flattened to one frame.
+ * Converts static images with the fallback GD extension.
  *
  * @since 0.9.0
  */
@@ -119,9 +116,7 @@ class GD_Driver extends Driver {
 					$lossless = defined( 'IMG_WEBP_LOSSLESS' ) ? constant( 'IMG_WEBP_LOSSLESS' ) : 101;
 					$quality  = $args['lossless'] ? $lossless : $args['quality'];
 
-					// The image is released when this closure returns and the last
-					// reference to it goes away, on both the PHP 7 resource and the
-					// PHP 8 GdImage. imagedestroy() is deprecated from PHP 8.5.
+					// The PHP 7 resource or PHP 8 GdImage is released with the closure.
 					return imagewebp( $image, $temp, $quality );
 				}
 
