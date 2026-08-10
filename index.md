@@ -16,7 +16,77 @@ permalink: /
 </div>
 
 <div class="home-section">
+  <div class="eyebrow">How it works</div>
+  <h2 class="section-title" style="margin-bottom:8px;">Three steps, all on your own server</h2>
+  <p style="color:var(--wz-warm-grey); max-width:64ch;">There's no dashboard to sign into and no image to upload anywhere else. The plugin runs inside WordPress using the image libraries your host already gave you.</p>
+
+  <div class="steps-grid">
+    <div class="step">
+      <h3>Test what your server can actually do</h3>
+      <p>At activation, the plugin encodes a small bundled image with GD and Imagick rather than trusting what the extension claims to support. It caches which formats really work, so AVIF is only offered when it will succeed.</p>
+    </div>
+    <div class="step">
+      <h3>Convert without touching the original</h3>
+      <p>New uploads convert automatically; existing libraries convert through a resumable, database-backed queue. Each result is written next to the source as a sidecar file &mdash; <code>photo.jpg</code> gains <code>photo.jpg.webp</code> &mdash; and a copy that isn't actually smaller is discarded.</p>
+    </div>
+    <div class="step">
+      <h3>Let the browser choose, safely</h3>
+      <p>Every image is wrapped in a <code>&lt;picture&gt;</code> element listing the available formats. The browser picks the one it supports, so the HTML is identical for every visitor and every cache layer &mdash; page cache, CDN, proxy &mdash; can cache it without any special configuration.</p>
+    </div>
+  </div>
+</div>
+
+<div class="home-section" style="padding-top:0;">
   <div class="eyebrow">Why it's different</div>
+  <h2 class="section-title" style="margin-bottom:8px;">Not a cloud service, and not an Accept-header hack</h2>
+  <p style="color:var(--wz-warm-grey); max-width:64ch;">Most image optimization plugins either ship your media to a third-party API, or rewrite delivery based on the browser's <code>Accept</code> header. Both come with trade-offs this plugin avoids.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Image Optimizer</th>
+        <th>Cloud optimization services</th>
+        <th>Accept-header rewriting</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Where images go</td>
+        <td class="wz-yes">Never leave your server</td>
+        <td>Uploaded to a third-party API</td>
+        <td>Never leave your server</td>
+      </tr>
+      <tr>
+        <td>Account / API key</td>
+        <td class="wz-yes">None required</td>
+        <td>Required, usually metered</td>
+        <td>Varies</td>
+      </tr>
+      <tr>
+        <td>Ongoing cost</td>
+        <td class="wz-yes">Free, no quota</td>
+        <td>Monthly quota or subscription</td>
+        <td>Free</td>
+      </tr>
+      <tr>
+        <td>Behind a CDN or page cache</td>
+        <td class="wz-yes">Safe &mdash; same HTML for everyone</td>
+        <td>Depends on provider</td>
+        <td>Risky unless every cache layer honors <code>Vary: Accept</code></td>
+      </tr>
+      <tr>
+        <td>If the service disappears</td>
+        <td class="wz-yes">Nothing to lose &mdash; it's not a service</td>
+        <td>Optimized images can stop being served</td>
+        <td>N/A</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="home-section" style="padding-top:0;">
+  <div class="eyebrow">Everything included</div>
   <h2 class="section-title" style="margin-bottom:8px;">Runs entirely on your server</h2>
   <p style="color:var(--wz-warm-grey); max-width:64ch;">Your images are never uploaded anywhere. The plugin makes no outbound network requests of any kind &mdash; no external service, no API key, no monthly image quota, no account to create, and nothing that can stop working because a company shut down or changed its pricing.</p>
 
