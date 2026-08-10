@@ -406,6 +406,33 @@ class Queue {
 	}
 
 	/**
+	 * Remove attachments that are still awaiting conversion.
+	 *
+	 * Completed rows are retained because they provide the final conversion
+	 * totals displayed on the bulk optimization screen.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	public static function clear_pending(): void {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return;
+		}
+
+		$table = Database::get_table();
+
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->delete( $table, array( 'status' => self::PENDING ), array( '%s' ) );
+     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->delete( $table, array( 'status' => self::PROCESSING ), array( '%s' ) );
+
+		self::flush_counts();
+	}
+
+	/**
 	 * Get the most recent failures.
 	 *
 	 * @since 1.0.0
