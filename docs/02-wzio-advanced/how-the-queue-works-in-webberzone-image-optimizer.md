@@ -50,7 +50,9 @@ A row stuck in `processing` for more than 10 minutes — a worker killed by a fa
 
 ## Clearing the queue
 
-**Clear queue** on the Bulk Optimize screen, or `wp wzio clean`, empties the table. Images that already have optimized copies stay optimized — clearing the queue only discards pending/failed rows, it does not delete any generated files.
+**Clear queue** on the Bulk Optimize screen removes pending and in-progress rows. Completed rows are kept so the **Bandwidth saved** totals on the bulk screen survive the reset — the queue can be cleared without losing the record of what was already saved. Images that already have optimized copies stay optimized; clearing the queue only discards rows that have not finished, it does not delete any generated files.
+
+Running `wp wzio clean` without attachment IDs empties the entire queue table (all rows) and deletes every generated sidecar file — a full reset. `wp wzio clean 7214` removes the row for a single attachment and its generated files.
 
 ## See also
 

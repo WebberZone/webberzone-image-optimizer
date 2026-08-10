@@ -26,6 +26,9 @@ Leave every box unchecked to convert all sizes, which is what you want unless di
 **Minimum saving (%)**
 Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. Default: `5`. Range: `0`–`90`.
 
+**Optimized file naming**
+Controls how the generated WebP/AVIF file is named. **Append the new extension** (`photo.jpg.webp`) is the safe default — every file has a unique name and nothing can collide. **Replace the extension** (`photo.webp`) produces shorter filenames but can collide if the same folder contains both `photo.jpg` and `photo.png`, silently overwriting one optimized copy with the other. Only choose Replace if you are sure your uploads never share a filename across extensions. Default: `append`.
+
 ## Quality
 
 **WebP quality**
@@ -41,7 +44,7 @@ Between 0 and 6. Default: `6`. Higher values spend more CPU time searching for a
 Remove EXIF, GPS and embedded thumbnails from the optimized copies. The color profile is always kept, so colors will not shift. Your original files are never modified either way. Default: on.
 
 **Lossless for PNG sources**
-Encode PNG sources without any quality loss. Right for logos, screenshots and line art; produces much larger files for photographs saved as PNG. Default: off.
+Encode PNG sources without any quality loss. Right for logos, screenshots and line art; produces much larger files for photographs saved as PNG. Default: on.
 
 ## Delivery
 
@@ -60,7 +63,7 @@ Catch images printed directly by a page builder or a hard-coded template by buff
 **CSS background images**
 The Delivery tab generates ready-to-paste Apache and nginx rules for images referenced from a stylesheet, where the browser is never offered a choice by the plugin itself. Both blocks send a `Vary: Accept` header — do not remove it, or a CDN or page cache can hand a WebP file to a browser that cannot display it.
 
-* **Apache or LiteSpeed** — add the generated block above the WordPress rules in `.htaccess`.
+* **Apache or LiteSpeed** — if the `.htaccess` file is writable by PHP, use the **Add to .htaccess** / **Remove from .htaccess** buttons to install the rules with one click. If the file is not writable, copy the generated block above the WordPress rules in `.htaccess` by hand.
 * **nginx** — add the generated block to your server configuration and reload.
 
 ## Advanced

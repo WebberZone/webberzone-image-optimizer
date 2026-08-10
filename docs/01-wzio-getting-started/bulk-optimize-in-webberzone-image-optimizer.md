@@ -23,9 +23,9 @@ Four cards summarize your library:
 * **Images in the library** — total convertible attachments.
 * **Already optimized** — attachments with at least one generated file.
 * **Waiting in the queue** — attachments still pending.
-* **Bandwidth saved** — total bytes saved across every optimized copy.
+* **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
 
-**Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** empties the queue — images already optimized stay optimized. The **Re-optimize images that are already done** checkbox forces every image to be re-encoded on the next run, even ones with an up-to-date copy.
+**Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress — completed rows are kept so the **Bandwidth saved** totals survive the reset. The **Re-optimize images that are already done** checkbox forces every image to be re-encoded on the next run, even ones with an up-to-date copy.
 
 ## Failures
 
