@@ -25,6 +25,7 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Settings {
 
+
 	/**
 	 * Settings API.
 	 *
@@ -76,6 +77,89 @@ class Settings {
 		Hook_Registry::add_filter( 'plugin_action_links_' . plugin_basename( WZIO_PLUGIN_FILE ), array( $this, 'plugin_actions_links' ) );
 
 		Hook_Registry::add_filter( self::$prefix . '_settings_sanitize', array( $this, 'change_settings_on_save' ), 99 );
+
+		Hook_Registry::add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_htaccess_assets' ) );
+		Hook_Registry::add_action( 'wp_ajax_wzio_install_htaccess', array( $this, 'ajax_install_htaccess' ) );
+		Hook_Registry::add_action( 'wp_ajax_wzio_remove_htaccess', array( $this, 'ajax_remove_htaccess' ) );
+	}
+
+	/**
+	 * Enqueue the .htaccess install/remove button script on the settings screen.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param  string $hook_suffix Current admin page.
+	 * @return void
+	 */
+	public function enqueue_htaccess_assets( $hook_suffix ): void {
+		if ( 'media_page_' . $this->menu_slug !== $hook_suffix ) {
+			return;
+		}
+
+		$minimize = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+
+		wp_enqueue_script(
+			'wzio-htaccess',
+			WZIO_PLUGIN_URL . 'includes/admin/js/htaccess' . $minimize . '.js',
+			array(),
+			WZIO_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'wzio-htaccess',
+			'wzioHtaccess',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'strings' => array(
+					'installed' => esc_html__( 'Currently installed.', 'webberzone-image-optimizer' ),
+					'working'   => esc_html__( 'Working…', 'webberzone-image-optimizer' ),
+					'error'     => esc_html__( 'Something went wrong. Add the block by hand instead.', 'webberzone-image-optimizer' ),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Write the Apache rules into `.htaccess`.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	public function ajax_install_htaccess(): void {
+		check_ajax_referer( 'wzio_htaccess', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'webberzone-image-optimizer' ) ), 403 );
+		}
+
+		if ( ! Server_Rules::install_apache_rules() ) {
+			wp_send_json_error( array( 'message' => __( 'Could not write to .htaccess. Add the block above by hand instead.', 'webberzone-image-optimizer' ) ) );
+		}
+
+		wp_send_json_success();
+	}
+
+	/**
+	 * Remove this plugin's block from `.htaccess`.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	public function ajax_remove_htaccess(): void {
+		check_ajax_referer( 'wzio_htaccess', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to do this.', 'webberzone-image-optimizer' ) ), 403 );
+		}
+
+		if ( ! Server_Rules::remove_apache_rules() ) {
+			wp_send_json_error( array( 'message' => __( 'Could not update .htaccess. Remove the block by hand instead.', 'webberzone-image-optimizer' ) ) );
+		}
+
+		wp_send_json_success();
 	}
 
 	/**
@@ -292,6 +376,17 @@ class Settings {
 				'max'     => 90,
 				'size'    => 'small',
 			),
+			'sidecar_naming'    => array(
+				'id'      => 'sidecar_naming',
+				'name'    => esc_html__( 'Optimized file naming', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Append keeps the original extension and adds the new one, e.g. photo.jpg.webp — this is the safe default. Replace produces photo.webp instead, but if a folder ever contains both photo.jpg and photo.png, their optimized copies would collide on the same photo.webp file and one would silently overwrite the other. Only choose Replace if you are sure your uploads never share a filename across extensions.', 'webberzone-image-optimizer' ),
+				'type'    => 'radio',
+				'default' => 'append',
+				'options' => array(
+					'append'  => esc_html__( 'Append the new extension (photo.jpg.webp) — safe', 'webberzone-image-optimizer' ),
+					'replace' => esc_html__( 'Replace the extension (photo.webp) — can collide', 'webberzone-image-optimizer' ),
+				),
+			),
 		);
 
 		return apply_filters( self::$prefix . '_settings_general', $settings ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
@@ -348,7 +443,7 @@ class Settings {
 				'name'    => esc_html__( 'Lossless for PNG sources', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Encode PNG sources without any quality loss. This is the right choice for logos, screenshots and line art, but produces much larger files for photographs saved as PNG.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => false,
+				'default' => true,
 			),
 		);
 
@@ -513,7 +608,7 @@ class Settings {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $settings Settings array.
+	 * @param  array $settings Settings array.
 	 * @return array Modified settings array.
 	 */
 	public function change_settings_on_save( $settings ) {
@@ -537,9 +632,9 @@ class Settings {
 	 */
 	public function get_help_sidebar() {
 		$help_sidebar =
-			'<p><strong>' . esc_html__( 'For more information:', 'webberzone-image-optimizer' ) . '</strong></p>' .
-			'<p><a href="https://webberzone.github.io/webberzone-image-optimizer/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Plugin Homepage', 'webberzone-image-optimizer' ) . '</a></p>' .
-			'<p><a href="https://webberzone.com/support/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Support', 'webberzone-image-optimizer' ) . '</a></p>';
+		'<p><strong>' . esc_html__( 'For more information:', 'webberzone-image-optimizer' ) . '</strong></p>' .
+		'<p><a href="https://webberzone.github.io/webberzone-image-optimizer/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Plugin Homepage', 'webberzone-image-optimizer' ) . '</a></p>' .
+		'<p><a href="https://webberzone.com/support/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Support', 'webberzone-image-optimizer' ) . '</a></p>';
 
 		return apply_filters( self::$prefix . '_settings_help_sidebar', $help_sidebar ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 	}
@@ -557,14 +652,14 @@ class Settings {
 				'id'      => 'wzio-settings-general',
 				'title'   => esc_html__( 'General', 'webberzone-image-optimizer' ),
 				'content' =>
-					'<p>' . esc_html__( 'The plugin never modifies or replaces your original images. Each converted copy is written alongside the original with the new extension appended, so photo.jpg gains photo.jpg.webp.', 'webberzone-image-optimizer' ) . '</p>' .
-					'<p>' . esc_html__( 'Turning the plugin off, or deactivating it, immediately returns your site to serving the original files.', 'webberzone-image-optimizer' ) . '</p>',
+				'<p>' . esc_html__( 'The plugin never modifies or replaces your original images. Each converted copy is written alongside the original with the new extension appended, so photo.jpg gains photo.jpg.webp.', 'webberzone-image-optimizer' ) . '</p>' .
+				'<p>' . esc_html__( 'Turning the plugin off, or deactivating it, immediately returns your site to serving the original files.', 'webberzone-image-optimizer' ) . '</p>',
 			),
 			array(
 				'id'      => 'wzio-settings-bulk',
 				'title'   => esc_html__( 'Bulk conversion', 'webberzone-image-optimizer' ),
 				'content' =>
-					'<p>' . esc_html__( 'Existing images are converted from the Bulk Optimize screen under the Media menu. The run is resumable: you can close the page and come back, and nothing is converted twice.', 'webberzone-image-optimizer' ) . '</p>',
+							'<p>' . esc_html__( 'Existing images are converted from the Bulk Optimize screen under the Media menu. The run is resumable: you can close the page and come back, and nothing is converted twice.', 'webberzone-image-optimizer' ) . '</p>',
 			),
 		);
 
@@ -580,7 +675,7 @@ class Settings {
 	 */
 	public function get_admin_footer_text() {
 		return sprintf(
-			/* translators: 1: Plugin homepage link, 2: GitHub repository link */
+		/* translators: 1: Plugin homepage link, 2: GitHub repository link */
 			__( 'Thank you for using <a href="%1$s" target="_blank" rel="noopener noreferrer">WebberZone Image Optimizer</a>! Please <a href="%2$s" target="_blank" rel="noopener noreferrer">star us</a> on GitHub', 'webberzone-image-optimizer' ),
 			'https://webberzone.github.io/webberzone-image-optimizer/',
 			'https://github.com/WebberZone/webberzone-image-optimizer'
@@ -592,7 +687,7 @@ class Settings {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array $links Array of links.
+	 * @param  array $links Array of links.
 	 * @return array Modified array of links.
 	 */
 	public function plugin_actions_links( $links ) {
@@ -610,8 +705,8 @@ class Settings {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array  $links Array of links.
-	 * @param string $file  Plugin file.
+	 * @param  array  $links Array of links.
+	 * @param  string $file  Plugin file.
 	 * @return array Modified array of links.
 	 */
 	public function plugin_row_meta( $links, $file ) {

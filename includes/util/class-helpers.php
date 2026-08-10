@@ -195,9 +195,7 @@ class Helpers {
 	/**
 	 * Build the sidecar path for a source file and target format.
 	 *
-	 * The target extension is appended rather than replacing the original, so
-	 * `photo.jpg` becomes `photo.jpg.webp`. This keeps `photo.jpg` and
-	 * `photo.png` from colliding on a single sidecar in the same directory.
+	 * Default is append (`photo.jpg` → `photo.jpg.webp`); see the `sidecar_naming` setting.
 	 *
 	 * @since 1.0.0
 	 *
@@ -206,7 +204,26 @@ class Helpers {
 	 * @return string Sidecar path or filename.
 	 */
 	public static function sidecar_path( string $file, string $format ): string {
-		return $file . '.' . $format;
+		return self::apply_sidecar_naming( $file, $format );
+	}
+
+	/**
+	 * Apply the `sidecar_naming` setting to any extension-bearing string.
+	 *
+	 * Shared by `sidecar_path()` and `Resolver::resolve()` so a file and its URL always agree.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $path   Absolute path, filename, or URL path.
+	 * @param string $format Target format slug.
+	 * @return string Path or URL with the sidecar naming applied.
+	 */
+	public static function apply_sidecar_naming( string $path, string $format ): string {
+		if ( 'replace' === \wzio_get_option( 'sidecar_naming', 'append' ) ) {
+			return (string) preg_replace( '/\.[^.\/\\\\]+$/', '', $path ) . '.' . $format;
+		}
+
+		return $path . '.' . $format;
 	}
 
 	/**

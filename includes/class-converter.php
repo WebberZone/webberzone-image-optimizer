@@ -24,12 +24,13 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Converter {
 
+
 	/**
 	 * Resolve the conversion arguments, layering overrides over the settings.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, mixed> $overrides Argument overrides.
+	 * @param  array<string, mixed> $overrides Argument overrides.
 	 * @return array<string, mixed> Arguments.
 	 */
 	public static function get_args( array $overrides = array() ): array {
@@ -72,10 +73,10 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int                       $attachment_id Attachment ID.
-	 * @param array<string, mixed>      $overrides     Argument overrides.
-	 * @param array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
-	 * @return array{files: int, converted: int, skipped: int, failed: int, saved: int, errors: array<int, string>}|\WP_Error Summary or error.
+	 * @param  int                       $attachment_id Attachment ID.
+	 * @param  array<string, mixed>      $overrides     Argument overrides.
+	 * @param  array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
+	 * @return array{files: int, converted: int, skipped: int, failed: int, source: int, saved: int, errors: array<int, string>}|\WP_Error Summary or error.
 	 */
 	public static function convert_attachment( int $attachment_id, array $overrides = array(), ?array $meta = null ) {
 		if ( ! self::is_convertible_attachment( $attachment_id ) ) {
@@ -101,6 +102,7 @@ class Converter {
 			'converted' => 0,
 			'skipped'   => 0,
 			'failed'    => 0,
+			'source'    => 0,
 			'saved'     => 0,
 			'errors'    => array(),
 		);
@@ -133,7 +135,8 @@ class Converter {
 			}
 
 			if ( $best > 0 ) {
-				$summary['saved'] += max( 0, $source - $best );
+				$summary['source'] += $source;
+				$summary['saved']  += max( 0, $source - $best );
 			}
 		}
 
@@ -174,9 +177,9 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string               $path     Absolute path to the source image.
-	 * @param array<string, mixed> $args     Conversion arguments.
-	 * @param array<string, mixed> $existing Previous record for this file.
+	 * @param  string               $path     Absolute path to the source image.
+	 * @param  array<string, mixed> $args     Conversion arguments.
+	 * @param  array<string, mixed> $existing Previous record for this file.
 	 * @return array<string, mixed> File record.
 	 */
 	public static function convert_file( string $path, array $args, array $existing = array() ): array {
@@ -275,8 +278,8 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int                       $attachment_id Attachment ID.
-	 * @param array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
+	 * @param  int                       $attachment_id Attachment ID.
+	 * @param  array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
 	 * @return array<string, string> Basename to absolute path.
 	 */
 	public static function get_attachment_files( int $attachment_id, ?array $meta = null ): array {
@@ -327,8 +330,8 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param array<string, string> $files         Basename to absolute path.
-	 * @param int                   $attachment_id Attachment ID.
+	 * @param  array<string, string> $files         Basename to absolute path.
+	 * @param  int                   $attachment_id Attachment ID.
 	 * @return array<string, string> Filtered list.
 	 */
 	private static function filter_files( array $files, int $attachment_id ): array {
@@ -357,7 +360,7 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $path Absolute file path.
+	 * @param  string $path Absolute file path.
 	 * @return bool True when the file should be left alone.
 	 */
 	public static function is_excluded( string $path ): bool {
@@ -423,7 +426,7 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $attachment_id Attachment ID.
+	 * @param  int $attachment_id Attachment ID.
 	 * @return bool True when convertible.
 	 */
 	public static function is_convertible_attachment( int $attachment_id ): bool {
@@ -441,7 +444,7 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $path Absolute file path.
+	 * @param  string $path Absolute file path.
 	 * @return string MIME type, or an empty string when it cannot be determined.
 	 */
 	private static function get_mime_type( string $path ): string {
@@ -459,7 +462,7 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int $attachment_id Attachment ID.
+	 * @param  int $attachment_id Attachment ID.
 	 * @return int Number of files deleted.
 	 */
 	public static function delete_sidecars( int $attachment_id ): int {

@@ -91,7 +91,7 @@ class Resolver {
 		$key = $format . ':' . $path;
 
 		if ( isset( self::$memo[ $key ] ) ) {
-			return self::$memo[ $key ] ? $url_path . '.' . $format . $url_tail : '';
+			return self::$memo[ $key ] ? Helpers::apply_sidecar_naming( $url_path, $format ) . $url_tail : '';
 		}
 
 		$cache_key = md5( $key );
@@ -112,7 +112,7 @@ class Resolver {
 
 		self::$memo[ $key ] = $exists;
 
-		return $exists ? $url_path . '.' . $format . $url_tail : '';
+		return $exists ? Helpers::apply_sidecar_naming( $url_path, $format ) . $url_tail : '';
 	}
 
 	/**

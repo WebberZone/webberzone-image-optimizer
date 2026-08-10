@@ -190,9 +190,10 @@ class Queue {
 	 * @param  string $status New status.
 	 * @param  int    $saved  Bytes saved.
 	 * @param  string $error  Error message, if any.
+	 * @param  int    $source Total source bytes considered.
 	 * @return void
 	 */
-	public static function complete( int $id, string $status, int $saved = 0, string $error = '' ): void {
+	public static function complete( int $id, string $status, int $saved = 0, string $error = '', int $source = 0 ): void {
 		global $wpdb;
 
 		if ( ! Database::is_installed() ) {
@@ -229,13 +230,14 @@ class Queue {
 		$wpdb->update(
 			$table,
 			array(
-				'status'  => $status,
-				'saved'   => $saved,
-				'error'   => mb_substr( $error, 0, 250 ),
-				'updated' => current_time( 'mysql' ),
+				'status'       => $status,
+				'source_bytes' => $source,
+				'saved'        => $saved,
+				'error'        => mb_substr( $error, 0, 250 ),
+				'updated'      => current_time( 'mysql' ),
 			),
 			array( 'id' => $id ),
-			array( '%s', '%d', '%s', '%s' ),
+			array( '%s', '%d', '%d', '%s', '%s' ),
 			array( '%d' )
 		);
 
@@ -313,10 +315,11 @@ class Queue {
 		$table = Database::get_table();
 
      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-		$rows = $wpdb->get_results( "SELECT status, COUNT(*) AS num, SUM(saved) AS saved FROM `{$table}` GROUP BY status" );
+		$rows = $wpdb->get_results( "SELECT status, COUNT(*) AS num, SUM(saved) AS saved, SUM(source_bytes) AS source_bytes FROM `{$table}` GROUP BY status" );
 
-		$counts                = $empty;
-		$counts['bytes_saved'] = 0;
+		$counts                 = $empty;
+		$counts['bytes_saved']  = 0;
+		$counts['bytes_source'] = 0;
 
 		foreach ( (array) $rows as $row ) {
 			$status = (string) $row->status;
@@ -325,8 +328,9 @@ class Queue {
 				$counts[ $status ] = (int) $row->num;
 			}
 
-			$counts['total']       += (int) $row->num;
-			$counts['bytes_saved'] += (int) $row->saved;
+			$counts['total']        += (int) $row->num;
+			$counts['bytes_saved']  += (int) $row->saved;
+			$counts['bytes_source'] += (int) $row->source_bytes;
 		}
 
 		wp_cache_set( 'queue_counts', $counts, 'wzio', MINUTE_IN_SECONDS );
