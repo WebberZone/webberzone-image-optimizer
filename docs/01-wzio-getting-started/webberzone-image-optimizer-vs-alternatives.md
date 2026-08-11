@@ -103,7 +103,7 @@ WebberZone Image Optimizer wraps images in a `<picture>` element by default, so 
 
 Modern Image Formats also supports a `<picture>`-based delivery mode, but it's marked **experimental** in its own settings screen and depends on the JPEG-fallback and "use picture element" options both being enabled; its default delivery still swaps `src`/`srcset` URLs directly.
 
-WebP Express and Converter for Media both rely primarily on server-level rewriting (`.htaccess`/nginx rules checking the `Accept` header) rather than a `<picture>` element as the default delivery method.
+WebP Express and Converter for Media both default to server-level rewriting: `.htaccess`/nginx rules that check the `Accept` header and return different bytes from the same URL (WebP Express calls this its "varied-image-responses" mode; Converter for Media's default "Image loading mode" is `via .htaccess / Nginx`). WebP Express also ships an opt-in `<picture>`-rewriting mode, disabled by default, that only activates if you switch on HTML alteration in its settings. Converter for Media has no `<picture>` mode at all — its own source contains no reference to the element.
 
 ## Free-tier summary
 
