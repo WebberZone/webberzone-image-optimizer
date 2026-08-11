@@ -22,4 +22,8 @@ permalink: /docs/
     <h3>Developer Reference</h3>
     <p>Hooks, filters, and functions for extending the plugin.</p>
   </a>
+  <a class="doc-card" href="{{ '/docs/01-wzio-getting-started/webberzone-image-optimizer-vs-alternatives/' | relative_url }}">
+    <h3>Comparisons</h3>
+    <p>How it stacks up against Modern Image Formats, WebP Express, and Converter for Media.</p>
+  </a>
 </div>
