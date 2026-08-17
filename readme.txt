@@ -113,6 +113,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 = 0.9.0 =
 
 * Initial release
+* Fixed the `wzio_settings_defaults` filter being ignored when a default was read outside the admin area. Setting defaults are now resolved from a single lightweight list instead of building every settings field, so reading an option early in the page load no longer risks loading translations too early.
 
 == Upgrade Notice ==
 
