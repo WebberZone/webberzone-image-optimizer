@@ -114,6 +114,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 * Bug fixes:
 	* Fixed the `wzio_settings_defaults` filter being ignored when a default was read outside the admin area.
+	* Fixed settings on a multisite network reading another site's values in the same request after a `switch_to_blog()` call, such as during network activation or deactivation.
 
 * Improvements:
 	* Setting defaults are now resolved from a single lightweight list instead of building every settings field, so reading an option early in the page load no longer risks loading translations too early.
