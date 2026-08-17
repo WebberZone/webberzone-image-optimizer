@@ -38,11 +38,16 @@ class Settings {
 	/**
 	 * Prefix which is used for creating the unique filters and actions.
 	 *
+	 * Initialised at declaration rather than only in the constructor: the static
+	 * methods on this class are reachable on the frontend where the Settings object
+	 * is never instantiated, and a null prefix there fires `_settings_defaults`
+	 * instead of `wzio_settings_defaults`.
+	 *
 	 * @since 0.9.0
 	 *
 	 * @var string Prefix.
 	 */
-	public static $prefix;
+	public static $prefix = 'wzio';
 
 	/**
 	 * Settings Key.
@@ -299,6 +304,58 @@ class Settings {
 	}
 
 	/**
+	 * Raw default values for every setting, keyed by option ID.
+	 *
+	 * Single source of truth for field defaults. Deliberately contains no
+	 * translation calls so it is safe to invoke before `init` without triggering a
+	 * "translation loading triggered too early" notice. Field definition methods
+	 * below reference this array instead of duplicating literals.
+	 *
+	 * Values are pre-normalised: checkbox defaults use 1/0 rather than true/false
+	 * so that they match what `settings_defaults()` produces after its
+	 * `(int) (bool)` cast. This array is deliberately unfiltered — the
+	 * `wzio_settings_defaults` filter is applied by the consumers
+	 * (`settings_defaults()` and `Options_API::get_default_option()`) so that it
+	 * runs exactly once on each path.
+	 *
+	 * @since 0.10.0
+	 *
+	 * @return array Raw default values keyed by option ID.
+	 */
+	public static function get_defaults() {
+		return array(
+			// General.
+			'formats'                   => 'webp',
+			'convert_on_upload'         => 1,
+			'convert_sizes'             => '',
+			'min_saving'                => 5,
+			'sidecar_naming'            => 'append',
+
+			// Quality.
+			'quality_webp'              => 82,
+			'quality_avif'              => 50,
+			'effort_webp'               => 6,
+			'effort_avif'               => 4,
+			'strip_metadata'            => 1,
+			'lossless_png'              => 1,
+
+			// Delivery.
+			'enable_delivery'           => 1,
+			'rewrite_content'           => 1,
+			'rewrite_template'          => 1,
+			'rewrite_buffer'            => 0,
+
+			// Advanced.
+			'batch_size'                => 10,
+			'background_queue'          => 1,
+			'lazy_convert'              => 1,
+			'exclude_paths'             => '',
+			'delete_files_on_uninstall' => 0,
+			'delete_data_on_uninstall'  => 0,
+		);
+	}
+
+	/**
 	 * Array containing the settings' sections.
 	 *
 	 * @since 0.9.0
@@ -342,13 +399,14 @@ class Settings {
 	 * @return array General settings.
 	 */
 	public static function settings_general() {
+		$defaults = self::get_defaults();
 		$settings = array(
 			'formats'           => array(
 				'id'      => 'formats',
 				'name'    => esc_html__( 'Formats to generate', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'AVIF files are smaller than WebP but take longer to encode and are understood by slightly fewer browsers. Generating both lets each visitor receive the smallest file their browser can read. Formats your server cannot encode are listed as unavailable.', 'webberzone-image-optimizer' ),
 				'type'    => 'multicheck',
-				'default' => 'webp',
+				'default' => $defaults['formats'],
 				'options' => self::get_format_options(),
 			),
 			'convert_on_upload' => array(
@@ -356,14 +414,14 @@ class Settings {
 				'name'    => esc_html__( 'Convert new uploads', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Generate the optimized copies as soon as an image is uploaded or its thumbnails are regenerated.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['convert_on_upload'],
 			),
 			'convert_sizes'     => array(
 				'id'      => 'convert_sizes',
 				'name'    => esc_html__( 'Image sizes to convert', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. A responsive image only switches format when every size in its srcset has been converted, so excluding a size that appears in your themes markup disables the optimization for those images.', 'webberzone-image-optimizer' ),
 				'type'    => 'multicheck',
-				'default' => '',
+				'default' => $defaults['convert_sizes'],
 				'options' => self::get_size_options(),
 			),
 			'min_saving'        => array(
@@ -371,7 +429,7 @@ class Settings {
 				'name'    => esc_html__( 'Minimum saving (%)', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 5,
+				'default' => $defaults['min_saving'],
 				'min'     => 0,
 				'max'     => 90,
 				'size'    => 'small',
@@ -381,7 +439,7 @@ class Settings {
 				'name'    => esc_html__( 'Optimized file naming', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Append keeps the original extension and adds the new one, e.g. photo.jpg.webp — this is the safe default. Replace produces photo.webp instead, but if a folder ever contains both photo.jpg and photo.png, their optimized copies would collide on the same photo.webp file and one would silently overwrite the other. Only choose Replace if you are sure your uploads never share a filename across extensions.', 'webberzone-image-optimizer' ),
 				'type'    => 'radio',
-				'default' => 'append',
+				'default' => $defaults['sidecar_naming'],
 				'options' => array(
 					'append'  => esc_html__( 'Append the new extension (photo.jpg.webp) — safe', 'webberzone-image-optimizer' ),
 					'replace' => esc_html__( 'Replace the extension (photo.webp) — can collide', 'webberzone-image-optimizer' ),
@@ -400,13 +458,14 @@ class Settings {
 	 * @return array Quality settings.
 	 */
 	public static function settings_quality() {
+		$defaults = self::get_defaults();
 		$settings = array(
 			'quality_webp'   => array(
 				'id'      => 'quality_webp',
 				'name'    => esc_html__( 'WebP quality', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 1 and 100. The default of 82 is visually indistinguishable from the original for most photographs. Values above 90 grow the file quickly for very little visible gain.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 82,
+				'default' => $defaults['quality_webp'],
 				'min'     => 1,
 				'max'     => 100,
 				'size'    => 'small',
@@ -416,7 +475,7 @@ class Settings {
 				'name'    => esc_html__( 'AVIF quality', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 1 and 100. AVIF and WebP quality numbers are not comparable: AVIF at 50 looks about the same as WebP at 82 while producing a noticeably smaller file.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 50,
+				'default' => $defaults['quality_avif'],
 				'min'     => 1,
 				'max'     => 100,
 				'size'    => 'small',
@@ -426,7 +485,7 @@ class Settings {
 				'name'    => esc_html__( 'WebP encoder effort', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 0 and 6. Higher values spend more CPU time searching for a smaller file at identical visual quality. Because conversion happens once and the result is served many times, the highest setting is usually the right trade. Lower it if bulk runs are timing out.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 6,
+				'default' => $defaults['effort_webp'],
 				'min'     => 0,
 				'max'     => 6,
 				'size'    => 'small',
@@ -436,7 +495,7 @@ class Settings {
 				'name'    => esc_html__( 'AVIF encoder effort', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 0 and 6. AVIF encoding is much slower than WebP, so the default is lower. The plugin also automatically speeds up encoding for very large images where the quality gain per pixel is small. Raise this for smaller files at the cost of longer conversion times.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 4,
+				'default' => $defaults['effort_avif'],
 				'min'     => 0,
 				'max'     => 6,
 				'size'    => 'small',
@@ -446,14 +505,14 @@ class Settings {
 				'name'    => esc_html__( 'Strip metadata', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Remove EXIF, GPS and embedded thumbnails from the optimized copies. The colour profile is always kept, so colours will not shift. Your original files are never modified.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['strip_metadata'],
 			),
 			'lossless_png'   => array(
 				'id'      => 'lossless_png',
 				'name'    => esc_html__( 'Lossless for PNG sources', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Encode PNG sources without any quality loss. This is the right choice for logos, screenshots and line art, but produces much larger files for photographs saved as PNG.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['lossless_png'],
 			),
 		);
 
@@ -468,34 +527,35 @@ class Settings {
 	 * @return array Delivery settings.
 	 */
 	public static function settings_delivery() {
+		$defaults = self::get_defaults();
 		$settings = array(
 			'enable_delivery'  => array(
 				'id'      => 'enable_delivery',
 				'name'    => esc_html__( 'Serve optimized images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Wrap images in a picture element so the browser picks the best format it supports. Because the choice is made by the browser rather than the server, this works correctly behind page caches and CDNs.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['enable_delivery'],
 			),
 			'rewrite_content'  => array(
 				'id'      => 'rewrite_content',
 				'name'    => esc_html__( 'Post content images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Rewrite images embedded in post and page content.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['rewrite_content'],
 			),
 			'rewrite_template' => array(
 				'id'      => 'rewrite_template',
 				'name'    => esc_html__( 'Theme and block images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Rewrite featured images, gallery images and any image rendered by a theme or block through the WordPress image functions.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['rewrite_template'],
 			),
 			'rewrite_buffer'   => array(
 				'id'      => 'rewrite_buffer',
 				'name'    => esc_html__( 'Whole page (buffered)', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Catch images printed directly by a page builder or a hard-coded template by buffering the entire page and rewriting it before it is sent. This catches the most images but costs a little memory on every request, so leave it off unless you can see images the two options above are missing.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => false,
+				'default' => $defaults['rewrite_buffer'],
 			),
 			'server_rules'     => array(
 				'id'   => 'server_rules',
@@ -516,13 +576,14 @@ class Settings {
 	 * @return array Advanced settings.
 	 */
 	public static function settings_advanced() {
+		$defaults = self::get_defaults();
 		$settings = array(
 			'batch_size'                => array(
 				'id'      => 'batch_size',
 				'name'    => esc_html__( 'Images per batch', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'How many attachments to process in a single bulk step. Lower this if your server times out during a bulk run; raise it to finish faster on a fast server.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
-				'default' => 10,
+				'default' => $defaults['batch_size'],
 				'min'     => 1,
 				'max'     => 200,
 				'size'    => 'small',
@@ -532,35 +593,35 @@ class Settings {
 				'name'    => esc_html__( 'Process the queue in the background', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Keep working through the queue on a schedule even when the bulk screen is closed. Turn this off if you would rather the queue only advance while you watch it.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['background_queue'],
 			),
 			'lazy_convert'              => array(
 				'id'      => 'lazy_convert',
 				'name'    => esc_html__( 'Queue images on first view', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'When a page references an image that has not been converted yet, serve the original immediately and add the image to the queue. Nothing is ever converted during a page render, so visitors never wait for an encode.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => true,
+				'default' => $defaults['lazy_convert'],
 			),
 			'exclude_paths'             => array(
 				'id'      => 'exclude_paths',
 				'name'    => esc_html__( 'Exclude paths', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'One fragment per line. Any image whose path inside the uploads folder contains one of these fragments is left alone, for example 2019/07 or /logos/.', 'webberzone-image-optimizer' ),
 				'type'    => 'textarea',
-				'default' => '',
+				'default' => $defaults['exclude_paths'],
 			),
 			'delete_files_on_uninstall' => array(
 				'id'      => 'delete_files_on_uninstall',
 				'name'    => esc_html__( 'Delete optimized files on uninstall', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Remove every generated WebP and AVIF file when the plugin is deleted. Your original images are never touched either way. Leave this off if you may reinstall later and would rather not convert everything again.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => false,
+				'default' => $defaults['delete_files_on_uninstall'],
 			),
 			'delete_data_on_uninstall'  => array(
 				'id'      => 'delete_data_on_uninstall',
 				'name'    => esc_html__( 'Delete settings and records on uninstall', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Remove the settings, the queue table and the per-image conversion records when the plugin is deleted.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
-				'default' => false,
+				'default' => $defaults['delete_data_on_uninstall'],
 			),
 		);
 
