@@ -1,7 +1,7 @@
 === WebberZone Image Optimizer ===
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
-Donate link: https://webberzone.com/donate/
+Donate link: https://wzn.io/donate-wz
 Stable tag: 0.9.0
 Requires at least: 6.6
 Tested up to: 7.1
