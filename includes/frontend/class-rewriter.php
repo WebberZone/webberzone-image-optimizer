@@ -33,6 +33,16 @@ class Rewriter {
 	private $lazy_queue = array();
 
 	/**
+	 * Output buffer nesting level captured just before we open ours.
+	 *
+	 * Lets close_buffer() flush only the levels this instance is responsible for.
+	 *
+	 * @since 0.9.0
+	 * @var int
+	 */
+	private $ob_level = 0;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 0.9.0
@@ -63,7 +73,25 @@ class Rewriter {
 		}
 
 		if ( \wzio_get_option( 'rewrite_buffer', false ) ) {
+			$this->ob_level = ob_get_level();
 			ob_start( array( $this, 'filter_buffer' ) );
+			Hook_Registry::add_action( 'shutdown', array( $this, 'close_buffer' ), PHP_INT_MAX );
+		}
+	}
+
+	/**
+	 * Explicitly close the buffer opened in register_output_hooks().
+	 *
+	 * Runs at the tail end of 'shutdown' so the buffer is not left to PHP's
+	 * implicit end-of-request flush.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @return void
+	 */
+	public function close_buffer(): void {
+		while ( ob_get_level() > $this->ob_level ) {
+			ob_end_flush();
 		}
 	}
 
