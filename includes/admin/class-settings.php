@@ -38,10 +38,10 @@ class Settings {
 	/**
 	 * Prefix which is used for creating the unique filters and actions.
 	 *
-	 * Initialised at declaration rather than only in the constructor: the static
-	 * methods on this class are reachable on the frontend where the Settings object
-	 * is never instantiated, and a null prefix there fires `_settings_defaults`
-	 * instead of `wzio_settings_defaults`.
+	 * Initialised at declaration rather than only in the constructor: the static methods on
+	 * this class are reachable on the frontend where the Settings object is never
+	 * instantiated, and a null prefix there fires `_settings_defaults` instead of
+	 * `wzio_settings_defaults`.
 	 *
 	 * @since 0.9.0
 	 *
@@ -306,17 +306,9 @@ class Settings {
 	/**
 	 * Raw default values for every setting, keyed by option ID.
 	 *
-	 * Single source of truth for field defaults. Deliberately contains no
-	 * translation calls so it is safe to invoke before `init` without triggering a
-	 * "translation loading triggered too early" notice. Field definition methods
-	 * below reference this array instead of duplicating literals.
-	 *
-	 * Values are pre-normalised: checkbox defaults use 1/0 rather than true/false
-	 * so that they match what `settings_defaults()` produces after its
-	 * `(int) (bool)` cast. This array is deliberately unfiltered — the
-	 * `wzio_settings_defaults` filter is applied by the consumers
-	 * (`settings_defaults()` and `Options_API::get_default_option()`) so that it
-	 * runs exactly once on each path.
+	 * Deliberately contains no translation calls, so it is safe to invoke before `init`.
+	 * Values are pre-normalised (checkboxes as 1/0) and the array is intentionally
+	 * unfiltered — consumers apply the `wzio_settings_defaults` filter themselves.
 	 *
 	 * @since 0.10.0
 	 *
