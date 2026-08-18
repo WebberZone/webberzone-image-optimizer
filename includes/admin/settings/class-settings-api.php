@@ -863,7 +863,7 @@ class Settings_API {
 	/**
 	 * Sanitize the form data being submitted.
 	 *
-	 * @param  array $input Input unclean array.
+	 * @param  mixed $input Unsanitized input. An array for form submissions, but REST and WP-CLI may pass anything.
 	 * @return array Sanitized array
 	 */
 	public function settings_sanitize( $input ) {
