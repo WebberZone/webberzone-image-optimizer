@@ -784,7 +784,7 @@ class Settings {
 		if ( false !== strpos( $file, 'webberzone-image-optimizer.php' ) ) {
 			$new_links = array(
 				'support' => '<a href="https://webberzone.com/support/" target="_blank">' . esc_html__( 'Support', 'webberzone-image-optimizer' ) . '</a>',
-				'donate'  => '<a href="https://webberzone.com/donate/" target="_blank">' . esc_html__( 'Donate', 'webberzone-image-optimizer' ) . '</a>',
+				'donate'  => '<a href="https://wzn.io/donate-wz" target="_blank">' . esc_html__( 'Donate', 'webberzone-image-optimizer' ) . '</a>',
 			);
 
 			$links = array_merge( $links, $new_links );
