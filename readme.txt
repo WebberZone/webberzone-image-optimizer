@@ -115,9 +115,12 @@ Yes. Because the format choice happens in the browser rather than on the server,
 * Bug fixes:
 	* Fixed the `wzio_settings_defaults` filter being ignored when a default was read outside the admin area.
 	* Fixed settings on a multisite network reading another site's values in the same request after a `switch_to_blog()` call, such as during network activation or deactivation.
+	* Fixed settings fields whose type had no matching sanitize callback being saved without sanitization. Radio, select and thumbnail size fields are now validated against the choices they actually offer, and any remaining type falls back to a sanitizing callback instead of storing raw input.
 
 * Improvements:
 	* Setting defaults are now resolved from a single lightweight list instead of building every settings field, so reading an option early in the page load no longer risks loading translations too early.
+	* Whole page rewriting now uses the template enhancement output buffer introduced in WordPress 6.9 instead of opening its own output buffer, so it can no longer interfere with buffers owned by a theme, a cache or another plugin. The option is unavailable on earlier versions.
+	* The settings option is registered with its correct type and default, and is no longer exposed through the REST API without a schema.
 
 = 0.9.0 =
 
