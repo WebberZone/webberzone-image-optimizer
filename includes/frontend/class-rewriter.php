@@ -33,16 +33,6 @@ class Rewriter {
 	private $lazy_queue = array();
 
 	/**
-	 * Output buffer nesting level captured just before we open ours.
-	 *
-	 * Lets close_buffer() flush only the levels this instance is responsible for.
-	 *
-	 * @since 0.9.0
-	 * @var int
-	 */
-	private $ob_level = 0;
-
-	/**
 	 * Constructor.
 	 *
 	 * @since 0.9.0
@@ -72,27 +62,20 @@ class Rewriter {
 			Hook_Registry::add_filter( 'wp_get_attachment_image', array( $this, 'filter_attachment_image' ), 20, 2 );
 		}
 
-		if ( \wzio_get_option( 'rewrite_buffer', false ) ) {
-			$this->ob_level = ob_get_level();
-			ob_start( array( $this, 'filter_buffer' ) );
-			Hook_Registry::add_action( 'shutdown', array( $this, 'close_buffer' ), PHP_INT_MAX );
+		if ( \wzio_get_option( 'rewrite_buffer', false ) && self::has_template_enhancement_buffer() ) {
+			Hook_Registry::add_filter( 'wp_template_enhancement_output_buffer', array( $this, 'filter_buffer' ), 20 );
 		}
 	}
 
 	/**
-	 * Explicitly close the buffer opened in register_output_hooks().
-	 *
-	 * Runs at the tail end of 'shutdown' so the buffer is not left to PHP's
-	 * implicit end-of-request flush.
+	 * Whether core provides the template enhancement output buffer.
 	 *
 	 * @since 0.9.0
 	 *
-	 * @return void
+	 * @return bool True on WordPress 6.9 and later.
 	 */
-	public function close_buffer(): void {
-		while ( ob_get_level() > $this->ob_level ) {
-			ob_end_flush();
-		}
+	public static function has_template_enhancement_buffer(): bool {
+		return function_exists( 'wp_start_template_enhancement_output_buffer' );
 	}
 
 	/**

@@ -543,11 +543,14 @@ class Settings {
 				'default' => $defaults['rewrite_template'],
 			),
 			'rewrite_buffer'   => array(
-				'id'      => 'rewrite_buffer',
-				'name'    => esc_html__( 'Whole page (buffered)', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Catch images printed directly by a page builder or a hard-coded template by buffering the entire page and rewriting it before it is sent. This catches the most images but costs a little memory on every request, so leave it off unless you can see images the two options above are missing.', 'webberzone-image-optimizer' ),
-				'type'    => 'checkbox',
-				'default' => $defaults['rewrite_buffer'],
+				'id'       => 'rewrite_buffer',
+				'name'     => esc_html__( 'Whole page (buffered)', 'webberzone-image-optimizer' ),
+				'desc'     => \WebberZone\Image_Optimizer\Frontend\Rewriter::has_template_enhancement_buffer()
+					? esc_html__( 'Catch images printed directly by a page builder or a hard-coded template by rewriting the whole page through the WordPress template enhancement output buffer. This catches the most images but costs a little memory on every request, so leave it off unless you can see images the two options above are missing.', 'webberzone-image-optimizer' )
+					: esc_html__( 'Requires WordPress 6.9 or later, which provides the template enhancement output buffer this option uses.', 'webberzone-image-optimizer' ),
+				'type'     => 'checkbox',
+				'default'  => $defaults['rewrite_buffer'],
+				'disabled' => ! \WebberZone\Image_Optimizer\Frontend\Rewriter::has_template_enhancement_buffer(),
 			),
 			'server_rules'     => array(
 				'id'   => 'server_rules',
