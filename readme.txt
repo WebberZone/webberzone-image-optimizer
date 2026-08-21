@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 0.9.0
+Stable tag: 0.9.1
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
