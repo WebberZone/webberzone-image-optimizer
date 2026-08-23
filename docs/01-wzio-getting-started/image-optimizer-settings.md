@@ -61,7 +61,7 @@ Rewrite images embedded in post and page content. Default: on.
 Rewrite featured images, gallery images and any image rendered by a theme or block through the WordPress image functions. Default: on.
 
 **Whole page (buffered)**
-Catch images printed directly by a page builder or a hard-coded template by buffering the entire page and rewriting it before it is sent. This catches the most images but costs a little memory on every request — leave it off unless you can see images the two options above are missing. Default: off.
+Catch images printed directly by a page builder or a hard-coded template by buffering the entire page and rewriting it before it is sent. This catches the most images but costs a little memory on every request — leave it off unless you can see images the two options above are missing. Requires WordPress 6.9 or later, which provides the output buffer this option uses; on older versions the option is grayed out. Default: off.
 
 **CSS background images**
 The Delivery tab generates ready-to-paste Apache and nginx rules for images referenced from a stylesheet, where the browser is never offered a choice by the plugin itself. Both blocks send a `Vary: Accept` header — do not remove it, or a CDN or page cache can hand a WebP file to a browser that cannot display it.
