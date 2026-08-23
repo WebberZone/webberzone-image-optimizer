@@ -12,7 +12,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Registers and tracks WordPress hooks.
+ * Hook Registry class for managing WordPress actions and filters.
  *
  * @since 0.9.0
  */
