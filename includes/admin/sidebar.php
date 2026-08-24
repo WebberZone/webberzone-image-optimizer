@@ -21,11 +21,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div id="quick-links">
 				<ul class="subsub">
 					<li>
-						<a href="https://webberzone.github.io/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
+						<a href="https://webberzone.com/plugins/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'WebberZone Image Optimizer homepage', 'webberzone-image-optimizer' ); ?></a>
 					</li>
 
 					<li>
-						<a href="https://webberzone.com/support/product/webberzone-image-optimizer/" target="_blank"><?php esc_html_e( 'Knowledge Base', 'webberzone-image-optimizer' ); ?></a>
+						<a href="https://webberzone.com/support/product/image-optimizer/" target="_blank"><?php esc_html_e( 'Knowledge Base', 'webberzone-image-optimizer' ); ?></a>
 					</li>
 
 					<li>

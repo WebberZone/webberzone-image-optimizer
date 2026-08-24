@@ -699,7 +699,7 @@ class Settings {
 	public function get_help_sidebar() {
 		$help_sidebar =
 		'<p><strong>' . esc_html__( 'For more information:', 'webberzone-image-optimizer' ) . '</strong></p>' .
-		'<p><a href="https://webberzone.github.io/webberzone-image-optimizer/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Plugin Homepage', 'webberzone-image-optimizer' ) . '</a></p>' .
+		'<p><a href="https://webberzone.com/plugins/webberzone-image-optimizer/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Plugin Homepage', 'webberzone-image-optimizer' ) . '</a></p>' .
 		'<p><a href="https://webberzone.com/support/" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Support', 'webberzone-image-optimizer' ) . '</a></p>';
 
 		return apply_filters( self::$prefix . '_settings_help_sidebar', $help_sidebar ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
@@ -743,7 +743,7 @@ class Settings {
 		return sprintf(
 		/* translators: 1: Plugin homepage link, 2: GitHub repository link */
 			__( 'Thank you for using <a href="%1$s" target="_blank" rel="noopener noreferrer">WebberZone Image Optimizer</a>! Please <a href="%2$s" target="_blank" rel="noopener noreferrer">star us</a> on GitHub', 'webberzone-image-optimizer' ),
-			'https://webberzone.github.io/webberzone-image-optimizer/',
+			'https://webberzone.com/plugins/webberzone-image-optimizer/',
 			'https://github.com/WebberZone/webberzone-image-optimizer'
 		);
 	}

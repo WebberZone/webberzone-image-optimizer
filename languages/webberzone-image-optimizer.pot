@@ -22,7 +22,7 @@ msgstr ""
 
 #. Plugin URI of the plugin
 #: webberzone-image-optimizer.php
-msgid "https://webberzone.github.io/webberzone-image-optimizer/"
+msgid "https://webberzone.com/plugins/webberzone-image-optimizer/"
 msgstr ""
 
 #. Description of the plugin
