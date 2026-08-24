@@ -108,9 +108,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
-= 1.0.0 =
-
-Release date: August 25, 2026
+= 1.0.0 (25 August 2026) =
 
 * Initial release.
 
