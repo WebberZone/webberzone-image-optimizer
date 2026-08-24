@@ -20,7 +20,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Options API Class.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Options_API {
 
@@ -28,7 +28,7 @@ class Options_API {
 	/**
 	 * Settings option name.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const SETTINGS_OPTION = 'wzio_settings';
@@ -36,7 +36,7 @@ class Options_API {
 	/**
 	 * Filter prefix.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const FILTER_PREFIX = 'wzio';
@@ -89,7 +89,7 @@ class Options_API {
 	 *
 	 * Retrieves all plugin settings.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return array Settings array.
 	 */
@@ -100,7 +100,7 @@ class Options_API {
 			/**
 			 * Filters the settings array.
 			 *
-			 * @since 0.9.0
+			 * @since 1.0.0
 			 *
 			 * @param array $settings Settings array.
 			 */
@@ -132,7 +132,7 @@ class Options_API {
 	 *
 	 * Looks to see if the specified setting exists, returns the default if not.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $key           Option to fetch.
 	 * @param  mixed  $default_value Default value if the option is missing.
@@ -150,7 +150,7 @@ class Options_API {
 		/**
 		 * Filter the value for the option being fetched.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param mixed $value         Value of the option.
 		 * @param mixed $key           Name of the option.
@@ -161,7 +161,7 @@ class Options_API {
 		/**
 		 * Key specific filter for the value of the option being fetched.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param mixed $value         Value of the option.
 		 * @param mixed $key           Name of the option.
@@ -198,7 +198,7 @@ class Options_API {
 		/**
 		 * Filters a blog option value.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param mixed  $value   The option value.
 		 * @param int    $blog_id Blog ID.
@@ -213,7 +213,7 @@ class Options_API {
 	 * Warning: passing an empty, false or null value will store that value; use
 	 * `delete_option()` to remove the key entirely.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string          $key   The key to update.
 	 * @param  string|bool|int $value The value to set the key to.
@@ -229,7 +229,7 @@ class Options_API {
 		/**
 		 * Filters the value before it is saved.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param mixed  $value Value of the option.
 		 * @param string $key   Name of the option.
@@ -249,7 +249,7 @@ class Options_API {
 	/**
 	 * Update all settings at once.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array $settings Settings array to save.
 	 * @param  bool  $merge    Whether to merge with existing settings. Default true.
@@ -273,7 +273,7 @@ class Options_API {
 	/**
 	 * Remove an option.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $key The key to delete.
 	 * @return bool True if updated, false if not.
@@ -305,7 +305,7 @@ class Options_API {
 	 * and is only safe to call after `init`. Use `get_default_option()` for a
 	 * single key when the read may happen earlier.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return array Default settings.
 	 */
@@ -321,7 +321,7 @@ class Options_API {
 	 * so this is safe before `init` and avoids building every field definition to
 	 * resolve one key.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $key Key of the option to fetch.
 	 * @return mixed Default value, or false if the key is not registered.
@@ -334,7 +334,7 @@ class Options_API {
 		 * this translation-free path honours the same hook. `get_defaults()` itself is
 		 * deliberately unfiltered, so the filter runs exactly once on each path.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param array $defaults Default settings.
 		 */
@@ -372,7 +372,7 @@ class Options_API {
 		/**
 		 * Filters the registered settings types.
 		 *
-		 * @since 0.9.0
+		 * @since 1.0.0
 		 *
 		 * @param array $options Settings types keyed by option ID.
 		 */
@@ -382,7 +382,7 @@ class Options_API {
 	/**
 	 * Reset settings to their defaults.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True if updated, false if not.
 	 */

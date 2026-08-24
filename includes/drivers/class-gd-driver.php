@@ -14,14 +14,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Converts static images with the fallback GD extension.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class GD_Driver extends Driver {
 
 	/**
 	 * Whether the GD extension is loaded.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True when available.
 	 */
@@ -32,7 +32,7 @@ class GD_Driver extends Driver {
 	/**
 	 * Machine name of the driver.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return string Driver slug.
 	 */
@@ -43,7 +43,7 @@ class GD_Driver extends Driver {
 	/**
 	 * Whether GD can encode the given format.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param string $format Target format slug.
 	 * @return bool True when the encoder function exists.
@@ -66,7 +66,7 @@ class GD_Driver extends Driver {
 	/**
 	 * Encode a source image into the target format.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param string               $source      Absolute path to the source image.
 	 * @param string               $destination Absolute path to write.

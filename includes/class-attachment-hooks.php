@@ -16,14 +16,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Keeps the sidecars in step with the attachments they belong to.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Attachment_Hooks {
 
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		// Runs after uploads and any operation that regenerates attachment files.
@@ -35,7 +35,7 @@ class Attachment_Hooks {
 	/**
 	 * Convert or queue changed files without modifying attachment metadata.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param mixed $data          Attachment metadata about to be stored.
 	 * @param int   $attachment_id Attachment ID.
@@ -63,7 +63,7 @@ class Attachment_Hooks {
 	/**
 	 * Remove sidecars and the queue row before attachment files disappear.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param int $attachment_id Attachment ID.
 	 * @return void

@@ -21,7 +21,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Adds per-image status and actions to the media list table.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Media_Library {
 
@@ -29,7 +29,7 @@ class Media_Library {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		Hook_Registry::add_filter( 'manage_media_columns', array( $this, 'add_column' ) );
@@ -48,7 +48,7 @@ class Media_Library {
 	/**
 	 * Enqueue the script that drives the "Optimize" action over AJAX.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $hook_suffix Current admin page.
 	 * @return void
@@ -96,7 +96,7 @@ class Media_Library {
 	/**
 	 * Confirm the outcome of a per-image action.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -141,7 +141,7 @@ class Media_Library {
 	/**
 	 * Add the status column.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array<string, string> $columns Existing columns.
 	 * @return array<string, string> Columns.
@@ -155,7 +155,7 @@ class Media_Library {
 	/**
 	 * Render the status column.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $column_name Column key.
 	 * @param  int    $post_id     Attachment ID.
@@ -194,7 +194,7 @@ class Media_Library {
 	/**
 	 * Add the per-image actions.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array<string, string> $actions Existing actions.
 	 * @param  \WP_Post              $post    Attachment.
@@ -228,7 +228,7 @@ class Media_Library {
 	/**
 	 * Add the bulk action to delete optimized copies.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array<string, string> $actions Existing bulk actions.
 	 * @return array<string, string> Bulk actions.
@@ -242,7 +242,7 @@ class Media_Library {
 	/**
 	 * Handle deletion after WordPress verifies the bulk action.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string          $redirect_to Redirect URL.
 	 * @param  string          $doaction    Bulk action name.
@@ -277,7 +277,7 @@ class Media_Library {
 	/**
 	 * Show optimization status and actions in the attachment edit Save box.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  \WP_Post $post Attachment.
 	 * @return void
@@ -344,7 +344,7 @@ class Media_Library {
 	/**
 	 * Build a nonced admin-post URL for an attachment action.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $action        Action name.
 	 * @param  int    $attachment_id Attachment ID.
@@ -366,7 +366,7 @@ class Media_Library {
 	/**
 	 * Validate an incoming attachment action.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $action Action name.
 	 * @return int Attachment ID.
@@ -386,7 +386,7 @@ class Media_Library {
 	/**
 	 * Convert one attachment as the no-JS fallback.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -405,7 +405,7 @@ class Media_Library {
 	/**
 	 * Convert the next file of an attachment over AJAX, one file per call.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -444,7 +444,7 @@ class Media_Library {
 	/**
 	 * Delete the generated copies for a single attachment.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -459,7 +459,7 @@ class Media_Library {
 	/**
 	 * Redirect to the referring admin page.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $message Message key.
 	 * @return void

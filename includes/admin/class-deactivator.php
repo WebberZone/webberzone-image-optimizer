@@ -17,14 +17,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Runs on deactivation.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Deactivator {
 
 	/**
 	 * Stop background work without deleting generated files.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param bool $network_wide Whether the plugin was deactivated for the whole network.
 	 * @return void

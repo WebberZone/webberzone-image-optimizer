@@ -16,14 +16,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Processes the conversion queue in bounded batches for all entry points.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Processor {
 
 	/**
 	 * Cron hook that advances the queue.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var string
 	 */
 	const CRON_HOOK = 'wzio_process_queue';
@@ -31,7 +31,7 @@ class Processor {
 	/**
 	 * MySQL advisory lock name guarding against two workers running at once.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var string
 	 */
 	const LOCK = 'wzio_processor';
@@ -39,7 +39,7 @@ class Processor {
 	/**
 	 * Wall-clock batch budget, checked between attachments without `set_time_limit()`.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var int
 	 */
 	const MAX_BATCH_SECONDS = 20;
@@ -47,7 +47,7 @@ class Processor {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		Hook_Registry::add_action( self::CRON_HOOK, array( __CLASS__, 'run_cron' ) );
@@ -57,7 +57,7 @@ class Processor {
 	/**
 	 * Register the one minute schedule used by the background worker.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param array<string, array<string, mixed>> $schedules Registered schedules.
 	 * @return array<string, array<string, mixed>> Schedules.
@@ -76,7 +76,7 @@ class Processor {
 	/**
 	 * Process one batch, sized from the settings.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param int|null $limit Batch size, or null to read it from the settings.
 	 * @return array{processed: int, converted: int, failed: int, skipped: int, saved: int, remaining: int, locked: bool} Result.
@@ -150,7 +150,7 @@ class Processor {
 	/**
 	 * Convert one attachment outside the batch cadence, for the "Optimize" action.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int  $attachment_id Attachment ID.
 	 * @param  bool $force         Whether to re-encode files that already have a valid sidecar.
@@ -194,7 +194,7 @@ class Processor {
 	/**
 	 * Convert the attachment behind one claimed queue row and record the outcome.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  object               $row       Claimed queue row.
 	 * @param  array<string, mixed> $overrides Conversion argument overrides.
@@ -260,7 +260,7 @@ class Processor {
 	/**
 	 * Cron callback.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -276,7 +276,7 @@ class Processor {
 	/**
 	 * Number of attachments still waiting.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return int Remaining count.
 	 */
@@ -289,7 +289,7 @@ class Processor {
 	/**
 	 * Schedule the background worker when there is work and it is enabled.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -306,7 +306,7 @@ class Processor {
 	/**
 	 * Remove the background worker schedule.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -322,7 +322,7 @@ class Processor {
 	/**
 	 * Acquire a connection-scoped MySQL lock without waiting.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True when the lock was acquired.
 	 */
@@ -338,7 +338,7 @@ class Processor {
 	/**
 	 * Release the worker lock.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */

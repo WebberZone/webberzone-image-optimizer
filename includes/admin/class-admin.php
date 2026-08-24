@@ -2,7 +2,7 @@
 /**
  * Admin bootstrap.
  *
- * @since 0.9.0
+ * @since 1.0.0
  *
  * @package WebberZone\Image_Optimizer\Admin
  */
@@ -16,14 +16,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Loads the admin area components.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Admin {
 
 	/**
 	 * Settings screen.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @var Settings
 	 */
@@ -32,7 +32,7 @@ class Admin {
 	/**
 	 * Bulk conversion screen.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @var Bulk_Page
 	 */
@@ -41,7 +41,7 @@ class Admin {
 	/**
 	 * Media library integration.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @var Media_Library
 	 */
@@ -50,7 +50,7 @@ class Admin {
 	/**
 	 * Admin banner helper.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @var Admin_Banner
 	 */
@@ -59,7 +59,7 @@ class Admin {
 	/**
 	 * Constructor.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		$this->settings      = new Settings();
@@ -71,7 +71,7 @@ class Admin {
 	/**
 	 * Configuration for the admin banner.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return array<string, mixed> Configuration.
 	 */

@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 0.9.1
+Stable tag: 1.0.0
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -104,29 +104,17 @@ Yes. Because the format choice happens in the browser rather than on the server,
 == Screenshots ==
 
 1. Bulk Optimize screen with live progress
-2. Settings — formats and conversion
-3. Settings — delivery, with generated server rules
-4. Media library showing per-image savings
+2. Per-image savings and actions in the Edit Media screen
 
 == Changelog ==
 
-= 0.9.1 =
+= 1.0.0 =
 
-* Bug fixes:
-	* Fixed the `wzio_settings_defaults` filter being ignored when a default was read outside the admin area.
-	* Fixed settings on a multisite network reading another site's values in the same request after a `switch_to_blog()` call, such as during network activation or deactivation.
-	* Fixed settings fields whose type had no matching sanitize callback. Radio, select and thumbnail size fields are now validated against the choices they offer on save.
+Release date: August 25, 2026
 
-* Improvements:
-	* Setting defaults are now resolved from a single lightweight list instead of building every settings field, so reading an option early in the page load no longer risks loading translations too early.
-	* Whole page rewriting now uses the template enhancement output buffer introduced in WordPress 6.9 instead of opening its own output buffer, so it can no longer interfere with buffers owned by a theme, a cache or another plugin. The option is unavailable on earlier versions.
-	* The settings option is registered with its correct type and default, and is no longer exposed through the REST API without a schema.
-
-= 0.9.0 =
-
-* Initial release
+* Initial release.
 
 == Upgrade Notice ==
 
-= 0.9.0 =
+= 1.0.0 =
 Initial release.

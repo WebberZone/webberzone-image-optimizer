@@ -14,7 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Contract implemented by every conversion backend.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 abstract class Driver {
 
@@ -22,7 +22,7 @@ abstract class Driver {
 	/**
 	 * Whether the underlying PHP extension is loaded.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True when the extension is present.
 	 */
@@ -31,7 +31,7 @@ abstract class Driver {
 	/**
 	 * Machine name of the driver.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return string Driver slug.
 	 */
@@ -40,7 +40,7 @@ abstract class Driver {
 	/**
 	 * Whether this driver can encode the given target format.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string $format Target format slug.
 	 * @return bool True when encoding is supported.
@@ -50,7 +50,7 @@ abstract class Driver {
 	/**
 	 * Encode without changing dimensions to preserve `srcset` alignment.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string               $source      Absolute path to the source image.
 	 * @param  string               $destination Absolute path to write.
@@ -63,7 +63,7 @@ abstract class Driver {
 	/**
 	 * Normalise the encoding arguments.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array<string, mixed> $args Raw arguments.
 	 * @return array<string, mixed> Normalised arguments.
@@ -92,7 +92,7 @@ abstract class Driver {
 	/**
 	 * Write atomically so incomplete sidecars are never served.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  string   $destination Final destination path.
 	 * @param  callable $writer      Receives the temporary path, returns bool.

@@ -1,6 +1,6 @@
 {
   "name": "@webberzone/webberzone-image-optimizer",
-  "version": "0.9.1",
+  "version": "1.0.0",
   "description": "Convert your media library to WebP and AVIF, and serve the best format each browser supports.",
   "author": "WebberZone",
   "license": "GPL-2.0-or-later",

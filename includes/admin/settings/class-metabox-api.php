@@ -15,7 +15,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Metabox API class.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Metabox_API {
 
