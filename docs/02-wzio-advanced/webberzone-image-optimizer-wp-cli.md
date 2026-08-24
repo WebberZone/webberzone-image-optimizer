@@ -10,7 +10,7 @@ order: 0
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) registers WP-CLI commands under `wp wzio`, useful for converting a library from a script, cron job, or deployment step without opening the admin screens.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) registers WP-CLI commands under `wp wzio`, useful for converting a library from a script, cron job, or deployment step without opening the admin screens.
 
 ## `wp wzio status`
 
@@ -67,9 +67,3 @@ wp wzio clean 7214
 
 * `[<id>...]` — attachment IDs. Omit to clean every attachment that has a conversion record (prompts for confirmation unless `--yes` is passed).
 * `[--yes]` — skip the confirmation prompt.
-
-## See also
-
-* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
-* [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)
-* [WebberZone Image Optimizer Developer Reference](https://webberzone.github.io/webberzone-image-optimizer/docs/03-wzio-developer-docs/webberzone-image-optimizer-developer-reference/)

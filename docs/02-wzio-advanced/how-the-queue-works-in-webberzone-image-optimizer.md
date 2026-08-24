@@ -10,7 +10,7 @@ order: 2
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) converts images through a database-backed queue rather than during a page render. This is what makes the Bulk Optimize screen resumable and keeps front-end visitors from ever waiting on an encode.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts images through a database-backed queue rather than during a page render. This is what makes the Bulk Optimize screen resumable and keeps front-end visitors from ever waiting on an encode.
 
 ## One row per attachment
 
@@ -53,9 +53,3 @@ A row stuck in `processing` for more than 10 minutes — a worker killed by a fa
 **Clear queue** on the Bulk Optimize screen removes pending and in-progress rows. Completed rows are kept so the **Bandwidth saved** totals on the bulk screen survive the reset — the queue can be cleared without losing the record of what was already saved. Images that already have optimized copies stay optimized; clearing the queue only discards rows that have not finished, it does not delete any generated files.
 
 Running `wp wzio clean` without attachment IDs empties the entire queue table (all rows) and deletes every generated sidecar file — a full reset. `wp wzio clean 7214` removes the row for a single attachment and its generated files.
-
-## See also
-
-* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
-* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
-* [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/)
