@@ -2,6 +2,16 @@
 
 Convert your WordPress media library to WebP and AVIF, and serve the best format each browser supports. Free and open source, GPL-2.0-or-later, no external service.
 
+## Screenshots
+
+![Bulk Optimize screen with live progress](wporg-assets/screenshot-1.png)
+
+*Bulk Optimize works through a resumable queue — close the tab and it carries on.*
+
+<img src="wporg-assets/screenshot-2.png" alt="Per-image savings and actions in the Edit Media screen" width="360">
+
+*Every attachment shows what each format saved, with Optimize and Delete actions.*
+
 ## What it does
 
 - Converts JPEG, PNG and GIF sources to WebP and/or AVIF **sidecar** files: `photo.jpg` → `photo.jpg.webp`. The original is never modified.
