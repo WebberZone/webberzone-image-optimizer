@@ -3,7 +3,7 @@ title: Documentation
 permalink: /docs/
 ---
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) converts the images in your WordPress media library to WebP and AVIF automatically. Browse the guides below to get set up and configured.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts the images in your WordPress media library to WebP and AVIF automatically. Browse the guides below to get set up and configured.
 
 <div class="card-grid">
   <a class="doc-card" href="{{ '/docs/01-wzio-getting-started/getting-started-with-webberzone-image-optimizer/' | relative_url }}">

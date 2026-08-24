@@ -10,7 +10,7 @@ order: 3
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
 
 ## The Optimized column
 
@@ -29,8 +29,3 @@ Converts this attachment immediately, even if it was skipped or already has an u
 Deletes the generated WebP/AVIF files for this attachment and reverts it to serving the original. Only shown once an attachment has at least one generated file. The original image is never affected either way.
 
 Both actions require the `edit_post` capability for that attachment and show a confirmation notice ("Optimized copies regenerated" / "Optimized copies deleted") after completing.
-
-## See also
-
-* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
-* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)

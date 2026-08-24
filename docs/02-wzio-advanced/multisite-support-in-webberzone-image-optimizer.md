@@ -10,7 +10,7 @@ order: 1
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
 
 ## Per-site queues
 
@@ -24,9 +24,4 @@ Sites created **after** the plugin is network-activated get their table automati
 
 ## Settings
 
-Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings — see [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/). Formats, quality and delivery choices set on one site have no effect on any other site in the network.
-
-## See also
-
-* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
-* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
+Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Formats, quality and delivery choices set on one site have no effect on any other site in the network.

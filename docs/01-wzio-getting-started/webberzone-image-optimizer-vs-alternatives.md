@@ -10,13 +10,13 @@ order: 5
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. This article compares it against three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. This article compares it against three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs.
 
 Every claim below was checked directly against each plugin's own source rather than its marketing copy: WebberZone Image Optimizer's own `includes/` directory, the WordPress Performance Team's [`performance`](https://github.com/WordPress/performance) repository, the [`rosell-dk/webp-express`](https://github.com/rosell-dk/webp-express) GitHub repository, and the `webp-converter-for-media` trunk from the WordPress.org plugin SVN. This comparison was compiled by Claude Sonnet 5 on 2026-08-11 and reflects each plugin's code as of that date — check each project's changelog if you're reading this later, since settings and defaults do change between releases.
 
 ## Quality and encoder control
 
-**WebberZone Image Optimizer** exposes independent numeric controls per format on the Quality tab: **WebP quality** (1–100, default `82`), **AVIF quality** (1–100, default `50`), **WebP encoder effort** (0–6, default `6`), **AVIF encoder effort** (0–6, default `4`), and a **Lossless for PNG sources** toggle (default on). See [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/) for the full reference.
+**WebberZone Image Optimizer** exposes independent numeric controls per format on the Quality tab: **WebP quality** (1–100, default `82`), **AVIF quality** (1–100, default `50`), **WebP encoder effort** (0–6, default `6`), **AVIF encoder effort** (0–6, default `4`), and a **Lossless for PNG sources** toggle (default on). See [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for the full reference.
 
 **Modern Image Formats** has no quality setting anywhere in its admin screen. WebP quality is hardcoded in `hooks.php`:
 
@@ -77,7 +77,7 @@ Converter for Media's free version is WebP-only as well. AVIF is gated behind a 
 
 ## Converting the existing media library
 
-WebberZone Image Optimizer ships a database-backed, resumable bulk-conversion queue (**Media → Bulk Optimize**), described in [How the Queue Works](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/), plus a **Queue images on first view** option that converts an image the moment it's seen on the front end without ever encoding during the page render itself.
+WebberZone Image Optimizer ships a database-backed, resumable bulk-conversion queue (**Media → Bulk Optimize**), described in [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/), plus a **Queue images on first view** option that converts an image the moment it's seen on the front end without ever encoding during the page render itself.
 
 Modern Image Formats converts **new uploads only**. Its own readme is explicit about this:
 
@@ -89,7 +89,7 @@ WebP Express and Converter for Media both ship their own bulk-conversion screens
 
 ## Command-line tooling
 
-WebberZone Image Optimizer registers five commands under `wp wzio`: `status`, `convert`, `queue`, `run`, and `clean` — documented in [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/).
+WebberZone Image Optimizer registers five commands under `wp wzio`: `status`, `convert`, `queue`, `run`, and `clean` — documented in [WebberZone Image Optimizer WP-CLI](https://webberzone.com/support/knowledgebase/webberzone-image-optimizer-wp-cli/).
 
 WebP Express registers `wp webp-express convert`, with flags for `--reconvert`, `--only-png`, `--only-jpeg`, `--quality`, `--near-lossless`, `--alpha-quality`, `--encoding`, and `--converter` — comparable in depth to WZIO's CLI, if organized as a single command with many flags rather than several purpose-built subcommands.
 
@@ -123,10 +123,3 @@ WebP Express and Converter for Media both default to server-level rewriting: `.h
 </table></figure>
 
 WebP Express is the closest competitor on quality-control depth, with genuinely sophisticated per-source-type logic, but it never generates AVIF. Converter for Media matches WZIO on bulk conversion and CLI support but locks AVIF behind a paywall and offers only coarse quality presets. Modern Image Formats, despite being the WordPress Performance Team's own plugin, has the shallowest feature set of the four on every axis in this comparison except being bundled with an authoritative source — it has no quality control, no bulk conversion, and no CLI.
-
-## See also
-
-* [Getting Started with WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/getting-started-with-webberzone-image-optimizer/)
-* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
-* [How the Queue Works in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/how-the-queue-works-in-webberzone-image-optimizer/)
-* [WebberZone Image Optimizer WP-CLI](https://webberzone.github.io/webberzone-image-optimizer/docs/02-wzio-advanced/webberzone-image-optimizer-wp-cli/)

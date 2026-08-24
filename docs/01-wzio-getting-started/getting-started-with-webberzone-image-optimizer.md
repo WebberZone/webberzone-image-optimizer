@@ -10,7 +10,7 @@ order: 0
 
 [kbtoc]
 
-[WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
 
 ## What your server needs
 
@@ -31,13 +31,7 @@ The plugin does not trust what the extension claims to support — it tests your
 
 1. Download the latest release from [GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases/latest) and upload the `webberzone-image-optimizer` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the Plugins menu.
-3. Visit **Media → Image Optimizer** to choose your formats — see [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/).
-4. Visit **Media → Bulk Optimize** and press **Start optimizing** — see [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/).
+3. Visit **Media → Image Optimizer** to choose your formats — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/).
+4. Visit **Media → Bulk Optimize** and press **Start optimizing** — see [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.com/support/knowledgebase/bulk-optimize-in-webberzone-image-optimizer/).
 
 New uploads are converted automatically from then on, and existing images are optimized the first time they're viewed on the front end even if you never run the bulk screen, as long as **Queue images on first view** is enabled.
-
-## See also
-
-* [Image Optimizer Settings](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/image-optimizer-settings/)
-* [Bulk Optimize in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/bulk-optimize-in-webberzone-image-optimizer/)
-* [Media Library Integration in WebberZone Image Optimizer](https://webberzone.github.io/webberzone-image-optimizer/docs/01-wzio-getting-started/media-library-integration-in-webberzone-image-optimizer/)
