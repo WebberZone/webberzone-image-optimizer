@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <clipPath id="wzioFrame">
+      <rect x="56" y="38" width="144" height="108" rx="14"></rect>
+    </clipPath>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#1A2E3A"></rect>
+  <g clip-path="url(#wzioFrame)">
+    <circle cx="92" cy="70" r="11" fill="#FFBD59"></circle>
+    <path d="M46 150 L104 92 L134 124 L158 98 L212 150 Z" fill="#F7F3EE"></path>
+  </g>
+  <rect x="56" y="38" width="144" height="108" rx="14" fill="none" stroke="#F7F3EE" stroke-width="9"></rect>
+  <circle cx="196" cy="142" r="32" fill="#1A2E3A"></circle>
+  <circle cx="196" cy="142" r="24" fill="#C25A32"></circle>
+  <path d="M196 130 L196 152 M186 143 L196 153 L206 143" fill="none" stroke="#F7F3EE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path>
+  <text x="128" y="228" text-anchor="middle" font-size="46" letter-spacing="3" fill="#F7F3EE" style="font-family:'League Spartan',sans-serif;font-weight:700;">WZ<tspan fill="#FFBD59">IO</tspan></text>
+</svg>
