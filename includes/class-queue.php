@@ -14,7 +14,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Manages one queue row per attachment and its files.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Queue {
 
@@ -22,7 +22,7 @@ class Queue {
 	/**
 	 * Waiting to be processed.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const PENDING = 'pending';
@@ -30,7 +30,7 @@ class Queue {
 	/**
 	 * Claimed by a worker.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const PROCESSING = 'processing';
@@ -38,7 +38,7 @@ class Queue {
 	/**
 	 * Finished successfully.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const DONE = 'done';
@@ -46,7 +46,7 @@ class Queue {
 	/**
 	 * Finished with an error.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const FAILED = 'failed';
@@ -54,7 +54,7 @@ class Queue {
 	/**
 	 * Nothing to do for this attachment.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   string
 	 */
 	const SKIPPED = 'skipped';
@@ -62,7 +62,7 @@ class Queue {
 	/**
 	 * Maximum times a failing attachment is retried before it is left alone.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var   int
 	 */
 	const MAX_ATTEMPTS = 3;
@@ -70,7 +70,7 @@ class Queue {
 	/**
 	 * Add attachments, resetting existing rows only when forced.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  array<int, int> $attachment_ids Attachment IDs.
 	 * @param  bool            $force          Whether to requeue rows that already finished.
@@ -115,7 +115,7 @@ class Queue {
 	/**
 	 * Claim the next batch of pending rows.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $limit Maximum rows to claim.
 	 * @return array<int, object> Claimed rows.
@@ -174,7 +174,7 @@ class Queue {
 	/**
 	 * Get the current status of an attachment's row.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return string Status, or an empty string when there is no row.
@@ -197,7 +197,7 @@ class Queue {
 	/**
 	 * Get the row ID for an attachment.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return int Row ID, or 0 when there is no row.
@@ -218,7 +218,7 @@ class Queue {
 	/**
 	 * Claim the pending row for one specific attachment, bypassing queue order.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return object|null Claimed row, or null when nothing was pending for it.
@@ -266,7 +266,7 @@ class Queue {
 	/**
 	 * Record the outcome of a claimed row.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int    $id     Queue row ID.
 	 * @param  string $status New status.
@@ -329,7 +329,7 @@ class Queue {
 	/**
 	 * Requeue stale claims left by terminated workers.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $older_than_seconds Age in seconds after which a claim is stale.
 	 * @return int Rows released.
@@ -365,7 +365,7 @@ class Queue {
 	/**
 	 * Count the rows in each status.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return array<string, int> Status to count, plus a `total` key.
 	 */
@@ -420,7 +420,7 @@ class Queue {
 	/**
 	 * Discard the cached status counts.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -431,7 +431,7 @@ class Queue {
 	/**
 	 * Whether any row is waiting to be processed.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return bool True when work remains.
 	 */
@@ -444,7 +444,7 @@ class Queue {
 	/**
 	 * Remove rows for a single attachment.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $attachment_id Attachment ID.
 	 * @return void
@@ -465,7 +465,7 @@ class Queue {
 	/**
 	 * Empty the queue.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -487,7 +487,7 @@ class Queue {
 	/**
 	 * Remove pending claims while retaining completed totals.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -511,7 +511,7 @@ class Queue {
 	/**
 	 * Get the most recent failures.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param  int $limit Maximum rows to return.
 	 * @return array<int, object> Failed rows.

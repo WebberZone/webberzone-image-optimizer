@@ -16,14 +16,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Finds convertible attachments via direct queries to avoid loading post objects.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Scanner {
 
 	/**
 	 * How many IDs to insert into the queue per statement.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var int
 	 */
 	const CHUNK = 500;
@@ -31,7 +31,7 @@ class Scanner {
 	/**
 	 * Count the attachments the plugin could convert.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return int Attachment count.
 	 */
@@ -54,7 +54,7 @@ class Scanner {
 	/**
 	 * Count the attachments that already carry a conversion record.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return int Attachment count.
 	 */
@@ -73,7 +73,7 @@ class Scanner {
 	/**
 	 * Get a page of attachment IDs that could be converted.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param int  $limit          Maximum IDs to return.
 	 * @param int  $after_id       Only return IDs greater than this.
@@ -121,7 +121,7 @@ class Scanner {
 	/**
 	 * Fill the queue with every attachment that still needs work.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param bool $force Whether to include attachments that already have a record.
 	 * @return int Number of attachments queued.

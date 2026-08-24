@@ -1,20 +1,6 @@
-= 0.9.1 =
+= 1.0.0 =
 
-Release date: August 21, 2026
-
-* Bug fixes:
-    * Fixed the `wzio_settings_defaults` filter being ignored when a default was read outside the admin area.
-    * Fixed settings on a multisite network reading another site's values in the same request after a `switch_to_blog()` call, such as during network activation or deactivation.
-    * Fixed settings fields whose type had no matching sanitize callback. Radio, select and thumbnail size fields are now validated against the choices they offer on save.
-
-* Improvements:
-    * Setting defaults are now resolved from a single lightweight list instead of building every settings field, so reading an option early in the page load no longer risks loading translations too early.
-    * Whole page rewriting now uses the template enhancement output buffer introduced in WordPress 6.9 instead of opening its own output buffer, so it can no longer interfere with buffers owned by a theme, a cache or another plugin. The option is unavailable on earlier versions.
-    * The settings option is registered with its correct type and default, and is no longer exposed through the REST API without a schema.
-
-= 0.9.0 =
-
-Release date: August 10, 2026
+Release date: August 25, 2026
 
 * Features:
     * Convert JPEG, PNG and GIF images in the media library to WebP and AVIF. Optimized copies are written alongside the original with the extension appended (`photo.jpg` becomes `photo.jpg.webp`) and originals are never modified.
@@ -28,3 +14,4 @@ Release date: August 10, 2026
     * Per-image savings column and Optimize / Delete-copies actions in the Media library.
     * Multisite aware, with a per-site queue table created automatically for new sites.
     * WP-CLI commands: `wp wzio status`, `convert`, `queue`, `run` and `clean`.
+    * Whole page rewriting uses the template enhancement output buffer introduced in WordPress 6.9, so it cannot interfere with buffers owned by a theme, a cache or another plugin. The option is unavailable on earlier versions.

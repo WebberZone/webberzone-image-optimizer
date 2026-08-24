@@ -17,14 +17,14 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Runs on activation.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Activator {
 
 	/**
 	 * Prepare the plugin for use.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param bool $network_wide Whether the plugin was activated for the whole network.
 	 * @return void
@@ -49,7 +49,7 @@ class Activator {
 	/**
 	 * Write the default settings, without disturbing an existing configuration.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */

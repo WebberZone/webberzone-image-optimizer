@@ -18,14 +18,14 @@ if ( ! defined( 'WPINC' ) ) {
  *
  * File existence is authoritative because unusable sidecars are deleted.
  *
- * @since 0.9.0
+ * @since 1.0.0
  */
 class Resolver {
 
 	/**
 	 * Object cache group.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var string
 	 */
 	const CACHE_GROUP = 'wzio_sidecar';
@@ -33,7 +33,7 @@ class Resolver {
 	/**
 	 * How long a positive result is trusted.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var int
 	 */
 	const HIT_TTL = DAY_IN_SECONDS;
@@ -41,7 +41,7 @@ class Resolver {
 	/**
 	 * How long a negative result is trusted before queued conversion may complete.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var int
 	 */
 	const MISS_TTL = 5 * MINUTE_IN_SECONDS;
@@ -49,7 +49,7 @@ class Resolver {
 	/**
 	 * Request-level cache of resolved paths.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 * @var array<string, string|false>
 	 */
 	private static $memo = array();
@@ -57,7 +57,7 @@ class Resolver {
 	/**
 	 * Resolve a source image URL to its sidecar URL.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param string $url    Source image URL.
 	 * @param string $format Target format slug.
@@ -105,7 +105,7 @@ class Resolver {
 	/**
 	 * Whether the URL points at a file inside this site's uploads directory.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param string $url Image URL.
 	 * @return bool True when the URL is local.
@@ -117,7 +117,7 @@ class Resolver {
 	/**
 	 * Forget everything cached for the current request.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
@@ -128,7 +128,7 @@ class Resolver {
 	/**
 	 * Invalidate cached existence after sidecar creation or deletion.
 	 *
-	 * @since 0.9.0
+	 * @since 1.0.0
 	 *
 	 * @param string $path Absolute source image path.
 	 * @return void
