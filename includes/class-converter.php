@@ -325,17 +325,23 @@ class Converter {
 
 		$animated = ( 'image/gif' === $mime ) && Helpers::is_animated_gif( $path );
 
+		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
+
 		foreach ( $args['formats'] as $format ) {
 			$destination = Helpers::sidecar_path( $path, $format );
 
-			// An up-to-date sidecar from a previous run is reused as-is.
+			// Any up-to-date copy is kept, whoever wrote it. Re-encoding a file that
+			// already serves costs a migrating site hours and can only make it worse.
 			if ( empty( $args['force'] )
-				&& Attachment_Meta::is_converted( $existing, $format )
 				&& file_exists( $destination )
 				&& filemtime( $destination ) >= filemtime( $path )
 			) {
-				$record[ $format ] = Attachment_Meta::converted_entry( (int) filesize( $destination ) );
-				continue;
+				$bytes = (int) filesize( $destination );
+
+				if ( $bytes > 0 && $bytes < $max_bytes ) {
+					$record[ $format ] = Attachment_Meta::converted_entry( $bytes );
+					continue;
+				}
 			}
 
 			// A previous run decided this file is not worth converting.
@@ -362,8 +368,6 @@ class Converter {
 				);
 				continue;
 			}
-
-			$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
 			$driver_args = array(
 				'quality'   => (int) ( $args['quality'][ $format ] ?? 82 ),
