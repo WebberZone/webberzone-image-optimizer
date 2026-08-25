@@ -1,14 +1,15 @@
 ---
 slug: image-optimizer-settings
 title: "Image Optimizer Settings"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, settings]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [settings, webberzone-image-optimizer]
 status: publish
 order: 1
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) settings live at **Media → Image Optimizer**, across four tabs: General, Quality, Delivery and Advanced.
 
@@ -68,8 +69,8 @@ Catch images printed directly by a page builder or a hard-coded template by buff
 **CSS background images**
 The Delivery tab generates ready-to-paste Apache and nginx rules for images referenced from a stylesheet, where the browser is never offered a choice by the plugin itself. Both blocks send a `Vary: Accept` header — do not remove it, or a CDN or page cache can hand a WebP file to a browser that cannot display it.
 
-* **Apache or LiteSpeed** — if the `.htaccess` file is writable by PHP, use the **Add to .htaccess** / **Remove from .htaccess** buttons to install the rules with one click. If the file is not writable, copy the generated block above the WordPress rules in `.htaccess` by hand.
-* **nginx** — add the generated block to your server configuration and reload.
+- **Apache or LiteSpeed** — if the `.htaccess` file is writable by PHP, use the **Add to .htaccess** / **Remove from .htaccess** buttons to install the rules with one click. If the file is not writable, copy the generated block above the WordPress rules in `.htaccess` by hand.
+- **nginx** — add the generated block to your server configuration and reload.
 
 ## Advanced
 

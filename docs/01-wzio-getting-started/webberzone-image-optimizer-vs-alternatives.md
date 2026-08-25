@@ -1,14 +1,15 @@
 ---
 slug: webberzone-image-optimizer-vs-alternatives
 title: "WebberZone Image Optimizer vs. Modern Image Formats, WebP Express, and Converter for Media"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, comparison, webp, avif]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [avif, comparison, webberzone-image-optimizer, webp]
 status: publish
 order: 5
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. This article compares it against three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs. If you are moving from one of those, see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/) for how to carry the files they generated across.
 
@@ -38,24 +39,19 @@ AVIF quality isn't touched by the plugin at all — it inherits whatever WordPre
 
 ```php
 public function get_available_values( array $settings ): array {
-    $levels = apply_filters( 'webpc_option_quality_levels', [ 75, 80, 85, 90, 95 ] );
+    $levels = apply_filters( 'webpc_option_quality_levels', [[ 75, 80, 85, 90, 95 ]] );
     // ...
 }
 ```
 
 No encoder-effort or lossless-PNG setting exists in its source.
 
-<figure class="wp-block-table"><table class="has-fixed-layout">
-<thead>
-<tr><th>Plugin</th><th>Quality range</th><th>Per-format quality</th><th>Encoder effort</th><th>Lossless PNG</th></tr>
-</thead>
-<tbody>
-<tr><td>WebberZone Image Optimizer</td><td>1–100</td><td>Yes (WebP and AVIF separate)</td><td>Yes (0–6, both formats)</td><td>Yes</td></tr>
-<tr><td>Modern Image Formats</td><td>Fixed (WebP always 82)</td><td>No</td><td>No</td><td>No</td></tr>
-<tr><td>WebP Express</td><td>0–100</td><td>Yes (by source type, WebP only)</td><td>Yes (0–6, cwebp only)</td><td>Near-lossless only</td></tr>
-<tr><td>Converter for Media</td><td>5 fixed presets</td><td>No (shared value)</td><td>No</td><td>No</td></tr>
-</tbody>
-</table></figure>
+| Plugin | Quality range | Per-format quality | Encoder effort | Lossless PNG |
+| --- | --- | --- | --- | --- |
+| WebberZone Image Optimizer | 1–100 | Yes (WebP and AVIF separate) | Yes (0–6, both formats) | Yes |
+| Modern Image Formats | Fixed (WebP always 82) | No | No | No |
+| WebP Express | 0–100 | Yes (by source type, WebP only) | Yes (0–6, cwebp only) | Near-lossless only |
+| Converter for Media | 5 fixed presets | No (shared value) | No | No |
 
 ## AVIF support
 
@@ -107,19 +103,14 @@ WebP Express and Converter for Media both default to server-level rewriting: `.h
 
 ## Free-tier summary
 
-<figure class="wp-block-table"><table class="has-fixed-layout">
-<thead>
-<tr><th>Capability</th><th>WebberZone Image Optimizer</th><th>Modern Image Formats</th><th>WebP Express</th><th>Converter for Media</th></tr>
-</thead>
-<tbody>
-<tr><td>WebP + AVIF together, free</td><td>Yes</td><td>No (one format at a time)</td><td>No AVIF</td><td>No (AVIF is paid)</td></tr>
-<tr><td>Granular quality (1–100)</td><td>Yes, per format</td><td>No</td><td>Yes, per source type</td><td>No (5 presets)</td></tr>
-<tr><td>Encoder effort control</td><td>Yes, both formats</td><td>No</td><td>Partial (cwebp only)</td><td>No</td></tr>
-<tr><td>Lossless PNG</td><td>Yes</td><td>No</td><td>Near-lossless only</td><td>No</td></tr>
-<tr><td>Bulk-converts existing library</td><td>Yes, resumable queue</td><td>No (core regenerate only)</td><td>Yes</td><td>Yes</td></tr>
-<tr><td>Native WP-CLI</td><td>Yes (5 commands)</td><td>No</td><td>Yes</td><td>Yes</td></tr>
-<tr><td>&lt;picture&gt; delivery by default</td><td>Yes</td><td>No (experimental, opt-in)</td><td>No</td><td>No</td></tr>
-</tbody>
-</table></figure>
+| Capability | WebberZone Image Optimizer | Modern Image Formats | WebP Express | Converter for Media |
+| --- | --- | --- | --- | --- |
+| WebP + AVIF together, free | Yes | No (one format at a time) | No AVIF | No (AVIF is paid) |
+| Granular quality (1–100) | Yes, per format | No | Yes, per source type | No (5 presets) |
+| Encoder effort control | Yes, both formats | No | Partial (cwebp only) | No |
+| Lossless PNG | Yes | No | Near-lossless only | No |
+| Bulk-converts existing library | Yes, resumable queue | No (core regenerate only) | Yes | Yes |
+| Native WP-CLI | Yes (5 commands) | No | Yes | Yes |
+| <picture> delivery by default | Yes | No (experimental, opt-in) | No | No |
 
 WebP Express is the closest competitor on quality-control depth, with genuinely sophisticated per-source-type logic, but it never generates AVIF. Converter for Media matches WZIO on bulk conversion and CLI support but locks AVIF behind a paywall and offers only coarse quality presets. Modern Image Formats, despite being the WordPress Performance Team's own plugin, has the shallowest feature set of the four on every axis in this comparison except being bundled with an authoritative source — it has no quality control, no bulk conversion, and no CLI.

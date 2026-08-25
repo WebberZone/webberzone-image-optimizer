@@ -1,14 +1,15 @@
 ---
 slug: bulk-optimize-in-webberzone-image-optimizer
 title: "Bulk Optimize in WebberZone Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, bulk, queue]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [bulk, queue, webberzone-image-optimizer]
 status: publish
 order: 2
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts your existing media library. Find it at **Media → Bulk Optimize**.
 
@@ -20,10 +21,10 @@ The screen works through a database-backed queue one batch at a time rather than
 
 Four cards summarize your library:
 
-* **Images in the library** — total convertible attachments.
-* **Already optimized** — attachments with at least one generated file.
-* **Waiting in the queue** — attachments still pending.
-* **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
+- **Images in the library** — total convertible attachments.
+- **Already optimized** — attachments with at least one generated file.
+- **Waiting in the queue** — attachments still pending.
+- **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
 
 **Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress — completed rows are kept so the **Bandwidth saved** totals survive the reset. The **Re-optimize images that are already done** checkbox forces every image to be re-encoded on the next run, even ones with an up-to-date copy.
 

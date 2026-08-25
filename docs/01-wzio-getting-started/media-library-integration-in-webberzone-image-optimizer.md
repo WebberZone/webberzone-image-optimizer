@@ -1,22 +1,23 @@
 ---
 slug: media-library-integration-in-webberzone-image-optimizer
 title: "Media Library Integration in WebberZone Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, media-library]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [media-library, webberzone-image-optimizer]
 status: publish
 order: 3
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
 
 ## The Optimized column
 
-* **—** — the file is not an image type the plugin can optimize.
-* **Not yet** — the image is convertible but has no optimized copy yet.
-* **N files, X smaller (Y%)** — the number of generated files, the total bytes saved, and the percentage saved for this attachment.
+- **—** — the file is not an image type the plugin can optimize.
+- **Not yet** — the image is convertible but has no optimized copy yet.
+- **N files, X smaller (Y%)** — the number of generated files, the total bytes saved, and the percentage saved for this attachment.
 
 ## Row actions
 

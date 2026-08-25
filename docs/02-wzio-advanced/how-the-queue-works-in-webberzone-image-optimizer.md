@@ -1,14 +1,15 @@
 ---
 slug: how-the-queue-works-in-webberzone-image-optimizer
 title: "How the Queue Works in WebberZone Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [02-wzio-advanced]
-tags: [webberzone-image-optimizer, queue, bulk]
+products: [image-optimizer]
+sections: ["02-wzio-advanced"]
+tags: [bulk, queue, webberzone-image-optimizer]
 status: publish
 order: 2
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts images through a database-backed queue rather than during a page render. This is what makes the Bulk Optimize screen resumable and keeps front-end visitors from ever waiting on an encode.
 
@@ -18,16 +19,16 @@ The queue holds one row per attachment, not per file — the converter always pr
 
 Each row moves through these statuses:
 
-* **pending** — waiting to be processed.
-* **processing** — claimed by a worker.
-* **done** — finished successfully.
-* **skipped** — nothing to do (already optimized, or excluded).
-* **failed** — finished with an error, after retries are exhausted.
+- **pending** — waiting to be processed.
+- **processing** — claimed by a worker.
+- **done** — finished successfully.
+- **skipped** — nothing to do (already optimized, or excluded).
+- **failed** — finished with an error, after retries are exhausted.
 
 ## What adds attachments to the queue
 
-* Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` / `wp wzio convert` from the command line.
-* A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab — the original is served immediately and the attachment is queued on `shutdown`, so nothing is ever encoded during the page render itself.
+- Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` / `wp wzio convert` from the command line.
+- A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab — the original is served immediately and the attachment is queued on `shutdown`, so nothing is ever encoded during the page render itself.
 
 ## How a batch runs
 
