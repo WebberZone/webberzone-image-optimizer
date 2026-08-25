@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -108,6 +108,14 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.0.1 =
+
+Release date: 26 August 2026
+
+* Bug fixes:
+    * An optimized copy that is not small enough is now rejected before it replaces anything, so a rejected conversion can no longer delete a usable copy from an earlier run.
+    * An optimized copy inherited from another plugin is kept only when it is no older than its source, so a stale copy is never served.
+
 = 1.0.0 =
 
 Release date: 25 August 2026
@@ -115,6 +123,9 @@ Release date: 25 August 2026
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Fixes a case where a rejected conversion could remove a usable optimized copy.
 
 = 1.0.0 =
 Initial release.

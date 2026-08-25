@@ -1,3 +1,11 @@
+= 1.0.1 =
+
+Release date: 26 August 2026
+
+* Bug fixes:
+    * An optimized copy that is not small enough is now rejected before it replaces anything, so a rejected conversion can no longer delete a usable copy from an earlier run.
+    * An optimized copy inherited from another plugin is kept only when it is no older than its source, so a stale copy is never served.
+
 = 1.0.0 =
 
 Release date: 25 August 2026
