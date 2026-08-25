@@ -194,10 +194,11 @@ class Helpers {
 	 *
 	 * @param string $file   Absolute path or filename of the source image.
 	 * @param string $format Target format slug.
+	 * @param string $naming Naming strategy to force. Empty uses the setting.
 	 * @return string Sidecar path or filename.
 	 */
-	public static function sidecar_path( string $file, string $format ): string {
-		return self::apply_sidecar_naming( $file, $format );
+	public static function sidecar_path( string $file, string $format, string $naming = '' ): string {
+		return self::apply_sidecar_naming( $file, $format, $naming );
 	}
 
 	/**
@@ -207,10 +208,15 @@ class Helpers {
 	 *
 	 * @param string $path   Absolute path, filename, or URL path.
 	 * @param string $format Target format slug.
+	 * @param string $naming Naming strategy to force. Empty uses the setting.
 	 * @return string Path or URL with the sidecar naming applied.
 	 */
-	public static function apply_sidecar_naming( string $path, string $format ): string {
-		if ( 'replace' === \wzio_get_option( 'sidecar_naming', 'append' ) ) {
+	public static function apply_sidecar_naming( string $path, string $format, string $naming = '' ): string {
+		if ( '' === $naming ) {
+			$naming = (string) \wzio_get_option( 'sidecar_naming', 'append' );
+		}
+
+		if ( 'replace' === $naming ) {
 			return (string) preg_replace( '/\.[^.\/\\\\]+$/', '', $path ) . '.' . $format;
 		}
 

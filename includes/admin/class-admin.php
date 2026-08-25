@@ -57,6 +57,15 @@ class Admin {
 	public Admin_Banner $admin_banner;
 
 	/**
+	 * Foreign sidecar naming prompt.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @var Naming_Notice
+	 */
+	public Naming_Notice $naming_notice;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -66,6 +75,7 @@ class Admin {
 		$this->bulk_page     = new Bulk_Page();
 		$this->media_library = new Media_Library();
 		$this->admin_banner  = new Admin_Banner( $this->get_admin_banner_config() );
+		$this->naming_notice = new Naming_Notice();
 	}
 
 	/**
