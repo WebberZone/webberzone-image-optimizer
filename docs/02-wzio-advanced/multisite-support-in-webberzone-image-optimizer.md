@@ -1,14 +1,15 @@
 ---
 slug: multisite-support-in-webberzone-image-optimizer
 title: "Multisite Support in WebberZone Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [02-wzio-advanced]
-tags: [webberzone-image-optimizer, multisite]
+products: [image-optimizer]
+sections: ["02-wzio-advanced"]
+tags: [multisite, webberzone-image-optimizer]
 status: publish
 order: 1
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
 

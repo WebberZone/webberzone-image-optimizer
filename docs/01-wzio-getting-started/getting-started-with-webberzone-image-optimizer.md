@@ -1,14 +1,14 @@
 ---
 slug: getting-started-with-webberzone-image-optimizer
 title: "Getting Started with WebberZone Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, getting-started, webp, avif]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [avif, getting-started, webberzone-image-optimizer, webp]
 status: publish
-order: 0
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
 
@@ -16,8 +16,8 @@ order: 0
 
 WordPress cannot crop or resize an uploaded image without either the **Imagick** or the **GD** extension, so every working WordPress install already has one of them, and both have been able to write WebP for years.
 
-* **WebP** works on virtually any current host.
-* **AVIF** is newer. It needs either PHP 8.1+ with GD built against libavif, or Imagick with an AVIF delegate. Not every host has it yet.
+- **WebP** works on virtually any current host.
+- **AVIF** is newer. It needs either PHP 8.1+ with GD built against libavif, or Imagick with an AVIF delegate. Not every host has it yet.
 
 The plugin does not trust what the extension claims to support — it tests your server by actually encoding a small image with each backend at activation, and the settings screen shows exactly which formats came back working. If AVIF is unavailable, the option is marked as such and WebP carries on normally.
 

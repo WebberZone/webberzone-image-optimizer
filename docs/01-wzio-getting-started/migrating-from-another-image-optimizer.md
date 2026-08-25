@@ -1,14 +1,15 @@
 ---
 slug: migrating-from-another-image-optimizer
 title: "Migrating from Another Image Optimizer"
-products: [webberzone-image-optimizer]
-sections: [01-wzio-getting-started]
-tags: [webberzone-image-optimizer, migration, webp, avif]
+products: [image-optimizer]
+sections: ["01-wzio-getting-started"]
+tags: [avif, migration, webberzone-image-optimizer, webp]
 status: publish
 order: 4
+toc: true
 ---
 
-[kbtoc]
+[toc]
 
 If your site already runs ShortPixel, Imagify, EWWW Image Optimizer or a similar plugin, the WebP and AVIF files it generated are ordinary files sitting next to your originals. [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) can serve those existing files as they are. There is no import step, nothing is renamed, and nothing is converted a second time.
 
@@ -58,18 +59,13 @@ A leftover block points at the naming the old plugin used and runs ahead of anyt
 
 ## What each plugin leaves behind
 
-<figure class="wp-block-table"><table class="has-fixed-layout">
-<thead>
-<tr><th>Plugin</th><th>Where the copies are</th><th>Naming</th></tr>
-</thead>
-<tbody>
-<tr><td>ShortPixel Image Optimizer</td><td>Next to the original</td><td>Replace (<code>photo.webp</code>) by default</td></tr>
-<tr><td>Imagify</td><td>Next to the original</td><td>Append (<code>photo.jpg.webp</code>)</td></tr>
-<tr><td>EWWW Image Optimizer</td><td>Next to the original</td><td>Append by default, Replace optional</td></tr>
-<tr><td>Smush</td><td>Free version writes no local copies</td><td>—</td></tr>
-<tr><td>Optimole</td><td>Nothing local — images are served from its CDN</td><td>—</td></tr>
-</tbody>
-</table></figure>
+| Plugin | Where the copies are | Naming |
+| --- | --- | --- |
+| ShortPixel Image Optimizer | Next to the original | Replace (`photo.webp`) by default |
+| Imagify | Next to the original | Append (`photo.jpg.webp`) |
+| EWWW Image Optimizer | Next to the original | Append by default, Replace optional |
+| Smush | Free version writes no local copies | — |
+| Optimole | Nothing local — images are served from its CDN | — |
 
 Smush's WebP and AVIF modules are paid features, so a site on the free version has nothing on disk to carry over. Smush Pro writes to a mirrored folder rather than next to the original, which this plugin does not read; those sites start from scratch. Optimole rewrites image URLs to its own CDN and stores nothing on your server.
 
