@@ -20,6 +20,6 @@ The full developer reference for [WebberZone Image Optimizer](https://webberzone
 
 The plugin uses the namespace `WebberZone\Image_Optimizer` and the prefix `wzio` throughout. Two design decisions matter when extending the plugin:
 
-**Sidecar files, named via `Helpers::apply_sidecar_naming()` — never by string concatenation.** Default is `photo.jpg` → `photo.jpg.webp`; the **Optimized file naming** setting can switch a site to `photo.webp` instead, and code that assumes append-only will 404 there. Originals are never modified.
+**Sidecar files, named via `Helpers::apply_sidecar_naming()` — never by string concatenation.** Default is `photo.jpg` → `photo.jpg.webp`; the **Optimized file naming** setting can switch a site to `photo.webp` instead, and code that assumes append-only will 404 there. The optional third argument forces a strategy rather than reading the setting, which is how the plugin looks for copies under the convention a site is not using. Originals are never modified.
 
 **`<picture>` rewriting, not `Accept`-header rewriting.** The HTML is identical for every visitor; the browser picks the source. Do not rely on server-side content negotiation when extending delivery — it is deliberately not how this plugin works.

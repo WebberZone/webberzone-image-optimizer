@@ -24,10 +24,12 @@ Generate the optimized copies as soon as an image is uploaded or its thumbnails 
 Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. A responsive image only switches format when every size in its `srcset` has been converted, so excluding a size that appears in your theme's markup disables the optimization for those images. Default: all sizes (nothing excluded).
 
 **Minimum saving (%)**
-Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. Default: `5`. Range: `0`–`90`.
+Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. The same threshold decides whether a copy inherited from another optimizer is kept or replaced. Default: `5`. Range: `0`–`90`.
 
 **Optimized file naming**
 Controls how the generated WebP/AVIF file is named. **Append the new extension** (`photo.jpg.webp`) is the safe default — every file has a unique name and nothing can collide. **Replace the extension** (`photo.webp`) produces shorter filenames but can collide if the same folder contains both `photo.jpg` and `photo.png`, silently overwriting one optimized copy with the other. Only choose Replace if you are sure your uploads never share a filename across extensions. Default: `append`.
+
+This setting also decides whether optimized copies written by a previous plugin are found. When the plugin detects copies named the other way round it offers to switch for you — see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
 
 ## Quality
 
