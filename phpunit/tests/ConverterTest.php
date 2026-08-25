@@ -292,6 +292,49 @@ class ConverterTest extends WP_UnitTestCase
     }
 
     /**
+     * A copy another plugin left behind is adopted instead of re-encoded.
+     */
+    public function test_a_foreign_sidecar_is_adopted_without_re_encoding()
+    {
+        $id      = $this->create_attachment();
+        $source  = get_attached_file($id);
+        $sidecar = Helpers::sidecar_path($source, 'webp');
+
+        // Stands in for a copy another optimizer wrote, with no record of ours.
+        file_put_contents($sidecar, str_repeat('x', 64));
+        clearstatcache();
+
+        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
+
+        clearstatcache();
+
+        $this->assertSame(64, filesize($sidecar));
+
+        $record = Attachment_Meta::get($id);
+
+        $this->assertSame(64, $record['files'][ wp_basename($source) ]['webp']['bytes']);
+    }
+
+    /**
+     * Forcing a run replaces a copy that would otherwise be adopted.
+     */
+    public function test_force_re_encodes_a_foreign_sidecar()
+    {
+        $id      = $this->create_attachment();
+        $source  = get_attached_file($id);
+        $sidecar = Helpers::sidecar_path($source, 'webp');
+
+        file_put_contents($sidecar, str_repeat('x', 64));
+        clearstatcache();
+
+        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ), 'force' => true ));
+
+        clearstatcache();
+
+        $this->assertNotSame(64, filesize($sidecar));
+    }
+
+    /**
      * A sidecar older than its source is stale and gets rebuilt.
      */
     public function test_a_stale_sidecar_is_regenerated()
