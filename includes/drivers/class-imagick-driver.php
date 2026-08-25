@@ -180,7 +180,8 @@ class Imagick_Driver extends Driver {
 					$image->clear();
 					$image->destroy();
 				}
-			}
+			},
+			$args['max_bytes']
 		);
 	}
 }

@@ -77,6 +77,7 @@ abstract class Driver {
 				'strip'         => true,
 				'alpha_quality' => 90,
 				'effort'        => 6,
+				'max_bytes'     => 0,
 			)
 		);
 
@@ -85,6 +86,7 @@ abstract class Driver {
 		$args['effort']        = max( 0, min( 6, (int) $args['effort'] ) );
 		$args['lossless']      = (bool) $args['lossless'];
 		$args['strip']         = (bool) $args['strip'];
+		$args['max_bytes']     = max( 0, (int) $args['max_bytes'] );
 
 		return $args;
 	}
@@ -96,9 +98,10 @@ abstract class Driver {
 	 *
 	 * @param  string   $destination Final destination path.
 	 * @param  callable $writer      Receives the temporary path, returns bool.
+	 * @param  int      $max_bytes   Reject the encode when it is not below this size. 0 disables the check.
 	 * @return true|\WP_Error True on success, WP_Error on failure.
 	 */
-	protected function write_atomic( string $destination, callable $writer ) {
+	protected function write_atomic( string $destination, callable $writer, int $max_bytes = 0 ) {
 		$dir = dirname( $destination );
 
 		if ( ! wp_mkdir_p( $dir ) ) {
@@ -128,6 +131,12 @@ abstract class Driver {
 		if ( ! $written || ! file_exists( $temp ) || 0 === filesize( $temp ) ) {
 			wp_delete_file( $temp );
 			return new \WP_Error( 'wzio_encode_failed', __( 'The encoder did not produce an image.', 'webberzone-image-optimizer' ) );
+		}
+
+		// Judged before the rename so a rejected encode never replaces a usable sidecar.
+		if ( $max_bytes > 0 && filesize( $temp ) >= $max_bytes ) {
+			wp_delete_file( $temp );
+			return new \WP_Error( 'wzio_encode_larger', __( 'The converted image was not small enough to keep.', 'webberzone-image-optimizer' ) );
 		}
 
      // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename

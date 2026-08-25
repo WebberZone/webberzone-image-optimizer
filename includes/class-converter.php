@@ -363,12 +363,15 @@ class Converter {
 				continue;
 			}
 
+			$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
+
 			$driver_args = array(
-				'quality'  => (int) ( $args['quality'][ $format ] ?? 82 ),
-				'lossless' => ! empty( $args['lossless'] ) && 'image/png' === $mime,
-				'strip'    => ! empty( $args['strip'] ),
-				'effort'   => (int) ( $args['effort_webp'] ?? 6 ),
-				'dims'     => compact( 'width', 'height' ),
+				'quality'   => (int) ( $args['quality'][ $format ] ?? 82 ),
+				'lossless'  => ! empty( $args['lossless'] ) && 'image/png' === $mime,
+				'strip'     => ! empty( $args['strip'] ),
+				'effort'    => (int) ( $args['effort_webp'] ?? 6 ),
+				'dims'      => compact( 'width', 'height' ),
+				'max_bytes' => $max_bytes,
 			);
 
 			if ( 'avif' === $format && isset( $args['effort_avif'] ) ) {
@@ -382,26 +385,52 @@ class Converter {
 				$driver_args
 			);
 
-			if ( is_wp_error( $result ) ) {
+			if ( is_wp_error( $result ) && 'wzio_encode_larger' !== $result->get_error_code() ) {
 				$record[ $format ] = Attachment_Meta::error_entry( $result->get_error_message() );
 				continue;
 			}
 
-			$converted_bytes = (int) filesize( $destination );
-
-			// Discard sidecars below the minimum saving.
-			$threshold = (int) ( $source_bytes * ( 100 - (int) $args['min_saving'] ) / 100 );
-
-			if ( $converted_bytes >= $threshold ) {
-				Helpers::delete_file( $destination );
-				$record[ $format ] = Attachment_Meta::skipped_entry( 'larger' );
-				continue;
-			}
-
-			$record[ $format ] = Attachment_Meta::converted_entry( $converted_bytes );
+			$record[ $format ] = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ) );
 		}
 
 		return $record;
+	}
+
+	/**
+	 * Judge the sidecar on disk once an encode has run to completion.
+	 *
+	 * Covers the copy this run wrote and the older one a rejected encode leaves
+	 * in place, which may have come from another plugin. Both are kept only when
+	 * small enough, and an inherited one only when no older than its source.
+	 * Encoder errors return before this and leave the file alone, on the grounds
+	 * that a transient failure is no reason to drop a working sidecar. This also
+	 * backstops the size limit for drivers that write without honouring it.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param  string $path        Absolute path to the source image.
+	 * @param  string $destination Sidecar path.
+	 * @param  int    $max_bytes   Size the sidecar has to stay below.
+	 * @param  bool   $written     Whether this run wrote the sidecar.
+	 * @return array<string, mixed> Format record.
+	 */
+	private static function resolve_sidecar( string $path, string $destination, int $max_bytes, bool $written ): array {
+		clearstatcache( true, $destination );
+
+		if ( file_exists( $destination ) ) {
+			$bytes = (int) filesize( $destination );
+
+			// A future-dated source would otherwise condemn the encode just made.
+			$fresh = $written || filemtime( $destination ) >= filemtime( $path );
+
+			if ( $bytes > 0 && $bytes < $max_bytes && $fresh ) {
+				return Attachment_Meta::converted_entry( $bytes );
+			}
+
+			Helpers::delete_file( $destination );
+		}
+
+		return Attachment_Meta::skipped_entry( 'larger' );
 	}
 
 	/**

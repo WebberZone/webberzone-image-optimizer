@@ -123,7 +123,8 @@ class GD_Driver extends Driver {
 				// imageavif() arrived in PHP 8.1. supports() has already confirmed
 				// it exists; calling it indirectly keeps older PHP parseable.
 				return (bool) call_user_func( 'imageavif', $image, $temp, $args['lossless'] ? -1 : $args['quality'] );
-			}
+			},
+			$args['max_bytes']
 		);
 	}
 }

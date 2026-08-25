@@ -342,6 +342,70 @@ class ConverterTest extends WP_UnitTestCase
     }
 
     /**
+     * A rejected encode leaves a usable sidecar from elsewhere in place.
+     */
+    public function test_a_usable_sidecar_survives_a_rejected_encode()
+    {
+        $id      = $this->create_attachment();
+        $source  = get_attached_file($id);
+        $sidecar = Helpers::sidecar_path($source, 'webp');
+
+        // Stands in for a sidecar another optimizer left behind.
+        file_put_contents($sidecar, str_repeat('x', 32));
+
+        Converter::convert_attachment(
+            $id,
+            array(
+            'formats'    => array( 'webp' ),
+            'min_saving' => 99,
+            'force'      => true,
+            )
+        );
+
+        clearstatcache();
+
+        $this->assertFileExists($sidecar);
+        $this->assertSame(32, filesize($sidecar));
+
+        $record = Attachment_Meta::get_file($id, wp_basename((string) $source));
+
+        $this->assertTrue(Attachment_Meta::is_converted($record, 'webp'));
+        $this->assertSame(32, $record['webp']['bytes']);
+    }
+
+    /**
+     * A sidecar older than its source is dropped even when the encode is rejected.
+     */
+    public function test_a_stale_sidecar_is_dropped_by_a_rejected_encode()
+    {
+        $id      = $this->create_attachment();
+        $source  = get_attached_file($id);
+        $sidecar = Helpers::sidecar_path($source, 'webp');
+
+        file_put_contents($sidecar, str_repeat('x', 32));
+
+        $now = time();
+        touch($sidecar, $now - 120);
+        touch($source, $now - 60);
+        clearstatcache();
+
+        Converter::convert_attachment(
+            $id,
+            array(
+            'formats'    => array( 'webp' ),
+            'min_saving' => 99,
+            'force'      => true,
+            )
+        );
+
+        $this->assertFileDoesNotExist($sidecar);
+
+        $record = Attachment_Meta::get_file($id, wp_basename((string) $source));
+
+        $this->assertSame('larger', $record['webp']['skip']);
+    }
+
+    /**
      * Deleting the copies removes the files and the record, not the original.
      */
     public function test_deleting_the_copies_leaves_the_original()

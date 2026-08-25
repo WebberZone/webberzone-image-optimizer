@@ -14,7 +14,7 @@
  * Plugin Name: WebberZone Image Optimizer
  * Plugin URI: https://webberzone.com/plugins/webberzone-image-optimizer/
  * Description: Convert your media library to WebP and AVIF, and serve the best format each browser supports.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: WebberZone
  * Author URI: https://webberzone.com/
  * License: GPL-2.0+
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'WZIO_VERSION', '1.0.0' );
+define( 'WZIO_VERSION', '1.0.1' );
 define( 'WZIO_PLUGIN_FILE', __FILE__ );
 define( 'WZIO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WZIO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
