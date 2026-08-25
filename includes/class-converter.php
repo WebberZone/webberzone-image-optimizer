@@ -330,6 +330,11 @@ class Converter {
 		foreach ( $args['formats'] as $format ) {
 			$destination = Helpers::sidecar_path( $path, $format );
 
+			if ( self::is_alien_file( $destination, $width, $height ) ) {
+				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
+				continue;
+			}
+
 			// Any up-to-date copy is kept, whoever wrote it. Re-encoding a file that
 			// already serves costs a migrating site hours and can only make it worse.
 			if ( empty( $args['force'] )
@@ -398,6 +403,42 @@ class Converter {
 		}
 
 		return $record;
+	}
+
+	/**
+	 * Whether the sidecar path holds an image that is not a copy of this source.
+	 *
+	 * Replace naming turns `photo.jpg` into `photo.webp`, which is also the name a
+	 * separately uploaded WebP image would carry. Adopting that file would serve it
+	 * in place of the JPEG and hand it to the uninstall routine to delete; encoding
+	 * over it would destroy an upload outright. A copy always keeps the dimensions
+	 * of its source, so a readable mismatch proves the file is neither, and the only
+	 * safe move is to leave it alone. Append naming cannot collide this way.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param  string $destination Sidecar path.
+	 * @param  int    $width       Source width.
+	 * @param  int    $height      Source height.
+	 * @return bool True when the path holds an unrelated image.
+	 */
+	private static function is_alien_file( string $destination, int $width, int $height ): bool {
+		if ( $width < 1 || $height < 1 || 'replace' !== \wzio_get_option( 'sidecar_naming', 'append' ) ) {
+			return false;
+		}
+
+		if ( ! file_exists( $destination ) ) {
+			return false;
+		}
+
+		$size = wp_getimagesize( $destination );
+
+		// An unreadable candidate is left to the size and freshness tests.
+		if ( ! is_array( $size ) || empty( $size[0] ) || empty( $size[1] ) ) {
+			return false;
+		}
+
+		return (int) $size[0] !== $width || (int) $size[1] !== $height;
 	}
 
 	/**

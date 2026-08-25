@@ -139,6 +139,8 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->attachments = array();
 
+        wzio_update_option('sidecar_naming', 'append');
+
         parent::tear_down();
     }
 
@@ -332,6 +334,41 @@ class ConverterTest extends WP_UnitTestCase
         clearstatcache();
 
         $this->assertNotSame(64, filesize($sidecar));
+    }
+
+    /**
+     * Replace naming must not adopt or overwrite an unrelated upload.
+     */
+    public function test_an_unrelated_image_at_the_sidecar_path_is_left_alone()
+    {
+        wzio_update_option('sidecar_naming', 'replace');
+
+        $id     = $this->create_attachment();
+        $source = get_attached_file($id);
+        $path   = Helpers::sidecar_path($source, 'webp');
+
+        // Stands in for a WebP uploaded separately that happens to share the name.
+        $image = imagecreatetruecolor(64, 64);
+        imagewebp($image, $path, 80);
+        imagedestroy($image);
+
+        $before = filesize($path);
+        clearstatcache();
+
+        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
+
+        clearstatcache();
+
+        $this->assertFileExists($path);
+        $this->assertSame($before, filesize($path));
+
+        $size = wp_getimagesize($path);
+
+        $this->assertSame(64, $size[0]);
+
+        $record = Attachment_Meta::get($id);
+
+        $this->assertSame('occupied', $record['files'][ wp_basename($source) ]['webp']['skip']);
     }
 
     /**
