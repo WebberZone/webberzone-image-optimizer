@@ -32,6 +32,11 @@ class NamingDetectorTest extends WP_UnitTestCase {
 		}
 
 		wzio_update_option( 'sidecar_naming', 'append' );
+
+		// Fixtures must look like uploads another optimizer handled, not like
+		// uploads this plugin converted: a record would remove them from the sample.
+		wzio_update_option( 'convert_on_upload', 0 );
+
 		Naming_Detector::forget();
 	}
 
