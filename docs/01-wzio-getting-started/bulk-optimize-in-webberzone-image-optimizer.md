@@ -27,6 +27,8 @@ Four cards summarize your library:
 
 **Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress — completed rows are kept so the **Bandwidth saved** totals survive the reset. The **Re-optimize images that are already done** checkbox forces every image to be re-encoded on the next run, even ones with an up-to-date copy.
 
+A normal run never re-encodes an image that already has a usable copy, whether this plugin wrote it or another optimizer did. Existing copies are kept and recorded, and only the missing formats and sizes are encoded, which is what makes a run on a library moving over from another plugin so much faster than the first run on a fresh library. See [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
+
 ## Failures
 
 An image that fails is retried a few times and then listed under **Images that could not be optimized**, with the reason for each failure. Common reasons include a server that cannot encode the requested format, or every candidate size failing the minimum-saving check.

@@ -23,7 +23,7 @@ order: 3
 Hover an image row to reveal:
 
 **Optimize**
-Converts this attachment immediately, even if it was skipped or already has an up-to-date copy. Useful after changing quality settings, when you want a single image re-encoded without running a full bulk pass.
+Converts whatever this attachment is still missing, without waiting for a bulk run — a size with no optimized copy yet, or one whose copy is older than its source. A copy that is already up to date is kept as it is, and a format recorded as skipped stays skipped. To re-encode an attachment that is already done, after changing the quality settings for example, use **Re-optimize images that are already done** on [the Bulk Optimize screen](https://webberzone.com/support/knowledgebase/bulk-optimize-in-webberzone-image-optimizer/) or run `wp wzio convert --force`.
 
 **Delete optimized copies**
 Deletes the generated WebP/AVIF files for this attachment and reverts it to serving the original. Only shown once an attachment has at least one generated file. The original image is never affected either way.
