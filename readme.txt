@@ -112,6 +112,10 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 Release date: 26 August 2026
 
+* Features:
+    * Optimized copies left by another plugin are detected, with a one-click switch to match their file naming so they start being served.
+    * An optimized copy that already exists is adopted rather than re-encoded, so moving from another plugin does not repeat work it has already done.
+
 * Bug fixes:
     * An optimized copy that is not small enough is now rejected before it replaces anything, so a rejected conversion can no longer delete a usable copy from an earlier run.
     * An optimized copy inherited from another plugin is kept only when it is no older than its source, so a stale copy is never served.
@@ -125,7 +129,7 @@ Release date: 25 August 2026
 == Upgrade Notice ==
 
 = 1.0.1 =
-Fixes a case where a rejected conversion could remove a usable optimized copy.
+Detects optimized copies left by another plugin. Fixes a rejected conversion removing a usable copy.
 
 = 1.0.0 =
 Initial release.

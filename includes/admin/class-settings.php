@@ -61,6 +61,14 @@ class Settings {
 	/**
 	 * The slug name to refer to this menu by.
 	 *
+	 * @since 1.0.1
+	 * @var string
+	 */
+	const MENU_SLUG = 'wzio-settings';
+
+	/**
+	 * The slug name to refer to this menu by.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @var string Menu slug.
@@ -75,7 +83,7 @@ class Settings {
 	public function __construct() {
 		$this->settings_key = 'wzio_settings';
 		self::$prefix       = 'wzio';
-		$this->menu_slug    = 'wzio-settings';
+		$this->menu_slug    = self::MENU_SLUG;
 
 		Hook_Registry::add_action( 'admin_menu', array( $this, 'initialise_settings' ) );
 		Hook_Registry::add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 11, 2 );
