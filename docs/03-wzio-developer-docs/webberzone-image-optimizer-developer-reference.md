@@ -5,7 +5,6 @@ products: [image-optimizer]
 sections: ["03-wzio-developer-docs"]
 tags: [developer, filters, hooks, webberzone-image-optimizer]
 status: publish
-order: 0
 ---
 
 The full developer reference for [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) lives at [webberzone.dev](https://webberzone.dev/webberzone-image-optimizer/), a site generated directly from the plugin source. It documents every action and filter hook, every function, and every class and public method in the plugin, with parameters, return types and `@since` versions — and it is always regenerated from the current release, so it never drifts.
