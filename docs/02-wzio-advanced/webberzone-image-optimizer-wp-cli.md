@@ -30,10 +30,10 @@ wp wzio convert 7214
 wp wzio convert --formats=webp,avif --force
 ```
 
-- `[[<id>...]]` — attachment IDs to convert. Omit to convert everything not yet handled.
-- `[[--force]]` — re-encode even when an up-to-date optimized copy already exists. Without it, an existing copy that is newer than its source and meets the minimum saving is kept and recorded, including one written by another plugin.
-- `[[--formats=<formats>]]` — comma-separated list of formats to generate, overriding the settings.
-- `[[--dry-run]]` — report what would be converted without writing anything.
+- `<id>...` — attachment IDs to convert. Omit to convert everything not yet handled.
+- `--force` — re-encode even when an up-to-date optimized copy already exists. Without it, it keeps and records an existing copy that is newer than its source and meets the minimum saving, including one written by another plugin.
+- `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
+- `--dry-run` — report what would be converted without writing anything.
 
 ## `wp wzio queue`
 
@@ -43,4 +43,4 @@ Adds every unconverted attachment to the background queue, the same queue the Bu
 wp wzio queue
 ```
 
-- `[[--force]]` — requeue attachments that already have a conversion record.
+- `--force` — re-queue attachments that already have a conversion record.
