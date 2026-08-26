@@ -5,6 +5,7 @@ products: [image-optimizer]
 sections: ["01-wzio-getting-started"]
 tags: [avif, getting-started, webberzone-image-optimizer, webp]
 status: publish
+order: 0
 toc: true
 ---
 
