@@ -118,6 +118,10 @@ class Naming_Detector {
 
 		$report['sampled'] = count( $ids );
 
+		if ( ! empty( $ids ) ) {
+			_prime_post_caches( $ids, false, true );
+		}
+
 		foreach ( $ids as $id ) {
 			$meta  = wp_get_attachment_metadata( $id );
 			$meta  = is_array( $meta ) ? $meta : array();

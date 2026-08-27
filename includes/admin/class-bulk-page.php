@@ -312,10 +312,17 @@ class Bulk_Page {
 
 		// The nonce and capability are both verified in verify_request() above.
      // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$force  = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
-		$queued = Scanner::enqueue_all( $force );
+		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
+     // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$after_id = isset( $_POST['after_id'] ) ? absint( wp_unslash( $_POST['after_id'] ) ) : 0;
 
-		wp_send_json_success( array_merge( self::get_stats(), array( 'queued' => $queued ) ) );
+		if ( 0 === $after_id ) {
+			Scanner::flush_counts();
+		}
+
+		$pass = Scanner::enqueue_batch( $after_id, $force );
+
+		wp_send_json_success( array_merge( self::get_stats(), $pass ) );
 	}
 
 	/**
@@ -358,6 +365,7 @@ class Bulk_Page {
 
 		Queue::clear_pending();
 		Processor::unschedule();
+		Scanner::flush_counts();
 
 		wp_send_json_success( self::get_stats() );
 	}

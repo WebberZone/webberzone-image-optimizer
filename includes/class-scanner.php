@@ -29,6 +29,30 @@ class Scanner {
 	const CHUNK = 500;
 
 	/**
+	 * Wall-clock budget for one scanning pass.
+	 *
+	 * @since 1.0.2
+	 * @var int
+	 */
+	const MAX_SCAN_SECONDS = 10;
+
+	/**
+	 * How long the candidate count is trusted.
+	 *
+	 * @since 1.0.2
+	 * @var int
+	 */
+	const CANDIDATE_TTL = HOUR_IN_SECONDS;
+
+	/**
+	 * How long the optimized count is trusted while a run is in progress.
+	 *
+	 * @since 1.0.2
+	 * @var int
+	 */
+	const OPTIMIZED_TTL = MINUTE_IN_SECONDS;
+
+	/**
 	 * Count the attachments the plugin could convert.
 	 *
 	 * @since 1.0.0
@@ -38,17 +62,27 @@ class Scanner {
 	public static function count_candidates(): int {
 		global $wpdb;
 
+		$cached = get_transient( 'wzio_count_candidates' );
+
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
 		$mimes        = Helpers::SOURCE_MIME_TYPES;
 		$placeholders = implode( ',', array_fill( 0, count( $mimes ), '%s' ) );
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
-		return (int) $wpdb->get_var(
+		$count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_mime_type IN ({$placeholders})",
 				$mimes
 			)
 		);
 		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		set_transient( 'wzio_count_candidates', $count, self::CANDIDATE_TTL );
+
+		return $count;
 	}
 
 	/**
@@ -61,13 +95,36 @@ class Scanner {
 	public static function count_optimized(): int {
 		global $wpdb;
 
+		$cached = get_transient( 'wzio_count_optimized' );
+
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return (int) $wpdb->get_var(
+		$count = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = %s",
 				Attachment_Meta::META_KEY
 			)
 		);
+
+		// Not invalidated per conversion: that would uncache it exactly during a bulk run.
+		set_transient( 'wzio_count_optimized', $count, self::OPTIMIZED_TTL );
+
+		return $count;
+	}
+
+	/**
+	 * Discard the cached library-wide counts.
+	 *
+	 * @since 1.0.2
+	 *
+	 * @return void
+	 */
+	public static function flush_counts(): void {
+		delete_transient( 'wzio_count_candidates' );
+		delete_transient( 'wzio_count_optimized' );
 	}
 
 	/**
@@ -127,8 +184,24 @@ class Scanner {
 	 * @return int Number of attachments queued.
 	 */
 	public static function enqueue_all( bool $force = false ): int {
+		$pass = self::enqueue_batch( 0, $force, INF );
+
+		return $pass['queued'];
+	}
+
+	/**
+	 * Queue one time-bounded page of attachments that still need work.
+	 *
+	 * @since 1.0.2
+	 *
+	 * @param int        $after_id Cursor; only attachments above this ID are considered.
+	 * @param bool       $force    Whether to include attachments that already have a record.
+	 * @param float|null $deadline Wall-clock deadline, or null for the default budget.
+	 * @return array{queued: int, after_id: int, done: bool} Pass result.
+	 */
+	public static function enqueue_batch( int $after_id = 0, bool $force = false, ?float $deadline = null ): array {
+		$deadline = null === $deadline ? microtime( true ) + self::MAX_SCAN_SECONDS : $deadline;
 		$queued   = 0;
-		$after_id = 0;
 		$found    = 0;
 
 		do {
@@ -143,8 +216,12 @@ class Scanner {
 
 			$queued  += $found;
 			$after_id = (int) end( $ids );
-		} while ( self::CHUNK === $found );
+		} while ( self::CHUNK === $found && microtime( true ) < $deadline );
 
-		return $queued;
+		return array(
+			'queued'   => $queued,
+			'after_id' => $after_id,
+			'done'     => self::CHUNK !== $found,
+		);
 	}
 }

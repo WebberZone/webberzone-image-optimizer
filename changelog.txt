@@ -1,3 +1,12 @@
+= 1.0.2 =
+
+Release date: 27 August 2026
+
+* Enhancements:
+    * The Bulk Optimize scan runs in time-bounded passes and resumes where it left off, so building the queue can no longer time out on a very large media library.
+    * The library-wide counts on the Bulk Optimize screen are cached, so a bulk run no longer re-counts the entire media library after every batch.
+    * The naming detection scan primes its post and meta caches, replacing roughly two hundred queries with two.
+
 = 1.0.1 =
 
 Release date: 26 August 2026
