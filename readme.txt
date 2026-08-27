@@ -137,6 +137,9 @@ Release date: 25 August 2026
 
 == Upgrade Notice ==
 
+= 1.0.2 =
+The Bulk Optimize scan no longer times out on very large media libraries, and bulk runs are faster.
+
 = 1.0.1 =
 Detects optimized copies left by another plugin. Fixes a rejected conversion removing a usable copy.
 
