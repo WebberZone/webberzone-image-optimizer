@@ -82,6 +82,9 @@ function wzio_uninstall_site() {
 	delete_option( 'wzio_capabilities' );
 	delete_option( 'wzio_db_version' );
 
+	delete_transient( 'wzio_count_candidates' );
+	delete_transient( 'wzio_count_optimized' );
+
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 	$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_wzio_data' ) );
 

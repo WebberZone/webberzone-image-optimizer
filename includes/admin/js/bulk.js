@@ -138,13 +138,23 @@
 			});
 	}
 
-	function start() {
-		setRunning(true);
-		status(strings.scanning);
+	function scan(afterId) {
+		if (!running) {
+			return;
+		}
 
-		post('wzio_bulk_scan', { force: els.force.checked ? '1' : '0' })
+		post('wzio_bulk_scan', {
+			force: els.force.checked ? '1' : '0',
+			after_id: afterId,
+		})
 			.then(function (stats) {
 				renderStats(stats);
+
+				if (!stats.done) {
+					scan(stats.after_id);
+					return;
+				}
+
 				startedWith = stats.remaining || 0;
 
 				if (startedWith === 0) {
@@ -160,6 +170,12 @@
 				setRunning(false);
 				status(error.message || strings.error);
 			});
+	}
+
+	function start() {
+		setRunning(true);
+		status(strings.scanning);
+		scan(0);
 	}
 
 	function pause() {

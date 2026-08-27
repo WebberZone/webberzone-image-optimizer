@@ -30,6 +30,7 @@ class Attachment_Hooks {
 		Hook_Registry::add_filter( 'wp_update_attachment_metadata', array( $this, 'on_metadata_updated' ), 9999, 2 );
 
 		Hook_Registry::add_action( 'delete_attachment', array( $this, 'on_delete_attachment' ) );
+		Hook_Registry::add_action( 'add_attachment', array( Scanner::class, 'flush_counts' ) );
 	}
 
 	/**
@@ -73,5 +74,6 @@ class Attachment_Hooks {
 
 		Converter::delete_sidecars( $attachment_id );
 		Queue::remove( $attachment_id );
+		Scanner::flush_counts();
 	}
 }

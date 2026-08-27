@@ -165,15 +165,15 @@ button:focus-visible {
 	font-weight: 700;
 	color: var(--wz-navy);
 	margin-right: 12px;
-	padding-right: 12px;
-	border-right: 1px solid var(--wz-stone);
-	font-size: 0.95rem;
+	font-size: 1.15rem;
 }
 .nav-links {
 	display: flex;
 	align-items: center;
 	gap: 24px;
 	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 .nav-links a {
 	color: var(--wz-warm-grey);
@@ -298,6 +298,82 @@ button:focus-visible {
 	line-height: 1.6;
 }
 
+.steps-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 24px;
+	margin-top: 28px;
+	counter-reset: step;
+}
+.step {
+	position: relative;
+	padding-right: 44px;
+}
+.step::before {
+	counter-increment: step;
+	content: counter(step);
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--wz-teal);
+	color: var(--wz-white);
+	border-radius: 50%;
+	font-family: "League Spartan", system-ui, sans-serif;
+	font-weight: 700;
+	font-size: 0.9rem;
+}
+.step h3 {
+	margin: 0 0 6px;
+	font-size: 1rem;
+}
+.step p {
+	color: var(--wz-warm-grey);
+	font-size: 0.87rem;
+	margin: 0;
+	line-height: 1.6;
+}
+
+.compare-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 24px;
+	background: var(--wz-white);
+	border: 1px solid var(--wz-card-border);
+	border-radius: var(--r);
+	overflow: hidden;
+}
+.compare-table th,
+.compare-table td {
+	border: 1px solid var(--wz-card-border);
+	padding: 12px 16px;
+	font-size: 0.87rem;
+	text-align: right;
+	vertical-align: top;
+}
+.compare-table th {
+	background: var(--wz-stone);
+	font-family: "League Spartan", system-ui, sans-serif;
+	font-weight: 700;
+	color: var(--wz-navy);
+}
+.compare-table td:first-child {
+	font-weight: 600;
+	color: var(--wz-navy);
+	white-space: nowrap;
+}
+.compare-table td {
+	color: var(--wz-warm-grey);
+}
+.compare-table td.wz-yes {
+	color: var(--wz-teal-text);
+	font-weight: 600;
+}
+
 @media (max-width: 700px) {
 	.hero {
 		padding: 56px 24px 48px;
@@ -307,6 +383,13 @@ button:focus-visible {
 	}
 	.feature-grid {
 		grid-template-columns: 1fr;
+	}
+	.steps-grid {
+		grid-template-columns: 1fr;
+	}
+	.compare-table {
+		display: block;
+		overflow-x: auto;
 	}
 }
 

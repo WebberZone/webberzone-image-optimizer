@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -107,6 +107,15 @@ Yes. Because the format choice happens in the browser rather than on the server,
 2. Per-image savings and actions in the Edit Media screen
 
 == Changelog ==
+
+= 1.0.2 =
+
+Release date: 27 August 2026
+
+* Enhancements:
+    * The Bulk Optimize scan runs in time-bounded passes and resumes where it left off, so building the queue can no longer time out on a very large media library.
+    * The library-wide counts on the Bulk Optimize screen are cached, so a bulk run no longer re-counts the entire media library after every batch.
+    * The naming detection scan primes its post and meta caches, replacing roughly two hundred queries with two.
 
 = 1.0.1 =
 
