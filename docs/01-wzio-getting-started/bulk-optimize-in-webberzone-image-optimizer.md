@@ -15,7 +15,7 @@ The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.com/
 
 ## How it works
 
-The screen works through a database-backed queue one batch at a time rather than in a single long request, so a large library cannot trip the PHP time limit. Closing the tab loses nothing — the queue lives in the database, and if **Process the queue in the background** is enabled on the Advanced settings tab, a background worker carries on and reopening the screen resumes exactly where it stopped. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/) for the full mechanics.
+The screen works through a database-backed queue one batch at a time rather than in a single long request, so a large library cannot trip the PHP time limit. Building that queue is time-bounded in the same way: **Start optimizing** scans the library in repeated passes of about ten seconds each, each pass picking up from the attachment ID the previous one stopped at, so the status stays on "Building the queue…" for a moment on a large library rather than timing out. Closing the tab loses nothing — the queue lives in the database, and if **Process the queue in the background** is enabled on the Advanced settings tab, a background worker carries on and reopening the screen resumes exactly where it stopped. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/) for the full mechanics.
 
 ## The screen
 
@@ -25,6 +25,8 @@ Four cards summarize your library:
 - **Already optimized** — attachments with at least one generated file.
 - **Waiting in the queue** — attachments still pending.
 - **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
+
+**Images in the library** and **Already optimized** are counted across the whole library, so both are cached rather than recounted after every batch — the library total for an hour, the optimized total for a minute. Uploading or deleting an image clears both immediately, as does starting a scan or clearing the queue. **Waiting in the queue** and **Bandwidth saved** are read from the queue itself and are always current. If **Already optimized** looks a minute behind during a long run, that is the cache, not a stalled queue.
 
 **Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress — completed rows are kept so the **Bandwidth saved** totals survive the reset. The **Re-optimize images that are already done** checkbox forces every image to be re-encoded on the next run, even ones with an up-to-date copy.
 
