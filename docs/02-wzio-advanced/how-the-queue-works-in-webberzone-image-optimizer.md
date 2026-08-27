@@ -30,11 +30,25 @@ Each row moves through these statuses:
 - Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` / `wp wzio convert` from the command line.
 - A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab — the original is served immediately and the attachment is queued on `shutdown`, so nothing is ever encoded during the page render itself.
 
+## Building the queue
+
+A scan walks the media library by attachment ID in pages of 500, adding the IDs it finds to the queue as it goes. From the Bulk Optimize screen the walk is time-bounded: each pass runs for about ten seconds, returns the ID it reached, and the screen immediately asks for another pass starting from there. The queue is complete once a pass comes back with a partial page, and only then does the run start converting. A library with hundreds of thousands of attachments is queued across as many passes as it takes, and no single request runs long enough to hit the PHP time limit.
+
+`wp wzio queue` scans in the same pages but with no time limit, since a CLI process has no request to time out. `wp wzio convert` without IDs is not a queue operation at all — it collects the candidates and converts them in the same process.
+
+Adding to the queue never creates a duplicate row for an attachment that is already queued. Re-running the scan on a library that is partly done picks up whatever has been added since.
+
+## The library counts
+
+The two library-wide numbers on the Bulk Optimize screen — the count of convertible attachments and the count with a conversion record — each need a full-table query, so both are cached in a transient rather than run after every batch. The convertible count is held for an hour, the optimized count for a minute. The optimized count is deliberately not invalidated per conversion: doing so would drop the cache on exactly the requests a bulk run makes most often.
+
+Both are discarded when an attachment is added or deleted, when a scan starts, and when the queue is cleared. `wp wzio status` reads the same cached counts.
+
 ## How a batch runs
 
 `Processor::run_batch()` is the single routine behind the Bulk Optimize screen, the background cron worker and `wp wzio run` — all three share one definition of a unit of work.
 
-1. Claims up to **Images per batch** pending rows (Advanced settings tab), oldest first.
+1. Claims up to **Images per batch** pending rows (Advanced settings tab), oldest first, stopping early if the batch has already run for 20 seconds so the rest stay pending for the next one.
 2. Converts each claimed attachment.
 3. Records the outcome: `done` with bytes saved, `skipped` when nothing was convertible, or `failed` with the error message.
 4. A `failed` attachment is put back to `pending` and retried, up to 3 attempts total, before it is left as `failed` for good and listed on the Bulk Optimize screen.
