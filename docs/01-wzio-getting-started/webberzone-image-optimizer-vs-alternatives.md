@@ -11,9 +11,9 @@ toc: true
 
 [toc]
 
-[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. The comparison here covers three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs. If you are moving from one of those, see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/) for how to carry the files they generated across.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. The comparison here covers three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs. If you are moving from one of those, see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/) for how to carry over the files they generated.
 
-Every claim below was checked directly against each plugin's own source rather than its marketing copy: WebberZone Image Optimizer's own `includes/` directory, the WordPress Performance Team's [`performance`](https://github.com/WordPress/performance) repository, the [`rosell-dk/webp-express`](https://github.com/rosell-dk/webp-express) GitHub repository, and the `webp-converter-for-media` trunk from the WordPress.org plugin SVN. They reflect each plugin's code as of 2026-08-11 — check each project's changelog if you're reading this later, since settings and defaults do change between releases.
+Every claim below was checked by Claude directly against each plugin's own source rather than its marketing copy: WebberZone Image Optimizer's own `includes/` directory, the WordPress Performance Team's [`performance`](https://github.com/WordPress/performance) repository, the [`rosell-dk/webp-express`](https://github.com/rosell-dk/webp-express) GitHub repository, and the `webp-converter-for-media` trunk from the WordPress.org plugin SVN. They reflect each plugin's code as of 2026-08-11 — check each project's changelog if you're reading this later, since settings and defaults do change between releases.
 
 ## Quality and encoder control
 
@@ -67,21 +67,21 @@ Modern Image Formats supports AVIF, but only one modern format at a time — its
 </select>
 ```
 
-WebP Express has no AVIF support at all — it is a WebP-only converter, which is reflected in its name.
+WebP Express has no AVIF support — it is a WebP-only converter, as its name suggests.
 
-Converter for Media's free version is WebP-only as well. AVIF is gated behind a paid upgrade, stated directly in its own readme: "Now in the PRO version you can use AVIF as the output format for your images." A plugin whose WordPress.org listing markets "Convert WebP & AVIF" does not generate AVIF at all until you pay.
+The free version of Converter for Media is WebP-only as well. AVIF is gated behind a paid upgrade, stated directly in its own readme: "Now in the PRO version you can use AVIF as the output format for your images." A plugin whose WordPress.org listing markets "Convert WebP & AVIF" does not generate AVIF at all until you pay.
 
 ## Converting the existing media library
 
 WebberZone Image Optimizer ships a database-backed, resumable bulk-conversion queue (**Media → Bulk Optimize**), described in [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/), plus a **Queue images on first view** option that converts an image the moment it's seen on the front end without ever encoding during the page render itself.
 
-Modern Image Formats converts **new uploads only**. Its own readme is explicit about this:
+Modern Image Formats converts **only new uploads**. Its own readme is explicit about this:
 
 > "Modern images will be generated only for new uploads, pre-existing images will only converted to a modern format if images are regenerated. Images can be regenerated with a plugin like Regenerate Thumbnails or via WP-CLI with the `wp media regenerate` command."
 
 There is no bulk-conversion screen, queue, or plugin-native CLI command in its source — it relies on WordPress core's generic `wp media regenerate`, a command that re-runs the entire thumbnail pipeline rather than being purpose-built for format conversion.
 
-WebP Express and Converter for Media both ship their own bulk-conversion screens and their own WP-CLI commands, so on this specific point all three non-Performance-Team plugins are comparable to WebberZone Image Optimizer.
+WebP Express and Converter for Media both ship their own bulk-conversion screens and WP-CLI commands, so on this point all three non-Performance-Team plugins are comparable to WebberZone Image Optimizer.
 
 ## Command-line tooling
 
@@ -91,7 +91,7 @@ WebP Express registers `wp webp-express convert`, with flags for `--reconvert`, 
 
 Converter for Media includes a `WpCliManager` service class, confirming CLI support exists, though its command surface is smaller than WebP Express's or WZIO's.
 
-Modern Image Formats has no CLI commands of its own.
+Modern Image Formats has no CLI commands.
 
 ## Delivery mechanism
 
