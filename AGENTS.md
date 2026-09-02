@@ -16,6 +16,10 @@ No AI attribution anywhere in this repository or on its GitHub.
 - Commit messages: never include a `Co-Authored-By:` line. A commit message ends with its body.
 - Pull request bodies, issue comments and review comments: no "Generated with Claude Code" footer or any equivalent.
 
+## Release Notes
+
+- In `readme.txt`, prefix any Pro-only changelog bullet with `[Pro]`
+
 ## Links
 
 - GitHub: <https://github.com/WebberZone/webberzone-image-optimizer>
