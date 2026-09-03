@@ -29,18 +29,18 @@ class Media_Library {
 	/**
 	 * Query-string key for the optimization status filter.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 * @var   string
 	 */
 	private const STATUS_FILTER = 'wzio_optimization_status';
 
 	/**
-	 * Internal query flag for the failed-attachment SQL clause.
+	 * Internal query variable for the requested optimization status.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 * @var   string
 	 */
-	private const FAILED_QUERY_VAR = 'wzio_filter_failed';
+	private const STATUS_QUERY_VAR = 'wzio_filter_status';
 
 	/**
 	 * Constructor.
@@ -55,7 +55,7 @@ class Media_Library {
 		Hook_Registry::add_filter( 'handle_bulk_actions-upload', array( $this, 'handle_bulk_restore' ), 10, 3 );
 		Hook_Registry::add_action( 'restrict_manage_posts', array( $this, 'render_status_filter' ), 10, 2 );
 		Hook_Registry::add_action( 'pre_get_posts', array( $this, 'filter_by_status' ) );
-		Hook_Registry::add_filter( 'posts_where', array( $this, 'filter_failed_attachments' ), 10, 2 );
+		Hook_Registry::add_filter( 'posts_where', array( $this, 'filter_attachments_by_status' ), 10, 2 );
 		Hook_Registry::add_action( 'admin_post_wzio_optimize_attachment', array( $this, 'handle_optimize' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_restore_attachment', array( $this, 'handle_restore' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_optimize_attachment', array( $this, 'ajax_optimize' ) );
@@ -174,7 +174,7 @@ class Media_Library {
 	/**
 	 * Add the optimization status filter to the media list table.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 *
 	 * @param string $post_type Current post type.
 	 * @param string $which     Location of the filter controls.
@@ -190,6 +190,7 @@ class Media_Library {
 			''            => __( 'All optimization statuses', 'webberzone-image-optimizer' ),
 			'optimized'   => __( 'Optimized', 'webberzone-image-optimizer' ),
 			'unoptimized' => __( 'Not yet optimized', 'webberzone-image-optimizer' ),
+			'skipped'     => __( 'Skipped', 'webberzone-image-optimizer' ),
 			'failed'      => __( 'Failed', 'webberzone-image-optimizer' ),
 		);
 		?>
@@ -207,7 +208,7 @@ class Media_Library {
 	/**
 	 * Filter the media library query by optimization status.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 *
 	 * @param \WP_Query $query Current query.
 	 * @return void
@@ -220,71 +221,74 @@ class Media_Library {
 			|| 'upload.php' !== $pagenow
 			|| ! $query->is_main_query()
 			|| 'attachment' !== $query->get( 'post_type' )
-			|| ! self::can_view_status_filter()
+			|| ! current_user_can( 'upload_files' )
 		) {
 			return;
 		}
 
 		$status = self::get_requested_status();
 
-		if ( 'failed' === $status ) {
-			$query->set( self::FAILED_QUERY_VAR, true );
-			return;
+		if ( '' !== $status ) {
+			$query->set( self::STATUS_QUERY_VAR, $status );
 		}
-
-		if ( 'optimized' !== $status && 'unoptimized' !== $status ) {
-			return;
-		}
-
-		$meta_clause = array(
-			'key'     => Attachment_Meta::META_KEY,
-			'compare' => 'optimized' === $status ? 'EXISTS' : 'NOT EXISTS',
-		);
-		$meta_query  = $query->get( 'meta_query' );
-
-		if ( ! is_array( $meta_query ) || empty( $meta_query ) ) {
-			$query->set( 'meta_query', array( $meta_clause ) );
-			return;
-		}
-
-		$query->set(
-			'meta_query',
-			array(
-				'relation' => 'AND',
-				$meta_query,
-				$meta_clause,
-			)
-		);
 	}
 
 	/**
-	 * Limit a flagged media query to attachments in the failed queue state.
+	 * Limit a flagged media query to eligible attachments in the requested queue state.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 *
 	 * @param string    $where Current WHERE clause.
 	 * @param \WP_Query $query Current query.
 	 * @return string Filtered WHERE clause.
 	 */
-	public function filter_failed_attachments( $where, $query ) {
+	public function filter_attachments_by_status( $where, $query ) {
 		global $wpdb;
 
-		if ( true !== $query->get( self::FAILED_QUERY_VAR ) ) {
+		$status = $query->get( self::STATUS_QUERY_VAR );
+
+		if ( ! is_string( $status ) || ! in_array( $status, array( 'optimized', 'unoptimized', 'skipped', 'failed' ), true ) ) {
 			return $where;
 		}
+
+		$mimes             = Helpers::SOURCE_MIME_TYPES;
+		$mime_placeholders = implode( ',', array_fill( 0, count( $mimes ), '%s' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$where .= $wpdb->prepare(
+			" AND %i.post_mime_type IN ({$mime_placeholders})",
+			array_merge( array( $wpdb->posts ), $mimes )
+		);
+
+		if ( 'unoptimized' === $status ) {
+			$terminal_statuses = array( Queue::DONE, Queue::SKIPPED, Queue::FAILED );
+			$placeholders      = implode( ',', array_fill( 0, count( $terminal_statuses ), '%s' ) );
+
+			return $where . $wpdb->prepare(
+				" AND %i.ID NOT IN (SELECT attachment_id FROM %i WHERE status IN ({$placeholders}))",
+				array_merge( array( $wpdb->posts, Database::get_table() ), $terminal_statuses )
+			);
+		}
+
+		$queue_status = array(
+			'optimized' => Queue::DONE,
+			'skipped'   => Queue::SKIPPED,
+			'failed'    => Queue::FAILED,
+		)[ $status ];
 
 		return $where . $wpdb->prepare(
 			' AND %i.ID IN (SELECT attachment_id FROM %i WHERE status = %s)',
 			$wpdb->posts,
 			Database::get_table(),
-			Queue::FAILED
+			$queue_status
 		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 	}
 
 	/**
 	 * Whether the current user can use the status filter on this screen.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 *
 	 * @return bool True when the optimization column is visible.
 	 */
@@ -300,7 +304,7 @@ class Media_Library {
 	/**
 	 * Get a valid requested optimization status.
 	 *
-	 * @since 1.3.0
+	 * @since 1.1.0
 	 *
 	 * @return string Status, or an empty string when none is selected.
 	 */
@@ -311,7 +315,7 @@ class Media_Library {
 			: '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		return in_array( $status, array( 'optimized', 'unoptimized', 'failed' ), true ) ? $status : '';
+		return in_array( $status, array( 'optimized', 'unoptimized', 'skipped', 'failed' ), true ) ? $status : '';
 	}
 
 	/**
