@@ -6,8 +6,8 @@
  */
 
 use WebberZone\Image_Optimizer\Admin\Media_Library;
-use WebberZone\Image_Optimizer\Attachment_Meta;
 use WebberZone\Image_Optimizer\Database;
+use WebberZone\Image_Optimizer\Queue;
 
 /**
  * Media library filtering controls and query clauses.
@@ -36,10 +36,13 @@ class MediaLibraryTest extends WP_UnitTestCase {
 	private $original_main_query;
 
 	/**
-	 * Prepare an upload screen and a media library instance without hooks.
+	 * Prepare an upload screen, queue table and media library instance without hooks.
 	 */
 	public function set_up() {
 		parent::set_up();
+
+		Database::install();
+		Queue::clear();
 
 		$reflection          = new ReflectionClass( Media_Library::class );
 		$this->media_library = $reflection->newInstanceWithoutConstructor();
@@ -58,6 +61,7 @@ class MediaLibraryTest extends WP_UnitTestCase {
 	public function tear_down() {
 		unset( $_GET['wzio_optimization_status'] );
 		delete_user_option( get_current_user_id(), 'manageuploadcolumnshidden' );
+		Queue::clear();
 
 		if ( null === $this->original_pagenow ) {
 			unset( $GLOBALS['pagenow'] );
@@ -86,6 +90,7 @@ class MediaLibraryTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'name="wzio_optimization_status"', $output );
 		$this->assertStringContainsString( 'All optimization statuses', $output );
 		$this->assertStringContainsString( 'Not yet optimized', $output );
+		$this->assertStringContainsString( 'value="skipped"', $output );
 		$this->assertStringContainsString( 'value="failed" selected', $output );
 	}
 
@@ -103,73 +108,152 @@ class MediaLibraryTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Optimized filtering is added without replacing another meta query.
+	 * Every status returns the matching eligible attachments and preserves other filters.
 	 */
-	public function test_optimized_filter_composes_with_existing_query_filters() {
-		$existing_meta_query = array(
-			array(
-				'key'   => '_example_key',
-				'value' => 'example-value',
-			),
+	public function test_status_filters_return_exact_attachment_ids() {
+		$attachments = $this->seed_attachments();
+
+		$this->assertSame(
+			array( $attachments['optimized'] ),
+			$this->get_filtered_attachment_ids( 'optimized' )
 		);
-		$query               = $this->get_filtered_query( 'optimized', $existing_meta_query );
-		$meta_query          = $query->get( 'meta_query' );
-
-		$this->assertSame( 'AND', $meta_query['relation'] );
-		$this->assertSame( $existing_meta_query, $meta_query[0] );
-		$this->assertSame( Attachment_Meta::META_KEY, $meta_query[1]['key'] );
-		$this->assertSame( 'EXISTS', $meta_query[1]['compare'] );
-		$this->assertSame( 'image/jpeg', $query->get( 'post_mime_type' ) );
-		$this->assertSame( 202601, $query->get( 'm' ) );
+		$this->assertSame(
+			array( $attachments['unoptimized'], $attachments['pending'], $attachments['processing'] ),
+			$this->get_filtered_attachment_ids( 'unoptimized' )
+		);
+		$this->assertSame(
+			array( $attachments['skipped'] ),
+			$this->get_filtered_attachment_ids( 'skipped' )
+		);
+		$this->assertSame(
+			array( $attachments['failed'] ),
+			$this->get_filtered_attachment_ids( 'failed' )
+		);
 	}
 
 	/**
-	 * Unoptimized filtering selects attachments without conversion metadata.
+	 * Hiding the status column does not disable an active URL filter.
 	 */
-	public function test_unoptimized_filter_uses_a_not_exists_meta_query() {
-		$query      = $this->get_filtered_query( 'unoptimized' );
-		$meta_query = $query->get( 'meta_query' );
+	public function test_hidden_status_column_does_not_disable_filtering() {
+		$attachments = $this->seed_attachments();
 
-		$this->assertSame( Attachment_Meta::META_KEY, $meta_query[0]['key'] );
-		$this->assertSame( 'NOT EXISTS', $meta_query[0]['compare'] );
+		update_user_option( get_current_user_id(), 'manageuploadcolumnshidden', array( 'wzio' ) );
+
+		$this->assertSame(
+			array( $attachments['failed'] ),
+			$this->get_filtered_attachment_ids( 'failed' )
+		);
 	}
 
 	/**
-	 * Failed filtering adds a queue-table subquery to the existing WHERE clause.
-	 */
-	public function test_failed_filter_uses_the_queue_table() {
-		$query = $this->get_filtered_query( 'failed' );
-		$where = $this->media_library->filter_failed_attachments( ' WHERE 1=1', $query );
-
-		$this->assertStringStartsWith( ' WHERE 1=1 AND ', $where );
-		$this->assertStringContainsString( Database::get_table(), $where );
-		$this->assertStringContainsString( 'attachment_id', $where );
-		$this->assertStringContainsString( "status = 'failed'", $where );
-	}
-
-	/**
-	 * Build a main media query and apply a requested status.
+	 * Seed eligible and unsupported attachments across every queue state.
 	 *
-	 * @param string                    $status     Requested status.
-	 * @param array<int|string, mixed> $meta_query Existing meta query.
-	 * @return WP_Query Filtered query.
+	 * @return array<string, int> Attachment IDs keyed by scenario.
 	 */
-	private function get_filtered_query( $status, $meta_query = array() ) {
+	private function seed_attachments(): array {
+		$attachments = array(
+			'optimized'            => $this->create_attachment( 'optimized.jpg', 'image/jpeg' ),
+			'unoptimized'          => $this->create_attachment( 'unoptimized.jpg', 'image/jpeg' ),
+			'skipped'              => $this->create_attachment( 'skipped.jpg', 'image/jpeg' ),
+			'failed'               => $this->create_attachment( 'failed.jpg', 'image/jpeg' ),
+			'pending'              => $this->create_attachment( 'pending.jpg', 'image/jpeg' ),
+			'processing'           => $this->create_attachment( 'processing.jpg', 'image/jpeg' ),
+			'unsupported'          => $this->create_attachment( 'unsupported.pdf', 'application/pdf' ),
+			'optimized_png'        => $this->create_attachment( 'optimized.png', 'image/png' ),
+			'optimized_next_month' => $this->create_attachment( 'optimized-next-month.jpg', 'image/jpeg', '2026-02-15 12:00:00' ),
+		);
+
+		$this->set_queue_status( $attachments['optimized'], Queue::DONE );
+		$this->set_queue_status( $attachments['skipped'], Queue::SKIPPED );
+		$this->set_queue_status( $attachments['failed'], Queue::FAILED );
+		$this->set_queue_status( $attachments['pending'], Queue::PENDING );
+		$this->set_queue_status( $attachments['processing'], Queue::PROCESSING );
+		$this->set_queue_status( $attachments['optimized_png'], Queue::DONE );
+		$this->set_queue_status( $attachments['optimized_next_month'], Queue::DONE );
+
+		return $attachments;
+	}
+
+	/**
+	 * Create an attachment fixture.
+	 *
+	 * @param string $file      Fixture filename.
+	 * @param string $mime_type Attachment MIME type.
+	 * @param string $date      Attachment date.
+	 * @return int Attachment ID.
+	 */
+	private function create_attachment( string $file, string $mime_type, string $date = '2026-01-15 12:00:00' ): int {
+		return (int) self::factory()->attachment->create(
+			array(
+				'file'           => $file,
+				'post_title'     => $file,
+				'post_mime_type' => $mime_type,
+				'post_status'    => 'inherit',
+				'post_date'      => $date,
+				'post_date_gmt'  => $date,
+			)
+		);
+	}
+
+	/**
+	 * Put an attachment into a queue state using the public queue API.
+	 *
+	 * @param int    $attachment_id Attachment ID.
+	 * @param string $status        Queue status.
+	 * @return void
+	 */
+	private function set_queue_status( int $attachment_id, string $status ): void {
+		Queue::add( array( $attachment_id ), true );
+
+		if ( Queue::PROCESSING === $status ) {
+			Queue::claim_attachment( $attachment_id );
+		} elseif ( Queue::PENDING !== $status ) {
+			$row_id = Queue::get_id( $attachment_id );
+
+			if ( Queue::FAILED === $status ) {
+				for ( $attempt = 0; $attempt < Queue::MAX_ATTEMPTS; ++$attempt ) {
+					Queue::complete( $row_id, Queue::FAILED );
+				}
+			} else {
+				Queue::complete( $row_id, $status );
+			}
+		}
+
+		$this->assertSame( $status, Queue::get_status( $attachment_id ) );
+	}
+
+	/**
+	 * Run a main media query with the requested status and existing MIME/date filters.
+	 *
+	 * @param string $status Requested status.
+	 * @return array<int, int> Matching attachment IDs.
+	 */
+	private function get_filtered_attachment_ids( string $status ): array {
 		$_GET['wzio_optimization_status'] = $status;
 
 		$query = new WP_Query();
 		$query->set( 'post_type', 'attachment' );
+		$query->set( 'post_status', 'inherit' );
 		$query->set( 'post_mime_type', 'image/jpeg' );
 		$query->set( 'm', 202601 );
-
-		if ( ! empty( $meta_query ) ) {
-			$query->set( 'meta_query', $meta_query );
-		}
+		$query->set( 'fields', 'ids' );
+		$query->set( 'orderby', 'ID' );
+		$query->set( 'order', 'ASC' );
+		$query->set( 'posts_per_page', -1 );
+		$query->set( 'no_found_rows', true );
+		$query->set( 'suppress_filters', false );
 
 		$GLOBALS['wp_the_query'] = $query;
 
 		$this->media_library->filter_by_status( $query );
+		add_filter( 'posts_where', array( $this->media_library, 'filter_attachments_by_status' ), 10, 2 );
 
-		return $query;
+		try {
+			$attachment_ids = $query->get_posts();
+		} finally {
+			remove_filter( 'posts_where', array( $this->media_library, 'filter_attachments_by_status' ), 10 );
+		}
+
+		return array_map( 'intval', $attachment_ids );
 	}
 }
