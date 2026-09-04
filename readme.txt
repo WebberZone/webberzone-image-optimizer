@@ -108,6 +108,11 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.1.0 =
+
+* Features:
+    * Filter Media Library images by optimized, not-yet-optimized, skipped and failed status.
+
 = 1.0.2 =
 
 Release date: 27 August 2026

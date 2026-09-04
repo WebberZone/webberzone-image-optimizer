@@ -9,6 +9,7 @@ namespace WebberZone\Image_Optimizer\Admin;
 
 use WebberZone\Image_Optimizer\Attachment_Meta;
 use WebberZone\Image_Optimizer\Converter;
+use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
 use WebberZone\Image_Optimizer\Util\Helpers;
@@ -25,6 +26,21 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Media_Library {
 
+	/**
+	 * Query-string key for the optimization status filter.
+	 *
+	 * @since 1.1.0
+	 * @var   string
+	 */
+	private const STATUS_FILTER = 'wzio_optimization_status';
+
+	/**
+	 * Internal query variable for the requested optimization status.
+	 *
+	 * @since 1.1.0
+	 * @var   string
+	 */
+	private const STATUS_QUERY_VAR = 'wzio_filter_status';
 
 	/**
 	 * Constructor.
@@ -37,6 +53,9 @@ class Media_Library {
 		Hook_Registry::add_filter( 'media_row_actions', array( $this, 'add_row_actions' ), 10, 2 );
 		Hook_Registry::add_filter( 'bulk_actions-upload', array( $this, 'add_bulk_actions' ) );
 		Hook_Registry::add_filter( 'handle_bulk_actions-upload', array( $this, 'handle_bulk_restore' ), 10, 3 );
+		Hook_Registry::add_action( 'restrict_manage_posts', array( $this, 'render_status_filter' ), 10, 2 );
+		Hook_Registry::add_action( 'pre_get_posts', array( $this, 'filter_by_status' ) );
+		Hook_Registry::add_filter( 'posts_where', array( $this, 'filter_attachments_by_status' ), 10, 2 );
 		Hook_Registry::add_action( 'admin_post_wzio_optimize_attachment', array( $this, 'handle_optimize' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_restore_attachment', array( $this, 'handle_restore' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_optimize_attachment', array( $this, 'ajax_optimize' ) );
@@ -150,6 +169,153 @@ class Media_Library {
 		$columns['wzio'] = esc_html__( 'Optimized', 'webberzone-image-optimizer' );
 
 		return $columns;
+	}
+
+	/**
+	 * Add the optimization status filter to the media list table.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string $post_type Current post type.
+	 * @param string $which     Location of the filter controls.
+	 * @return void
+	 */
+	public function render_status_filter( $post_type, $which ): void {
+		if ( 'attachment' !== $post_type || 'bar' !== $which || ! self::can_view_status_filter() ) {
+			return;
+		}
+
+		$selected = self::get_requested_status();
+		$options  = array(
+			''            => __( 'All optimization statuses', 'webberzone-image-optimizer' ),
+			'optimized'   => __( 'Optimized', 'webberzone-image-optimizer' ),
+			'unoptimized' => __( 'Not yet optimized', 'webberzone-image-optimizer' ),
+			'skipped'     => __( 'Skipped', 'webberzone-image-optimizer' ),
+			'failed'      => __( 'Failed', 'webberzone-image-optimizer' ),
+		);
+		?>
+		<label for="wzio-optimization-status" class="screen-reader-text">
+			<?php esc_html_e( 'Filter by optimization status', 'webberzone-image-optimizer' ); ?>
+		</label>
+		<select name="<?php echo esc_attr( self::STATUS_FILTER ); ?>" id="wzio-optimization-status">
+			<?php foreach ( $options as $value => $label ) : ?>
+				<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $selected, $value ); ?>><?php echo esc_html( $label ); ?></option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+	}
+
+	/**
+	 * Filter the media library query by optimization status.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param \WP_Query $query Current query.
+	 * @return void
+	 */
+	public function filter_by_status( $query ): void {
+		global $pagenow;
+
+		if (
+			! is_admin()
+			|| 'upload.php' !== $pagenow
+			|| ! $query->is_main_query()
+			|| 'attachment' !== $query->get( 'post_type' )
+			|| ! current_user_can( 'upload_files' )
+		) {
+			return;
+		}
+
+		$status = self::get_requested_status();
+
+		if ( '' !== $status ) {
+			$query->set( self::STATUS_QUERY_VAR, $status );
+		}
+	}
+
+	/**
+	 * Limit a flagged media query to eligible attachments in the requested queue state.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string    $where Current WHERE clause.
+	 * @param \WP_Query $query Current query.
+	 * @return string Filtered WHERE clause.
+	 */
+	public function filter_attachments_by_status( $where, $query ) {
+		global $wpdb;
+
+		$status = $query->get( self::STATUS_QUERY_VAR );
+
+		if ( ! is_string( $status ) || ! in_array( $status, array( 'optimized', 'unoptimized', 'skipped', 'failed' ), true ) ) {
+			return $where;
+		}
+
+		$mimes             = Helpers::SOURCE_MIME_TYPES;
+		$mime_placeholders = implode( ',', array_fill( 0, count( $mimes ), '%s' ) );
+
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$where .= $wpdb->prepare(
+			" AND %i.post_mime_type IN ({$mime_placeholders})",
+			array_merge( array( $wpdb->posts ), $mimes )
+		);
+
+		if ( 'unoptimized' === $status ) {
+			$terminal_statuses = array( Queue::DONE, Queue::SKIPPED, Queue::FAILED );
+			$placeholders      = implode( ',', array_fill( 0, count( $terminal_statuses ), '%s' ) );
+
+			return $where . $wpdb->prepare(
+				" AND %i.ID NOT IN (SELECT attachment_id FROM %i WHERE status IN ({$placeholders}))",
+				array_merge( array( $wpdb->posts, Database::get_table() ), $terminal_statuses )
+			);
+		}
+
+		$queue_status = array(
+			'optimized' => Queue::DONE,
+			'skipped'   => Queue::SKIPPED,
+			'failed'    => Queue::FAILED,
+		)[ $status ];
+
+		return $where . $wpdb->prepare(
+			' AND %i.ID IN (SELECT attachment_id FROM %i WHERE status = %s)',
+			$wpdb->posts,
+			Database::get_table(),
+			$queue_status
+		);
+		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+	}
+
+	/**
+	 * Whether the current user can use the status filter on this screen.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return bool True when the optimization column is visible.
+	 */
+	private static function can_view_status_filter(): bool {
+		$screen = get_current_screen();
+
+		return current_user_can( 'upload_files' )
+			&& $screen
+			&& 'upload' === $screen->id
+			&& ! in_array( 'wzio', get_hidden_columns( $screen ), true );
+	}
+
+	/**
+	 * Get a valid requested optimization status.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return string Status, or an empty string when none is selected.
+	 */
+	private static function get_requested_status(): string {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended
+		$status = isset( $_GET[ self::STATUS_FILTER ] ) && is_string( $_GET[ self::STATUS_FILTER ] )
+			? sanitize_key( wp_unslash( $_GET[ self::STATUS_FILTER ] ) )
+			: '';
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		return in_array( $status, array( 'optimized', 'unoptimized', 'skipped', 'failed' ), true ) ? $status : '';
 	}
 
 	/**
