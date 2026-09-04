@@ -15,6 +15,24 @@ use WebberZone\Image_Optimizer\Queue;
 class MediaLibraryTest extends WP_UnitTestCase {
 
 	/**
+	 * Install the queue table outside the per-test database transaction.
+	 */
+	public static function set_up_before_class() {
+		parent::set_up_before_class();
+
+		Database::install();
+	}
+
+	/**
+	 * Remove the queue table after all tests in this class have run.
+	 */
+	public static function tear_down_after_class() {
+		Database::drop_table();
+
+		parent::tear_down_after_class();
+	}
+
+	/**
 	 * Media library integration under test.
 	 *
 	 * @var Media_Library
@@ -41,7 +59,6 @@ class MediaLibraryTest extends WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 
-		Database::install();
 		Queue::clear();
 
 		$reflection          = new ReflectionClass( Media_Library::class );
@@ -91,7 +108,7 @@ class MediaLibraryTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'All optimization statuses', $output );
 		$this->assertStringContainsString( 'Not yet optimized', $output );
 		$this->assertStringContainsString( 'value="skipped"', $output );
-		$this->assertStringContainsString( 'value="failed" selected', $output );
+		$this->assertStringContainsString( 'value="failed"  selected=\'selected\'', $output );
 	}
 
 	/**
