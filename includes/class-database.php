@@ -36,6 +36,14 @@ class Database {
 	const VERSION = '1.1';
 
 	/**
+	 * Memoised table existence checks, keyed by table name.
+	 *
+	 * @since 1.1.0
+	 * @var   array<string, bool>
+	 */
+	private static $installed_cache = array();
+
+	/**
 	 * Get the queue table name for the current site.
 	 *
 	 * @since 1.0.0
@@ -88,6 +96,8 @@ class Database {
 		include_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		dbDelta( self::get_schema() );
+
+		self::flush_installed_cache();
 
 		update_option( self::VERSION_OPTION, self::VERSION, false );
 	}
@@ -183,20 +193,29 @@ class Database {
 	public static function is_installed(): bool {
 		global $wpdb;
 
-		static $cache = array();
-
 		$table = self::get_table();
 
-		if ( isset( $cache[ $table ] ) ) {
-			return $cache[ $table ];
+		if ( isset( self::$installed_cache[ $table ] ) ) {
+			return self::$installed_cache[ $table ];
 		}
 
      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) );
 
-		$cache[ $table ] = ( $found === $table );
+		self::$installed_cache[ $table ] = ( $found === $table );
 
-		return $cache[ $table ];
+		return self::$installed_cache[ $table ];
+	}
+
+	/**
+	 * Forget the memoised existence check for the current site's table.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public static function flush_installed_cache(): void {
+		unset( self::$installed_cache[ self::get_table() ] );
 	}
 
 	/**
@@ -213,6 +232,8 @@ class Database {
 
      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$wpdb->query( "DROP TABLE IF EXISTS `{$table}`" );
+
+		self::flush_installed_cache();
 
 		delete_option( self::VERSION_OPTION );
 	}
