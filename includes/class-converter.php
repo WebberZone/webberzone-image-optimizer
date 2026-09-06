@@ -573,7 +573,7 @@ class Converter {
 		$fragments = array();
 
 		foreach ( is_array( $lines ) ? $lines : array() as $line ) {
-			$line = trim( $line );
+			$line = trim( $line, '' );
 
 			if ( '' !== $line ) {
 				$fragments[] = wp_normalize_path( $line );
