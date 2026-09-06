@@ -164,7 +164,7 @@ class Rewriter {
 		$out = '';
 
 		foreach ( $segments as $segment ) {
-			if ( 0 === stripos( ltrim( $segment, '' ), '<picture' ) ) {
+			if ( 0 === stripos( ltrim( $segment, " \t\n\r\0\x0B" ), '<picture' ) ) {
 				$out .= $segment;
 				continue;
 			}
@@ -242,7 +242,7 @@ class Rewriter {
 					break;
 				}
 
-				$mapped[] = trim( $sidecar . ' ' . $candidate[1], '' );
+				$mapped[] = trim( $sidecar . ' ' . $candidate[1], " \t\n\r\0\x0B" );
 			}
 
 			if ( empty( $mapped ) ) {
@@ -283,7 +283,7 @@ class Rewriter {
 		$candidates = array();
 
 		foreach ( explode( ',', $srcset ) as $part ) {
-			$part = trim( $part, '' );
+			$part = trim( $part, " \t\n\r\0\x0B" );
 
 			if ( '' === $part ) {
 				continue;
@@ -291,8 +291,8 @@ class Rewriter {
 
 			// A candidate is a URL, then optional whitespace and a descriptor.
 			$pieces     = preg_split( '/\s+/', $part, 2 );
-			$url        = is_array( $pieces ) ? trim( $pieces[0], '' ) : '';
-			$descriptor = is_array( $pieces ) && isset( $pieces[1] ) ? trim( $pieces[1], '' ) : '';
+			$url        = is_array( $pieces ) ? trim( $pieces[0], " \t\n\r\0\x0B" ) : '';
+			$descriptor = is_array( $pieces ) && isset( $pieces[1] ) ? trim( $pieces[1], " \t\n\r\0\x0B" ) : '';
 
 			if ( '' === $url ) {
 				return array();
