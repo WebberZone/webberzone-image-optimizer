@@ -9,6 +9,7 @@ namespace WebberZone\Image_Optimizer\Admin;
 
 use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Converter;
+use WebberZone\Image_Optimizer\Cron_Health;
 use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
@@ -148,12 +149,15 @@ class Bulk_Page {
 
 		Database::maybe_upgrade();
 
-		$stats   = self::get_stats();
-		$formats = Converter::get_args()['formats'];
+		$stats       = self::get_stats();
+		$formats     = Converter::get_args()['formats'];
+		$cron_status = Cron_Health::get_status();
 
 		?>
 		<div class="wrap wzio-bulk">
 			<h1><?php esc_html_e( 'Bulk Optimize Images', 'webberzone-image-optimizer' ); ?></h1>
+
+			<?php $this->render_cron_health_notice( $cron_status ); ?>
 
 		<?php if ( empty( Capabilities::get_supported_formats() ) ) : ?>
 				<div class="notice notice-error">
@@ -256,6 +260,42 @@ class Bulk_Page {
 		<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render a warning when the background queue has stopped being processed.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  string|null $status Cron health status. Defaults to the current status.
+	 * @return void
+	 */
+	public function render_cron_health_notice( ?string $status = null ): void {
+		$status = null === $status ? Cron_Health::get_status() : $status;
+
+		if ( Cron_Health::HEALTHY === $status ) {
+			return;
+		}
+
+		if ( Cron_Health::DISABLED === $status ) {
+			$reason = __( 'Page-load cron is switched off by DISABLE_WP_CRON, and nothing else has run the queue since it was last checked.', 'webberzone-image-optimizer' );
+		} else {
+			$reason = __( 'The queue has not moved since it was last checked, so WP-Cron or the loopback request it depends on may not be working.', 'webberzone-image-optimizer' );
+		}
+
+		$fix = sprintf(
+			/* translators: 1: WP-CLI command, 2: example system cron entry. */
+			esc_html__( 'Run %1$s to process the queue now. For ongoing processing, add a system cron entry such as %2$s', 'webberzone-image-optimizer' ),
+			'<code>wp wzio run</code>',
+			'<code>*/5 * * * * wp --path=/path/to/wordpress cron event run --due-now --quiet</code>'
+		);
+
+		printf(
+			'<div class="notice notice-warning wzio-cron-health-notice"><p><strong>%1$s</strong> %2$s</p><p>%3$s</p></div>',
+			esc_html__( 'Queued images are not being optimized in the background.', 'webberzone-image-optimizer' ),
+			esc_html( $reason ),
+			$fix // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		);
 	}
 
 	/**

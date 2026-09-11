@@ -7,6 +7,7 @@
 
 namespace WebberZone\Image_Optimizer\Admin;
 
+use WebberZone\Image_Optimizer\Cron_Health;
 use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
 
@@ -34,6 +35,7 @@ class Deactivator {
 			foreach ( Database::get_site_ids() as $site_id ) {
 				switch_to_blog( $site_id );
 				Processor::unschedule();
+				Cron_Health::forget();
 				restore_current_blog();
 			}
 
@@ -41,5 +43,6 @@ class Deactivator {
 		}
 
 		Processor::unschedule();
+		Cron_Health::forget();
 	}
 }

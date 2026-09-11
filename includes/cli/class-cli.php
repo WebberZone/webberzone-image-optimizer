@@ -10,6 +10,7 @@ namespace WebberZone\Image_Optimizer\CLI;
 use WebberZone\Image_Optimizer\Attachment_Meta;
 use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Converter;
+use WebberZone\Image_Optimizer\Cron_Health;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
 use WebberZone\Image_Optimizer\Scanner;
@@ -239,6 +240,9 @@ class CLI {
 
 		$batches = 0;
 		$saved   = 0;
+
+		// Counts as a worker run so a crontab calling this is not reported as a stalled queue.
+		Cron_Health::record_run();
 
 		do {
 			$result = Processor::run_batch( $batch > 0 ? $batch : null );

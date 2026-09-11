@@ -63,6 +63,16 @@ When **Process the queue in the background** is enabled (Advanced settings tab),
 
 A row stuck in `processing` for more than 10 minutes — a worker killed by a fatal error or a timeout — is automatically released back to `pending` the next time a batch runs, so it can never stall the queue permanently.
 
+## When the background worker stops running
+
+WP-Cron is not a real scheduler. It runs at the end of a page load, by sending a loopback request back to your own site, so it advances the queue only when someone visits. If `DISABLE_WP_CRON` is set with nothing else running WordPress cron, or the loopback request is blocked — by HTTP authentication, a firewall, or a host that does not allow a site to request itself — the scheduled event never fires and the queue sits at the same number indefinitely.
+
+The Bulk Optimize screen watches for this and warns you when it happens. It does not go by the scheduled event's timestamp, which is always overdue on a site that simply has not had a visitor for a while. Instead it notes each time it sees images waiting, and records each time the worker actually runs. Only when a whole 15-minute window passes with images still waiting and no worker run does it tell you the queue has stopped. That means a low-traffic site is never accused of a broken cron, and the warning needs a second visit to the screen to appear.
+
+Anything that runs the worker counts: WP-Cron, a system cron entry calling `wp cron event run`, and `wp wzio run`. The warning clears itself as soon as one of them runs a batch, and never appears while the queue is empty or while **Process the queue in the background** is switched off.
+
+The **Start optimizing** button does not depend on cron at all — it runs batches directly from your browser — so it keeps working normally while the warning is shown.
+
 ## Clearing the queue
 
 **Clear queue** on the Bulk Optimize screen removes pending and in-progress rows. Completed rows are kept so the **Bandwidth saved** totals on the bulk screen survive the reset — the queue can be cleared without losing the record of what was already saved. Images that already have optimized copies stay optimized; clearing the queue only discards rows that have not finished, it does not delete any generated files.

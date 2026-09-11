@@ -81,6 +81,8 @@ function wzio_uninstall_site() {
 	delete_option( 'wzio_settings' );
 	delete_option( 'wzio_capabilities' );
 	delete_option( 'wzio_db_version' );
+	delete_option( 'wzio_cron_last_run' );
+	delete_option( 'wzio_cron_observed' );
 
 	delete_transient( 'wzio_count_candidates' );
 	delete_transient( 'wzio_count_optimized' );

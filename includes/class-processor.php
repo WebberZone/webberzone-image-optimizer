@@ -270,6 +270,8 @@ class Processor {
 			return;
 		}
 
+		Cron_Health::record_run();
+
 		self::run_batch();
 	}
 

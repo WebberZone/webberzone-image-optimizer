@@ -112,6 +112,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 * Features:
     * Filter Media Library images by optimized, not-yet-optimized, skipped and failed status.
+    * Bulk Optimize warns when images are queued but the background worker has stopped running, naming DISABLE_WP_CRON or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
 
 = 1.0.2 =
 
