@@ -34,7 +34,7 @@ By default, each optimized copy is written alongside the original with the new e
 
 Images are wrapped in a `<picture>` element, so the *browser* chooses the format. That matters more than it sounds: the common alternative is to vary the response on the `Accept` header, which returns different bytes for a single URL. Any cache in front of that — a page cache plugin, a CDN — which ignores `Vary` will happily hand a WebP file to a browser that cannot display it. A `<picture>` element has no such failure mode.
 
-Responsive images are handled properly. Each format's `<source>` lists only the optimized `srcset` candidates that exist, with their descriptors preserved exactly. Missing intermediate copies are omitted, while a missing smallest, widest or highest-density copy withholds that format so payload and image quality cannot regress. The original `<img>` remains as the fallback.
+Responsive images are handled properly. Each format's `<source>` lists only the optimized `srcset` candidates that exist, with their descriptors preserved exactly. Missing intermediate copies are omitted, while a missing smallest, widest or highest-density copy withholds that format so the optimized set always covers the same range as the original set. The original `<img>` remains as the fallback.
 
 For images referenced from a stylesheet, where the browser is never offered a choice, the Delivery tab generates ready-to-paste Apache and nginx rules, complete with the `Vary: Accept` header those rules require.
 
