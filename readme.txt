@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -50,10 +50,11 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 * Lazy conversion: an image seen on the front end but not yet converted is queued, never encoded during the page render
 * Per-format quality, encoder effort, and lossless mode for PNG sources
 * A lossy optimized copy that misses the minimum saving is retried once at a lower quality before being discarded, per file
-* Metadata stripped from the copies while the colour profile is kept, so colours do not shift
+* Metadata stripped from the copies while the color profile is kept, so colors do not shift
 * Animated GIFs keep their animation when ImageMagick is available
 * Memory guard that skips an image rather than crashing a batch
-* Per-image status and actions in the Media library
+* Per-image status and actions in the Media library, with a filter for optimized, not-yet-optimized, skipped and failed images
+* Bulk Optimize warns when images are queued but the background worker has stopped running, and gives the commands that recover it
 * Multisite aware: per-site queues, tables created for new sites automatically
 * WP-CLI: `wp wzio status`, `convert`, `queue`, `run`, `clean`
 * Filters throughout for developers
@@ -110,53 +111,33 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.1.0 =
 
+Release date: 12 September 2026
+Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
+
 **Added**
 
-* Added Media Library filters for optimized, not-yet-optimized, skipped and failed images.
-* Added a Bulk Optimize warning when images were queued but the background worker had stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
-* Added one lower-quality retry for lossy optimized copies that missed the minimum-saving threshold, recovering more complete responsive image sets without ever serving a file that missed the configured saving. The retry gives up a fixed share of the configured quality rather than a flat number of points, so WebP and AVIF drop by the same proportion, and it never goes below a quality of 40.
-* Added a note in the Media Library column and on the attachment screen when a copy had to drop below the configured quality to come out smaller, so a lower-quality result is never silent. `wp wzio convert` reports the same number of copies.
+* Media Library filter for optimized, not-yet-optimized, skipped and failed images. Thanks to [muneeb-ashraf](https://github.com/muneeb-ashraf).
+* One lower-quality retry for a lossy copy that misses the minimum saving, so a single oversized size no longer drops a whole responsive image back to the original. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`.
+* A Bulk Optimize warning when images are queued but the background worker has stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
+* A note in the Media Library column, on the attachment screen and in `wp wzio convert` when a copy needed a lower quality than the one configured.
+
+**Security**
+
+* Hardened settings textarea sanitization for users without the `unfiltered_html` capability.
 
 **Fixed**
 
-* Fixed the quality recorded against a copy that was kept from an earlier run being taken from an attempt that had failed, which described a file it never produced.
-* Fixed an image whose conversion killed the background worker being claimed again forever. An attempt that never reported back is now counted, so such an image is marked failed once it has used its retries.
-* Fixed a single attachment being able to run far past the batch time budget. The worker now stops between files and hands the attachment back for the next batch without spending one of its retries, resuming after the last file it attempted so a file that keeps failing cannot hold up the rest.
+* Images were wrapped in a second `<picture>` element when content and template rewriting both ran.
+* An image whose conversion stopped the background worker was claimed again indefinitely, because the abandoned attempt was never counted against its retry budget.
+* A single attachment could run far past the batch time budget. The worker now stops between files and resumes after the last file it attempted.
+* The queue table was reported missing for the rest of the request in which it was created, so a new site silently queued nothing.
+* `trim()`, `ltrim()` and `rtrim()` relied on the default character list, which changes in PHP 8.6.
 
-= 1.0.2 =
+= Earlier versions =
 
-Release date: 27 August 2026
-
-* Enhancements:
-    * The Bulk Optimize scan runs in time-bounded passes and resumes where it left off, so building the queue can no longer time out on a very large media library.
-    * The library-wide counts on the Bulk Optimize screen are cached, so a bulk run no longer re-counts the entire media library after every batch.
-    * The naming detection scan primes its post and meta caches, replacing roughly two hundred queries with two.
-
-= 1.0.1 =
-
-Release date: 26 August 2026
-
-* Features:
-    * Optimized copies left by another plugin are detected, with a one-click switch to match their file naming so they start being served.
-    * An optimized copy that already exists is adopted rather than re-encoded, so moving from another plugin does not repeat work it has already done.
-
-* Bug fixes:
-    * An optimized copy that is not small enough is now rejected before it replaces anything, so a rejected conversion can no longer delete a usable copy from an earlier run.
-    * An optimized copy inherited from another plugin is kept only when it is no older than its source, so a stale copy is never served.
-
-= 1.0.0 =
-
-Release date: 25 August 2026
-
-* Initial release.
+For the changelog of earlier versions, please refer to the [releases page on GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases).
 
 == Upgrade Notice ==
 
-= 1.0.2 =
-The Bulk Optimize scan no longer times out on very large media libraries, and bulk runs are faster.
-
-= 1.0.1 =
-Detects optimized copies left by another plugin. Fixes a rejected conversion removing a usable copy.
-
-= 1.0.0 =
-Initial release.
+= 1.1.0 =
+A size that could not be made smaller no longer drops the whole responsive image back to the original, and Bulk Optimize warns when the background worker has stopped. Includes a security hardening fix.

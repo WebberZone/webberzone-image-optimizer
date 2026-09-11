@@ -18,6 +18,7 @@ Convert your WordPress media library to WebP and AVIF, and serve the best format
 - Serves them with a `<picture>` element so the *browser* picks the format — which is what keeps it correct behind page caches and CDNs.
 - Maps every `srcset` candidate, preserving width descriptors exactly, and falls back to the original if any candidate is missing.
 - Bulk-converts an existing library through a resumable, database-backed queue.
+- Retries a lossy encode once at a lower quality when it misses the minimum saving, so one oversized size does not drop a whole responsive image back to the original.
 
 ## Requirements
 
