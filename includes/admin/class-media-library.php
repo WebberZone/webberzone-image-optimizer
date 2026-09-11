@@ -355,6 +355,36 @@ class Media_Library {
 			esc_html( Helpers::format_bytes( $totals['saved'] ) ),
 			(int) $percent
 		);
+
+		self::render_reduced_note( (int) $totals['reduced'], '<br /><span class="wzio-reduced-note">%s</span>' );
+	}
+
+	/**
+	 * Say how many copies had to drop below the configured quality to beat the original.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  int    $reduced Number of copies re-encoded at a lower quality.
+	 * @param  string $wrapper printf wrapper holding a single %s for the escaped text.
+	 * @return void
+	 */
+	private static function render_reduced_note( int $reduced, string $wrapper ): void {
+		if ( $reduced < 1 ) {
+			return;
+		}
+
+		$text = sprintf(
+			/* translators: %d: number of files. */
+			_n(
+				'%d copy needed a lower quality to come out smaller than the original.',
+				'%d copies needed a lower quality to come out smaller than the original.',
+				$reduced,
+				'webberzone-image-optimizer'
+			),
+			$reduced
+		);
+
+		printf( $wrapper, esc_html( $text ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -473,6 +503,8 @@ class Media_Library {
 				esc_html( Helpers::format_bytes( $totals['saved'] ) ),
 				(int) $percent
 			);
+
+			self::render_reduced_note( (int) $totals['reduced'], '<br /><span class="wzio-reduced-note">%s</span>' );
 
 			if ( ! empty( $totals['formats'] ) ) {
 				echo '<ul class="wzio-submitbox-formats">';

@@ -114,7 +114,14 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 * Added Media Library filters for optimized, not-yet-optimized, skipped and failed images.
 * Added a Bulk Optimize warning when images were queued but the background worker had stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
-* Added one lower-quality retry for lossy optimized copies that missed the minimum-saving threshold, recovering more complete responsive image sets without ever serving a file that missed the configured saving.
+* Added one lower-quality retry for lossy optimized copies that missed the minimum-saving threshold, recovering more complete responsive image sets without ever serving a file that missed the configured saving. The retry gives up a fixed share of the configured quality rather than a flat number of points, so WebP and AVIF drop by the same proportion, and it never goes below a quality of 40.
+* Added a note in the Media Library column and on the attachment screen when a copy had to drop below the configured quality to come out smaller, so a lower-quality result is never silent. `wp wzio convert` reports the same number of copies.
+
+**Fixed**
+
+* Fixed the quality recorded against a copy that was kept from an earlier run being taken from an attempt that had failed, which described a file it never produced.
+* Fixed an image whose conversion killed the background worker being claimed again forever. An attempt that never reported back is now counted, so such an image is marked failed once it has used its retries.
+* Fixed a single attachment being able to run far past the batch time budget. The worker now stops between files and hands the attachment back for the next batch without spending one of its retries, resuming after the last file it attempted so a file that keeps failing cannot hold up the rest.
 
 = 1.0.2 =
 

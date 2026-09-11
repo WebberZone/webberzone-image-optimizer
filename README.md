@@ -98,7 +98,7 @@ Tests cover path and URL mapping, traversal guards, `srcset` parsing, `<picture>
 ## Notable filters
 
 - `wzio_conversion_args` — quality, formats, effort, thresholds
-- `wzio_conversion_retry_step` — quality reduction for the single oversized-encode retry
+- `wzio_conversion_retry_step` — quality reduction for the single oversized-encode retry, defaulting to 15% of the configured quality and floored at `Converter::MIN_RETRY_QUALITY`
 - `wzio_attachment_files` — which files an attachment converts
 - `wzio_is_excluded` — per-file exclusion
 - `wzio_delivery_enabled` — disable rewriting for a request

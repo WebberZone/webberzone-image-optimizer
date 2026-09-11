@@ -343,23 +343,73 @@ class Queue {
 
 		$table  = Database::get_table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', (int) current_time( 'timestamp' ) - $older_than_seconds ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+		$now    = current_time( 'mysql' );
 
      // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		// A worker killed mid-row never reported its attempt. Counting it here is what
+		// stops an image that kills every worker from being claimed forever.
+		$exhausted = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET status = %s, attempts = attempts + 1, error = %s, updated = %s WHERE status = %s AND updated < %s AND attempts + 1 >= %d",
+				self::FAILED,
+				__( 'The worker stopped before this image finished.', 'webberzone-image-optimizer' ),
+				$now,
+				self::PROCESSING,
+				$cutoff,
+				self::MAX_ATTEMPTS
+			)
+		);
+
 		$released = $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE `{$table}` SET status = %s WHERE status = %s AND updated < %s",
+				"UPDATE `{$table}` SET status = %s, attempts = attempts + 1, updated = %s WHERE status = %s AND updated < %s",
 				self::PENDING,
+				$now,
 				self::PROCESSING,
 				$cutoff
 			)
 		);
      // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
-		if ( $released ) {
+		if ( $released || $exhausted ) {
 			self::flush_counts();
 		}
 
 		return false === $released ? 0 : (int) $released;
+	}
+
+	/**
+	 * Hand a claimed row back for the next batch without counting an attempt.
+	 *
+	 * Used when the worker yields on its own deadline, which is a deliberate stop
+	 * rather than a failure, so the row keeps its full retry budget.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  int $id Queue row ID.
+	 * @return void
+	 */
+	public static function defer( int $id ): void {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return;
+		}
+
+		$table = Database::get_table();
+
+     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE `{$table}` SET status = %s, updated = %s WHERE id = %d",
+				self::PENDING,
+				current_time( 'mysql' ),
+				$id
+			)
+		);
+     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		self::flush_counts();
 	}
 
 	/**

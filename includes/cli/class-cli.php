@@ -152,6 +152,7 @@ class CLI {
 		$progress = \WP_CLI\Utils\make_progress_bar( 'Converting', count( $ids ) );
 		$saved    = 0;
 		$failed   = 0;
+		$reduced  = 0;
 
 		foreach ( $ids as $id ) {
 			$summary = Converter::convert_attachment( $id, $overrides );
@@ -160,7 +161,8 @@ class CLI {
 				++$failed;
 				\WP_CLI::warning( sprintf( '#%d: %s', $id, $summary->get_error_message() ) );
 			} else {
-				$saved += (int) $summary['saved'];
+				$saved   += (int) $summary['saved'];
+				$reduced += (int) $summary['reduced'];
 
 				foreach ( $summary['errors'] as $error ) {
 					\WP_CLI::warning( sprintf( '#%d: %s', $id, $error ) );
@@ -171,6 +173,21 @@ class CLI {
 		}
 
 		$progress->finish();
+
+		if ( $reduced > 0 ) {
+			\WP_CLI::log(
+				sprintf(
+					/* translators: %d: number of optimized copies. */
+					_n(
+						'%d optimized copy needed a lower quality than configured to come out smaller than the original.',
+						'%d optimized copies needed a lower quality than configured to come out smaller than the original.',
+						$reduced,
+						'webberzone-image-optimizer'
+					),
+					$reduced
+				)
+			);
+		}
 
 		\WP_CLI::success(
 			sprintf(

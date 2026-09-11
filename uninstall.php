@@ -39,8 +39,9 @@ function wzio_uninstall_site() {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$records = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s",
-				'_wzio_data'
+				"SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key IN (%s, %s)",
+				'_wzio_data',
+				'_wzio_progress'
 			)
 		);
 
@@ -89,6 +90,8 @@ function wzio_uninstall_site() {
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 	$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_wzio_data' ) );
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+	$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_wzio_progress' ) );
 
 	$table = $wpdb->prefix . 'wzio_queue';
 

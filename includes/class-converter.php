@@ -21,6 +21,24 @@ if ( ! defined( 'WPINC' ) ) {
  */
 class Converter {
 
+	/**
+	 * Lowest quality a retry may drop to, whatever the step works out at.
+	 *
+	 * @since 1.1.0
+	 * @var int
+	 */
+	const MIN_RETRY_QUALITY = 40;
+
+	/**
+	 * Share of the configured quality the default retry step gives up.
+	 *
+	 * Quality numbers are not comparable across formats, so a proportional step
+	 * keeps the drop even: WebP 82 loses 12 points, AVIF 50 loses 8.
+	 *
+	 * @since 1.1.0
+	 * @var float
+	 */
+	const RETRY_STEP_RATIO = 0.15;
 
 	/**
 	 * Resolve the conversion arguments, layering overrides over the settings.
@@ -45,8 +63,8 @@ class Converter {
 				'effort_avif' => (int) \wzio_get_option( 'effort_avif', 4 ),
 				'min_saving'  => (int) \wzio_get_option( 'min_saving', 5 ),
 				'quality'     => array(
-					'webp' => (int) \wzio_get_option( 'quality_webp', 82 ),
-					'avif' => (int) \wzio_get_option( 'quality_avif', 50 ),
+					'webp' => self::get_quality( 'webp' ),
+					'avif' => self::get_quality( 'avif' ),
 				),
 				'lossless'    => (bool) \wzio_get_option( 'lossless_png', true ),
 			)
@@ -64,6 +82,23 @@ class Converter {
 	}
 
 	/**
+	 * The quality configured for a format.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  string $format Target format slug.
+	 * @return int Quality between 1 and 100.
+	 */
+	public static function get_quality( string $format ): int {
+		$defaults = array(
+			'webp' => 82,
+			'avif' => 50,
+		);
+
+		return max( 1, min( 100, (int) \wzio_get_option( 'quality_' . $format, $defaults[ $format ] ?? 82 ) ) );
+	}
+
+	/**
 	 * Convert every served attachment file, excluding the unserved big-image original.
 	 *
 	 * @since 1.0.0
@@ -71,7 +106,7 @@ class Converter {
 	 * @param  int                       $attachment_id Attachment ID.
 	 * @param  array<string, mixed>      $overrides     Argument overrides.
 	 * @param  array<string, mixed>|null $meta          Attachment metadata, when it is not yet stored.
-	 * @return array{files: int, converted: int, skipped: int, failed: int, source: int, saved: int, errors: array<int, string>}|\WP_Error Summary or error.
+	 * @return array{files: int, converted: int, skipped: int, failed: int, reduced: int, source: int, saved: int, errors: array<int, string>, complete: bool}|\WP_Error Summary or error.
 	 */
 	public static function convert_attachment( int $attachment_id, array $overrides = array(), ?array $meta = null ) {
 		if ( ! self::is_convertible_attachment( $attachment_id ) ) {
@@ -91,18 +126,60 @@ class Converter {
 			);
 		}
 
-		$record = Attachment_Meta::get( $attachment_id );
+		$record       = Attachment_Meta::get( $attachment_id );
+		$deadline     = (float) ( $args['deadline'] ?? 0 );
+		$use_progress = 0 < $deadline && empty( $args['force'] );
+		$context      = '';
+		$processed    = array();
+		$complete     = true;
+		$started      = 0;
+
+		if ( $use_progress ) {
+			$context  = self::get_progress_context( $files, $args );
+			$progress = Attachment_Meta::get_progress( $attachment_id );
+
+			if ( ( $progress['context'] ?? '' ) === $context ) {
+				$record['files'] = array_replace( $record['files'], $progress['files'] );
+				$processed       = array_fill_keys( $progress['processed'], true );
+			} else {
+				Attachment_Meta::delete_progress( $attachment_id );
+			}
+		} else {
+			Attachment_Meta::delete_progress( $attachment_id );
+		}
 
 		foreach ( $files as $basename => $path ) {
+			if ( isset( $processed[ $basename ] ) ) {
+				continue;
+			}
+
+			// Yield between files so one attachment cannot overrun the batch budget.
+			// Always convert at least one, or a passed deadline would never progress.
+			if ( $started > 0 && $deadline > 0 && microtime( true ) >= $deadline ) {
+				$complete = false;
+				break;
+			}
+
+			++$started;
 			$existing = $record['files'][ $basename ] ?? array();
 
 			$record['files'][ $basename ] = self::convert_file( $path, $args, $existing );
-			// Saved per file so a timeout mid-loop doesn't discard finished work.
-			Attachment_Meta::set( $attachment_id, $record );
+			$processed[ $basename ]       = true;
+
+			if ( $use_progress ) {
+				Attachment_Meta::set_progress( $attachment_id, $record, $context, array_keys( $processed ) );
+			}
+
 			Resolver::invalidate_path( $path );
 		}
 
-		$summary = self::summarise( $record, $files, $args['formats'] );
+		$summary             = self::summarise( $record, $files, $args );
+		$summary['complete'] = $complete;
+
+		// Pruning and the completion hook both assume every file has been seen.
+		if ( ! $complete ) {
+			return $summary;
+		}
 
 		self::prune_orphans( $attachment_id, $record, $files );
 
@@ -149,9 +226,16 @@ class Converter {
 			);
 		}
 
-		$record = Attachment_Meta::get( $attachment_id );
-		$total  = count( $files );
-		$index  = 0;
+		$record   = Attachment_Meta::get( $attachment_id );
+		$progress = Attachment_Meta::get_progress( $attachment_id );
+
+		if ( ! empty( $progress['files'] ) ) {
+			$record['files'] = array_replace( $record['files'], $progress['files'] );
+			Attachment_Meta::delete_progress( $attachment_id );
+		}
+
+		$total = count( $files );
+		$index = 0;
 
 		foreach ( $files as $basename => $path ) {
 			++$index;
@@ -175,7 +259,7 @@ class Converter {
 		self::prune_orphans( $attachment_id, $record, $files );
 
 		/** This action is documented in includes/class-converter.php */
-		do_action( 'wzio_attachment_converted', $attachment_id, self::summarise( $record, $files, $args['formats'] ), $args );
+		do_action( 'wzio_attachment_converted', $attachment_id, self::summarise( $record, $files, $args ), $args );
 
 		return array(
 			'done'  => true,
@@ -189,17 +273,19 @@ class Converter {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param  array<string, mixed>  $record  Conversion record.
-	 * @param  array<string, string> $files   Basename to path map.
-	 * @param  array<int, string>    $formats Requested formats.
-	 * @return array{files: int, converted: int, skipped: int, failed: int, source: int, saved: int, errors: array<int, string>} Summary.
+	 * @param  array<string, mixed>  $record Conversion record.
+	 * @param  array<string, string> $files  Basename to path map.
+	 * @param  array<string, mixed>  $args   Conversion arguments used.
+	 * @return array{files: int, converted: int, skipped: int, failed: int, reduced: int, source: int, saved: int, errors: array<int, string>} Summary.
 	 */
-	private static function summarise( array $record, array $files, array $formats ): array {
+	private static function summarise( array $record, array $files, array $args ): array {
+		$formats = (array) ( $args['formats'] ?? array() );
 		$summary = array(
 			'files'     => 0,
 			'converted' => 0,
 			'skipped'   => 0,
 			'failed'    => 0,
+			'reduced'   => 0,
 			'source'    => 0,
 			'saved'     => 0,
 			'errors'    => array(),
@@ -217,6 +303,10 @@ class Converter {
 
 				if ( isset( $entry['bytes'] ) ) {
 					++$summary['converted'];
+
+					if ( ! empty( $entry['reduced'] ) ) {
+						++$summary['reduced'];
+					}
 
 					if ( 0 === $best || $entry['bytes'] < $best ) {
 						$best = (int) $entry['bytes'];
@@ -258,6 +348,41 @@ class Converter {
 	}
 
 	/**
+	 * Fingerprint the inputs that make an interrupted conversion safe to resume.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  array<string, string> $files Basename to path map.
+	 * @param  array<string, mixed>  $args  Conversion arguments used.
+	 * @return string Context fingerprint.
+	 */
+	private static function get_progress_context( array $files, array $args ): string {
+		$sources = array();
+
+		foreach ( $files as $basename => $path ) {
+			$sources[ $basename ] = array(
+				'path'  => wp_normalize_path( $path ),
+				'size'  => (int) filesize( $path ),
+				'mtime' => (int) filemtime( $path ),
+			);
+		}
+
+		$context = array(
+			'sources'        => $sources,
+			'formats'        => array_values( (array) ( $args['formats'] ?? array() ) ),
+			'quality'        => (array) ( $args['quality'] ?? array() ),
+			'lossless'       => ! empty( $args['lossless'] ),
+			'strip'          => ! empty( $args['strip'] ),
+			'min_saving'     => (int) ( $args['min_saving'] ?? 5 ),
+			'effort_webp'    => (int) ( $args['effort_webp'] ?? 6 ),
+			'effort_avif'    => (int) ( $args['effort_avif'] ?? 4 ),
+			'sidecar_naming' => (string) \wzio_get_option( 'sidecar_naming', 'append' ),
+		);
+
+		return hash( 'sha256', (string) wp_json_encode( $context ) );
+	}
+
+	/**
 	 * Delete sidecars for files no longer produced by the attachment, and save the record.
 	 *
 	 * @since 1.0.0
@@ -273,6 +398,7 @@ class Converter {
 
 		if ( empty( $orphans ) ) {
 			Attachment_Meta::set( $attachment_id, $record );
+			Attachment_Meta::delete_progress( $attachment_id );
 			return;
 		}
 
@@ -288,6 +414,7 @@ class Converter {
 
 		$record['files'] = array_intersect_key( $record['files'], $files );
 		Attachment_Meta::set( $attachment_id, $record );
+		Attachment_Meta::delete_progress( $attachment_id );
 	}
 
 	/**
@@ -327,11 +454,17 @@ class Converter {
 
 		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
-		foreach ( $args['formats'] as $format ) {
-			$destination    = Helpers::sidecar_path( $path, $format );
-			$stored_quality = $existing[ $format ]['quality'] ?? null;
+		// Lowering quality cannot change a lossless encode, so it never gets the retry.
+		$lossless = ! empty( $args['lossless'] ) && 'image/png' === $mime;
 
-			$known_quality = is_numeric( $stored_quality ) ? max( 1, min( 100, (int) $stored_quality ) ) : null;
+		foreach ( $args['formats'] as $format ) {
+			$destination = Helpers::sidecar_path( $path, $format );
+
+			// Quality on a skip entry is the one that failed, so it describes no file
+			// and must never be inherited by a sidecar that happens to be on disk.
+			$stored_quality = isset( $existing[ $format ]['bytes'] ) ? ( $existing[ $format ]['quality'] ?? null ) : null;
+			$known_quality  = is_numeric( $stored_quality ) ? max( 1, min( 100, (int) $stored_quality ) ) : null;
+			$known_reduced  = isset( $existing[ $format ]['bytes'] ) && ! empty( $existing[ $format ]['reduced'] );
 
 			if ( self::is_alien_file( $destination, $width, $height ) ) {
 				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
@@ -347,13 +480,16 @@ class Converter {
 				$bytes = (int) filesize( $destination );
 
 				if ( $bytes > 0 && $bytes < $max_bytes ) {
-					$record[ $format ] = Attachment_Meta::converted_entry( $bytes, $known_quality );
+					$record[ $format ] = Attachment_Meta::converted_entry( $bytes, $known_quality, $known_reduced );
 					continue;
 				}
 			}
 
 			// A previous run decided this file is not worth converting.
-			if ( empty( $args['force'] ) && isset( $existing[ $format ]['skip'] ) ) {
+			if ( empty( $args['force'] )
+				&& isset( $existing[ $format ]['skip'] )
+				&& ! self::skip_predates_retry( $existing[ $format ], $lossless )
+			) {
 				$record[ $format ] = $existing[ $format ];
 				continue;
 			}
@@ -379,7 +515,7 @@ class Converter {
 
 			$driver_args = array(
 				'quality'   => max( 1, min( 100, (int) ( $args['quality'][ $format ] ?? 82 ) ) ),
-				'lossless'  => ! empty( $args['lossless'] ) && 'image/png' === $mime,
+				'lossless'  => $lossless,
 				'strip'     => ! empty( $args['strip'] ),
 				'effort'    => (int) ( $args['effort_webp'] ?? 6 ),
 				'dims'      => compact( 'width', 'height' ),
@@ -397,12 +533,13 @@ class Converter {
 				continue;
 			}
 
-			$quality = $driver_args['lossless'] ? null : $driver_args['quality'];
-			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality );
+			$quality = $lossless ? null : $driver_args['quality'];
+			$reduced = false;
+			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, false, $known_reduced );
 
-			// Lowering quality cannot change a lossless encode, so only lossy
-			// copies get the one extra attempt.
-			if ( 'larger' === ( $entry['skip'] ?? '' ) && ! $driver_args['lossless'] ) {
+			// Check both signals: built-in drivers reject an oversized encode, while
+			// third-party drivers may return success and rely on this size backstop.
+			if ( ! $lossless && ( is_wp_error( $result ) || 'larger' === ( $entry['skip'] ?? '' ) ) ) {
 				$retry_quality = self::get_retry_quality( $driver_args['quality'], $format, $path, $driver_args );
 
 				if ( $retry_quality < $driver_args['quality'] ) {
@@ -414,7 +551,9 @@ class Converter {
 						continue;
 					}
 
-					$entry = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $retry_quality, $known_quality );
+					$quality = $retry_quality;
+					$reduced = true;
+					$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced );
 				}
 			}
 
@@ -436,10 +575,14 @@ class Converter {
 	 * @return int Retry quality. The initial quality is returned when retrying is disabled.
 	 */
 	private static function get_retry_quality( int $quality, string $format, string $path, array $driver_args ): int {
+		$default = (int) round( $quality * self::RETRY_STEP_RATIO );
+
 		/**
 		 * Filter the quality reduction used for one retry after an oversized encode.
 		 *
-		 * Return zero to disable the retry. Values above 99 are treated as 99.
+		 * Return zero to disable the retry. Values above 99 are treated as 99. The
+		 * result is floored at Converter::MIN_RETRY_QUALITY whatever the step, so a
+		 * retry can never ship a visibly degraded copy.
 		 *
 		 * @since 1.1.0
 		 *
@@ -448,10 +591,34 @@ class Converter {
 		 * @param string               $path        Absolute path to the source image.
 		 * @param array<string, mixed> $driver_args Encoding arguments used for the first attempt.
 		 */
-		$step = (int) apply_filters( 'wzio_conversion_retry_step', 12, $format, $path, $driver_args );
+		$step = (int) apply_filters( 'wzio_conversion_retry_step', $default, $format, $path, $driver_args );
 		$step = max( 0, min( 99, $step ) );
 
-		return max( 1, $quality - $step );
+		if ( $step < 1 ) {
+			return $quality;
+		}
+
+		return max( self::MIN_RETRY_QUALITY, $quality - $step );
+	}
+
+	/**
+	 * Whether a stored skip was recorded before the adaptive retry existed.
+	 *
+	 * Such an entry gets one more chance, because the run that wrote it had no
+	 * retry to offer. The attempt always records a quality, so it settles for good.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  array<string, mixed> $entry    Stored format entry.
+	 * @param  bool                 $lossless Whether this source encodes losslessly.
+	 * @return bool True when the entry should be attempted once more.
+	 */
+	private static function skip_predates_retry( array $entry, bool $lossless ): bool {
+		if ( $lossless ) {
+			return false;
+		}
+
+		return 'larger' === ( $entry['skip'] ?? '' ) && ! isset( $entry['quality'] );
 	}
 
 	/**
@@ -508,6 +675,8 @@ class Converter {
 	 * @param  bool     $written     Whether this run wrote the sidecar.
 	 * @param  int|null $quality     Effective lossy quality attempted, when applicable.
 	 * @param  int|null $known_quality Quality recorded for an inherited sidecar, when known.
+	 * @param  bool     $reduced       Whether this run used the lower-quality retry.
+	 * @param  bool     $known_reduced Whether an inherited sidecar used the retry.
 	 * @return array<string, mixed> Format record.
 	 */
 	private static function resolve_sidecar(
@@ -516,7 +685,9 @@ class Converter {
 		int $max_bytes,
 		bool $written,
 		?int $quality = null,
-		?int $known_quality = null
+		?int $known_quality = null,
+		bool $reduced = false,
+		bool $known_reduced = false
 	): array {
 		clearstatcache( true, $destination );
 
@@ -527,7 +698,7 @@ class Converter {
 			$fresh = $written || filemtime( $destination ) >= filemtime( $path );
 
 			if ( $bytes > 0 && $bytes < $max_bytes && $fresh ) {
-				return Attachment_Meta::converted_entry( $bytes, $written ? $quality : $known_quality );
+				return Attachment_Meta::converted_entry( $bytes, $written ? $quality : $known_quality, $written ? $reduced : $known_reduced );
 			}
 
 			Helpers::delete_file( $destination );
@@ -729,9 +900,12 @@ class Converter {
 	 * @return int Number of files deleted.
 	 */
 	public static function delete_sidecars( int $attachment_id ): int {
-		$record  = Attachment_Meta::get( $attachment_id );
-		$files   = self::get_attachment_files( $attachment_id );
-		$deleted = 0;
+		$record   = Attachment_Meta::get( $attachment_id );
+		$progress = Attachment_Meta::get_progress( $attachment_id );
+		$files    = self::get_attachment_files( $attachment_id );
+		$deleted  = 0;
+
+		$record['files'] = array_replace( $record['files'], $progress['files'] );
 
 		// Cover both the files still on disk and any recorded earlier.
 		$basenames = array_unique( array_merge( array_keys( $files ), array_keys( $record['files'] ) ) );

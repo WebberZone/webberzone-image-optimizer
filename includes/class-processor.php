@@ -79,7 +79,7 @@ class Processor {
 	 * @since 1.0.0
 	 *
 	 * @param int|null $limit Batch size, or null to read it from the settings.
-	 * @return array{processed: int, converted: int, failed: int, skipped: int, saved: int, remaining: int, locked: bool} Result.
+	 * @return array{processed: int, converted: int, failed: int, skipped: int, deferred: int, saved: int, remaining: int, locked: bool} Result.
 	 */
 	public static function run_batch( ?int $limit = null ): array {
 		$result = array(
@@ -87,6 +87,7 @@ class Processor {
 			'converted' => 0,
 			'failed'    => 0,
 			'skipped'   => 0,
+			'deferred'  => 0,
 			'saved'     => 0,
 			'remaining' => 0,
 			'locked'    => false,
@@ -109,6 +110,7 @@ class Processor {
 				Queue::DONE    => 'converted',
 				Queue::FAILED  => 'failed',
 				Queue::SKIPPED => 'skipped',
+				Queue::PENDING => 'deferred',
 			);
 
 			// Claim individually so the deadline leaves remaining rows pending.
@@ -127,7 +129,13 @@ class Processor {
 
 				++$result['processed'];
 
-				$outcome = self::process_row( $rows[0], array( 'force' => false ) );
+				$outcome = self::process_row(
+					$rows[0],
+					array(
+						'force'    => false,
+						'deadline' => $deadline,
+					)
+				);
 
 				++$result[ $result_keys[ $outcome['status'] ] ];
 				$result['saved'] += $outcome['saved'];
@@ -223,6 +231,18 @@ class Processor {
 				'status' => Queue::FAILED,
 				'saved'  => 0,
 				'error'  => $summary->get_error_message(),
+			);
+		}
+
+		// The worker ran out of time part way through, so the row waits rather than
+		// reporting an outcome it has not reached yet.
+		if ( empty( $summary['complete'] ) ) {
+			Queue::defer( (int) $row->id );
+
+			return array(
+				'status' => Queue::PENDING,
+				'saved'  => 0,
+				'error'  => '',
 			);
 		}
 
