@@ -158,6 +158,14 @@ class AttachmentDeadlineTest extends WP_UnitTestCase
         add_filter('wzio_driver_classes', array( __CLASS__, 'deadline_driver_classes' ));
         Capabilities::flush();
         Capabilities::get(true);
+
+        // Creating the attachment fires the on-upload conversion with the real
+        // driver. Leaving those sidecars in place would let convert_file() reuse
+        // them and this driver would never be called.
+        Converter::delete_sidecars($this->attachment_id);
+        Attachment_Meta::delete($this->attachment_id);
+        Attachment_Meta::delete_progress($this->attachment_id);
+        WZIO_Deadline_Test_Driver::$calls = array();
     }
 
     /**

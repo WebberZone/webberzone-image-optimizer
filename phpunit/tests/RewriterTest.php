@@ -123,8 +123,12 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'type="image/webp"', $out );
 		$this->assertStringContainsString( $url . '.webp', $out );
 
-		// The original tag must survive intact as the fallback.
-		$this->assertStringContainsString( $html, $out );
+		// The original tag survives as the fallback, carrying the marker that stops a
+		// repeat pass wrapping it again. Asserted per attribute, not as one string,
+		// so the tag processor's attribute ordering is not baked into the test.
+		$this->assertStringContainsString( 'src="' . $url . '"', $out );
+		$this->assertStringContainsString( 'alt=""', $out );
+		$this->assertStringContainsString( 'data-wzio-processed="1"', $out );
 	}
 
 	/**
