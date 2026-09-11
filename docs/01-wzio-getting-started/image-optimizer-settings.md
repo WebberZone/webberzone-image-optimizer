@@ -27,6 +27,8 @@ Leave every box unchecked to convert all sizes, which is what you want unless di
 **Minimum saving (%)**
 Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. The same threshold decides whether a copy inherited from another optimizer is kept or replaced. Default: `5`. Range: `0`–`90`.
 
+A lossy copy that misses the threshold is not thrown away immediately — it is retried once at a lower quality, so a single stubborn size no longer drops a whole responsive image back to the original. The retry drops the configured quality by 15%, rounded, and never goes below quality 40: WebP at 82 retries at 70, AVIF at 50 retries at 42. A copy that still misses the threshold after that retry is discarded, and lossless PNG copies are never retried because they have no quality to lower. When a copy is kept after a retry, the Media Library and `wp wzio convert` both say so. Developers can adjust or switch off the retry with the `wzio_conversion_retry_step` filter — return `0` to disable it.
+
 **Optimized file naming**
 Controls how the generated WebP/AVIF file is named. **Append the new extension** (`photo.jpg.webp`) is the safe default — every file has a unique name and nothing can collide. **Replace the extension** (`photo.webp`) produces shorter filenames but can collide if the same folder contains both `photo.jpg` and `photo.png`, silently overwriting one optimized copy with the other. Only choose Replace if you are sure your uploads never share a filename across extensions. Default: `append`.
 

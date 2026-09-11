@@ -34,8 +34,10 @@ A normal run never re-encodes an image that already has a usable copy, whether t
 
 ## Failures
 
-An image that fails is retried a few times and then listed under **Images that could not be optimized**, with the reason for each failure. Common reasons include a server that cannot encode the requested format, or every candidate size failing the minimum-saving check.
+An image that fails is retried a few times and then listed under **Images that could not be optimized**, with the reason for each failure. The most common reason is a server that cannot encode the requested format. A candidate size that would miss the minimum-saving threshold is not an immediate failure — it is retried once at a lower quality first (see **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/)), and the Media Library notes any copy kept that way.
 
 ## Configuring the run
 
 **Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/).
+
+When images are queued but the background worker has stopped running, the screen shows a warning naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause, with the WP-CLI and system cron commands that recover it. The warning only appears after a whole 15-minute window passes with no worker run, and it clears as soon as one runs — see [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/) for how the plugin tells a stalled queue from a quiet site.

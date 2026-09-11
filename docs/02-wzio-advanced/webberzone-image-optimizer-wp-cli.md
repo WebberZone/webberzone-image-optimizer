@@ -35,6 +35,8 @@ wp wzio convert --formats=webp,avif --force
 - `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
 - `--dry-run` — report what would be converted without writing anything.
 
+When a copy had to drop below the configured quality to come out smaller than the original, the command says so at the end — "N optimized copies needed a lower quality than configured to come out smaller than the original." See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
+
 ## `wp wzio queue`
 
 Adds every unconverted attachment to the background queue, the same queue the Bulk Optimize screen uses.
