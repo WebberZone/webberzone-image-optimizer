@@ -128,6 +128,26 @@ class RewriterTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Repeated content filtering must not nest picture elements.
+	 */
+	public function test_existing_picture_is_not_wrapped_again() {
+		$this->touch_upload( '2026/02/repeated.jpg' );
+		$this->touch_upload( '2026/02/repeated.jpg.webp' );
+
+		$url  = Helpers::get_upload_baseurl() . '/2026/02/repeated.jpg';
+		$html = '<img src="' . $url . '" alt="" />';
+		$once = $this->rewriter->wrap( $html, 0 );
+
+		$this->assertSame( $once, $this->rewriter->wrap( $once, 0 ) );
+		$this->assertSame( 1, substr_count( $once, '<picture>' ) );
+		$this->assertStringContainsString( 'data-wzio-processed="1"', $once );
+
+		$this->assertSame( 1, preg_match( '#<img\b[^>]*>#i', $once, $matches ) );
+
+		$this->assertSame( $matches[0], $this->rewriter->wrap( $matches[0], 0 ) );
+	}
+
+	/**
 	 * Every srcset candidate is mapped, with its width descriptor preserved.
 	 */
 	public function test_every_srcset_candidate_is_mapped() {

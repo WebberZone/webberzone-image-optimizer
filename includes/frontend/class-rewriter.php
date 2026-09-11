@@ -197,13 +197,22 @@ class Rewriter {
 			return $html;
 		}
 
+		// Content filters can run more than once. Never nest a second picture.
+		if ( false !== stripos( $html, '<picture' ) ) {
+			return $html;
+		}
+
 		$tags = new \WP_HTML_Tag_Processor( $html );
 
 		if ( ! $tags->next_tag( array( 'tag_name' => 'IMG' ) ) ) {
 			return $html;
 		}
 
-		if ( null !== $tags->get_attribute( 'data-wzio-skip' ) || $tags->has_class( 'wzio-skip' ) ) {
+		if (
+			null !== $tags->get_attribute( 'data-wzio-skip' )
+			|| null !== $tags->get_attribute( 'data-wzio-processed' )
+			|| $tags->has_class( 'wzio-skip' )
+		) {
 			return $html;
 		}
 
@@ -267,6 +276,9 @@ class Rewriter {
 
 			return $html;
 		}
+
+		$tags->set_attribute( 'data-wzio-processed', '1' );
+		$html = $tags->get_updated_html();
 
 		return '<picture>' . implode( '', $sources ) . $html . '</picture>';
 	}
