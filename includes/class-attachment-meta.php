@@ -140,24 +140,40 @@ class Attachment_Meta {
 	 * Build the record entry for a successful conversion.
 	 *
 	 * @since 1.0.0
+	 * @since 1.1.0 Added the optional quality value.
 	 *
-	 * @param int $bytes Sidecar size in bytes.
-	 * @return array{bytes: int} Entry.
+	 * @param int      $bytes   Sidecar size in bytes.
+	 * @param int|null $quality Effective lossy quality, when known.
+	 * @return array{bytes: int, quality?: int} Entry.
 	 */
-	public static function converted_entry( int $bytes ): array {
-		return array( 'bytes' => $bytes );
+	public static function converted_entry( int $bytes, ?int $quality = null ): array {
+		$entry = array( 'bytes' => $bytes );
+
+		if ( null !== $quality ) {
+			$entry['quality'] = max( 1, min( 100, $quality ) );
+		}
+
+		return $entry;
 	}
 
 	/**
 	 * Build the record entry for a file that was deliberately not converted.
 	 *
 	 * @since 1.0.0
+	 * @since 1.1.0 Added the optional quality value.
 	 *
-	 * @param string $reason Machine-readable reason.
-	 * @return array{skip: string} Entry.
+	 * @param string   $reason  Machine-readable reason.
+	 * @param int|null $quality Final lossy quality attempted, when applicable.
+	 * @return array{skip: string, quality?: int} Entry.
 	 */
-	public static function skipped_entry( string $reason ): array {
-		return array( 'skip' => $reason );
+	public static function skipped_entry( string $reason, ?int $quality = null ): array {
+		$entry = array( 'skip' => $reason );
+
+		if ( null !== $quality ) {
+			$entry['quality'] = max( 1, min( 100, $quality ) );
+		}
+
+		return $entry;
 	}
 
 	/**

@@ -49,7 +49,7 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 * Automatic conversion of new uploads
 * Lazy conversion: an image seen on the front end but not yet converted is queued, never encoded during the page render
 * Per-format quality, encoder effort, and lossless mode for PNG sources
-* An optimized copy that comes out no smaller than its source is discarded, per file
+* A lossy optimized copy that misses the minimum saving is retried once at a lower quality before being discarded, per file
 * Metadata stripped from the copies while the colour profile is kept, so colours do not shift
 * Animated GIFs keep their animation when ImageMagick is available
 * Memory guard that skips an image rather than crashing a batch
@@ -93,7 +93,7 @@ There are three common reasons, and the Media library column tells you which one
 
 **The image is not hosted on your site.** Only files inside your own uploads directory can be optimized. Posts imported from another site often keep image URLs pointing back at the original domain, and those are left alone.
 
-**One size in the set could not be made smaller.** An optimized copy that comes out no smaller than the source is discarded rather than kept, and a responsive image is all-or-nothing: if any single size in its `srcset` has no optimized copy, the whole image falls back to the original. This is deliberate — offering the browser a set with a gap in it would let it request a file that does not exist. It happens most often on large photographs that were already heavily compressed, where the full-size version loses to the original even though every smaller size wins.
+**One size in the set could not be made smaller.** A lossy optimized copy that misses the minimum saving is retried once at a lower quality and discarded if it still misses. Lossless copies are simply discarded when they miss. A responsive image is all-or-nothing: if any single size in its `srcset` has no optimized copy, the whole image falls back to the original. This is deliberate — offering the browser a set with a gap in it would let it request a file that does not exist. It happens most often on large photographs that were already heavily compressed, where the full-size version loses to the original even though every smaller size wins.
 
 **Your server cannot produce that format.** Check the settings screen, which marks any format your server cannot encode.
 
@@ -110,9 +110,11 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.1.0 =
 
-* Features:
-    * Filter Media Library images by optimized, not-yet-optimized, skipped and failed status.
-    * Bulk Optimize warns when images are queued but the background worker has stopped running, naming DISABLE_WP_CRON or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
+**Added**
+
+* Added Media Library filters for optimized, not-yet-optimized, skipped and failed images.
+* Added a Bulk Optimize warning when images were queued but the background worker had stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
+* Added one lower-quality retry for lossy optimized copies that missed the minimum-saving threshold, recovering more complete responsive image sets without ever serving a file that missed the configured saving.
 
 = 1.0.2 =
 

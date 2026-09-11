@@ -93,11 +93,12 @@ bash phpunit/install.sh wzio_tests root '' 127.0.0.1 latest
 vendor/bin/phpunit
 ```
 
-34 tests cover path and URL mapping, traversal guards, `srcset` parsing, `<picture>` construction and its bail-out rules, buffered rewriting, and a real end-to-end conversion including the reuse, staleness, discard-if-larger and exclusion paths.
+Tests cover path and URL mapping, traversal guards, `srcset` parsing, `<picture>` construction and its bail-out rules, buffered rewriting, queue health, and end-to-end conversion including reuse, staleness, adaptive quality retry and exclusion paths.
 
 ## Notable filters
 
 - `wzio_conversion_args` — quality, formats, effort, thresholds
+- `wzio_conversion_retry_step` — quality reduction for the single oversized-encode retry
 - `wzio_attachment_files` — which files an attachment converts
 - `wzio_is_excluded` — per-file exclusion
 - `wzio_delivery_enabled` — disable rewriting for a request

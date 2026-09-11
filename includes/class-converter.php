@@ -328,7 +328,10 @@ class Converter {
 		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
 		foreach ( $args['formats'] as $format ) {
-			$destination = Helpers::sidecar_path( $path, $format );
+			$destination    = Helpers::sidecar_path( $path, $format );
+			$stored_quality = $existing[ $format ]['quality'] ?? null;
+
+			$known_quality = is_numeric( $stored_quality ) ? max( 1, min( 100, (int) $stored_quality ) ) : null;
 
 			if ( self::is_alien_file( $destination, $width, $height ) ) {
 				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
@@ -344,7 +347,7 @@ class Converter {
 				$bytes = (int) filesize( $destination );
 
 				if ( $bytes > 0 && $bytes < $max_bytes ) {
-					$record[ $format ] = Attachment_Meta::converted_entry( $bytes );
+					$record[ $format ] = Attachment_Meta::converted_entry( $bytes, $known_quality );
 					continue;
 				}
 			}
@@ -375,7 +378,7 @@ class Converter {
 			}
 
 			$driver_args = array(
-				'quality'   => (int) ( $args['quality'][ $format ] ?? 82 ),
+				'quality'   => max( 1, min( 100, (int) ( $args['quality'][ $format ] ?? 82 ) ) ),
 				'lossless'  => ! empty( $args['lossless'] ) && 'image/png' === $mime,
 				'strip'     => ! empty( $args['strip'] ),
 				'effort'    => (int) ( $args['effort_webp'] ?? 6 ),
@@ -387,22 +390,68 @@ class Converter {
 				$driver_args['effort'] = (int) $args['effort_avif'];
 			}
 
-			$result = $driver->convert(
-				$path,
-				$destination,
-				$format,
-				$driver_args
-			);
+			$result = $driver->convert( $path, $destination, $format, $driver_args );
 
 			if ( is_wp_error( $result ) && 'wzio_encode_larger' !== $result->get_error_code() ) {
 				$record[ $format ] = Attachment_Meta::error_entry( $result->get_error_message() );
 				continue;
 			}
 
-			$record[ $format ] = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ) );
+			$quality = $driver_args['lossless'] ? null : $driver_args['quality'];
+			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality );
+
+			// Lowering quality cannot change a lossless encode, so only lossy
+			// copies get the one extra attempt.
+			if ( 'larger' === ( $entry['skip'] ?? '' ) && ! $driver_args['lossless'] ) {
+				$retry_quality = self::get_retry_quality( $driver_args['quality'], $format, $path, $driver_args );
+
+				if ( $retry_quality < $driver_args['quality'] ) {
+					$driver_args['quality'] = $retry_quality;
+					$result                 = $driver->convert( $path, $destination, $format, $driver_args );
+
+					if ( is_wp_error( $result ) && 'wzio_encode_larger' !== $result->get_error_code() ) {
+						$record[ $format ] = Attachment_Meta::error_entry( $result->get_error_message() );
+						continue;
+					}
+
+					$entry = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $retry_quality, $known_quality );
+				}
+			}
+
+			$record[ $format ] = $entry;
 		}
 
 		return $record;
+	}
+
+	/**
+	 * Get the lower quality used for a single retry after an oversized encode.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  int                  $quality     Initial encoding quality.
+	 * @param  string               $format      Target format slug.
+	 * @param  string               $path        Absolute path to the source image.
+	 * @param  array<string, mixed> $driver_args Encoding arguments used for the first attempt.
+	 * @return int Retry quality. The initial quality is returned when retrying is disabled.
+	 */
+	private static function get_retry_quality( int $quality, string $format, string $path, array $driver_args ): int {
+		/**
+		 * Filter the quality reduction used for one retry after an oversized encode.
+		 *
+		 * Return zero to disable the retry. Values above 99 are treated as 99.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param int                  $step        Quality points to subtract.
+		 * @param string               $format      Target format slug.
+		 * @param string               $path        Absolute path to the source image.
+		 * @param array<string, mixed> $driver_args Encoding arguments used for the first attempt.
+		 */
+		$step = (int) apply_filters( 'wzio_conversion_retry_step', 12, $format, $path, $driver_args );
+		$step = max( 0, min( 99, $step ) );
+
+		return max( 1, $quality - $step );
 	}
 
 	/**
@@ -453,13 +502,22 @@ class Converter {
 	 *
 	 * @since 1.0.1
 	 *
-	 * @param  string $path        Absolute path to the source image.
-	 * @param  string $destination Sidecar path.
-	 * @param  int    $max_bytes   Size the sidecar has to stay below.
-	 * @param  bool   $written     Whether this run wrote the sidecar.
+	 * @param  string   $path        Absolute path to the source image.
+	 * @param  string   $destination Sidecar path.
+	 * @param  int      $max_bytes   Size the sidecar has to stay below.
+	 * @param  bool     $written     Whether this run wrote the sidecar.
+	 * @param  int|null $quality     Effective lossy quality attempted, when applicable.
+	 * @param  int|null $known_quality Quality recorded for an inherited sidecar, when known.
 	 * @return array<string, mixed> Format record.
 	 */
-	private static function resolve_sidecar( string $path, string $destination, int $max_bytes, bool $written ): array {
+	private static function resolve_sidecar(
+		string $path,
+		string $destination,
+		int $max_bytes,
+		bool $written,
+		?int $quality = null,
+		?int $known_quality = null
+	): array {
 		clearstatcache( true, $destination );
 
 		if ( file_exists( $destination ) ) {
@@ -469,13 +527,13 @@ class Converter {
 			$fresh = $written || filemtime( $destination ) >= filemtime( $path );
 
 			if ( $bytes > 0 && $bytes < $max_bytes && $fresh ) {
-				return Attachment_Meta::converted_entry( $bytes );
+				return Attachment_Meta::converted_entry( $bytes, $written ? $quality : $known_quality );
 			}
 
 			Helpers::delete_file( $destination );
 		}
 
-		return Attachment_Meta::skipped_entry( 'larger' );
+		return Attachment_Meta::skipped_entry( 'larger', $quality );
 	}
 
 	/**
