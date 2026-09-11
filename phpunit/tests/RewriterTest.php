@@ -175,11 +175,9 @@ class RewriterTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * One unconverted candidate disqualifies the whole format.
-	 *
-	 * A partial `<source>` would let the browser pick a width that has no file.
+	 * A missing widest candidate disqualifies the whole format.
 	 */
-	public function test_a_missing_candidate_disqualifies_the_format() {
+	public function test_a_missing_widest_candidate_disqualifies_the_format() {
 		$this->touch_upload( '2026/02/partial-300x200.jpg' );
 		$this->touch_upload( '2026/02/partial-300x200.jpg.webp' );
 		$this->touch_upload( '2026/02/partial.jpg' );
@@ -189,6 +187,141 @@ class RewriterTest extends WP_UnitTestCase {
 		$html = '<img src="' . $base . 'partial-300x200.jpg" srcset="'
 			. $base . 'partial-300x200.jpg 300w, '
 			. $base . 'partial.jpg 1200w" alt="" />';
+
+		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
+	}
+
+	/**
+	 * Missing intermediate widths are omitted when the widest copy exists.
+	 */
+	public function test_a_missing_intermediate_width_is_omitted() {
+		foreach ( array( 'partial-width-300x200.jpg', 'partial-width-768x512.jpg', 'partial-width.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+		}
+
+		$this->touch_upload( '2026/02/partial-width-300x200.jpg.webp' );
+		$this->touch_upload( '2026/02/partial-width.jpg.webp' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'partial-width-300x200.jpg" srcset="'
+			. $base . 'partial-width-300x200.jpg 300w, '
+			. $base . 'partial-width-768x512.jpg 768w, '
+			. $base . 'partial-width.jpg 1200w" sizes="(max-width: 600px) 100vw, 600px" alt="" />';
+
+		$out = $this->rewriter->wrap( $html, 0 );
+
+		$this->assertStringContainsString( '<picture>', $out );
+		$this->assertStringContainsString( 'partial-width-300x200.jpg.webp 300w', $out );
+		$this->assertStringNotContainsString( 'partial-width-768x512.jpg.webp', $out );
+		$this->assertStringContainsString( 'partial-width.jpg.webp 1200w', $out );
+		$this->assertStringContainsString( 'sizes="(max-width: 600px) 100vw, 600px"', $out );
+		$this->assertStringContainsString( 'partial-width-768x512.jpg 768w', $out );
+	}
+
+	/**
+	 * A missing lowest-density copy disqualifies the whole format.
+	 */
+	public function test_a_missing_lowest_density_disqualifies_the_format() {
+		foreach ( array( 'density.jpg', 'density@2x.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+		}
+
+		$this->touch_upload( '2026/02/density@2x.jpg.webp' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'density.jpg" srcset="'
+			. $base . 'density.jpg 1x, '
+			. $base . 'density@2x.jpg 2x" alt="" />';
+
+		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
+	}
+
+	/**
+	 * Missing intermediate densities are omitted when the lowest and highest
+	 * copies exist.
+	 */
+	public function test_a_missing_intermediate_density_is_omitted() {
+		foreach ( array( 'density-gap.jpg', 'density-gap@1-5x.jpg', 'density-gap@2x.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+		}
+
+		$this->touch_upload( '2026/02/density-gap.jpg.webp' );
+		$this->touch_upload( '2026/02/density-gap@2x.jpg.webp' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'density-gap.jpg" srcset="'
+			. $base . 'density-gap.jpg 1x, '
+			. $base . 'density-gap@1-5x.jpg 1.5x, '
+			. $base . 'density-gap@2x.jpg 2x" alt="" />';
+
+		$out = $this->rewriter->wrap( $html, 0 );
+
+		$this->assertStringContainsString( '<picture>', $out );
+		$this->assertStringContainsString( 'density-gap.jpg.webp 1x', $out );
+		$this->assertStringNotContainsString( 'density-gap@1-5x.jpg.webp', $out );
+		$this->assertStringContainsString( 'density-gap@2x.jpg.webp 2x', $out );
+	}
+
+	/**
+	 * A missing highest-density candidate disqualifies the whole format.
+	 */
+	public function test_a_missing_highest_density_disqualifies_the_format() {
+		foreach ( array( 'density-max.jpg', 'density-max@2x.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+		}
+
+		$this->touch_upload( '2026/02/density-max.jpg.webp' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'density-max.jpg" srcset="'
+			. $base . 'density-max.jpg 1x, '
+			. $base . 'density-max@2x.jpg 2x" alt="" />';
+
+		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
+	}
+
+	/**
+	 * A complete format is listed before a partial format, preserving preference
+	 * for the complete candidate set in browsers that support both.
+	 */
+	public function test_complete_format_precedes_partial_format() {
+		foreach ( array( 'format-order-300.jpg', 'format-order-768.jpg', 'format-order.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+			$this->touch_upload( '2026/02/' . $file . '.webp' );
+		}
+
+		$this->touch_upload( '2026/02/format-order-300.jpg.avif' );
+		$this->touch_upload( '2026/02/format-order.jpg.avif' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'format-order-300.jpg" srcset="'
+			. $base . 'format-order-300.jpg 300w, '
+			. $base . 'format-order-768.jpg 768w, '
+			. $base . 'format-order.jpg 1200w" alt="" />';
+
+		$out        = $this->rewriter->wrap( $html, 0 );
+		$webp_index = strpos( $out, 'type="image/webp"' );
+		$avif_index = strpos( $out, 'type="image/avif"' );
+
+		$this->assertNotFalse( $webp_index );
+		$this->assertNotFalse( $avif_index );
+		$this->assertLessThan( $avif_index, $webp_index );
+	}
+
+	/**
+	 * Mixed descriptor sets keep the conservative all-candidates rule.
+	 */
+	public function test_a_mixed_descriptor_set_requires_every_candidate() {
+		foreach ( array( 'mixed.jpg', 'mixed@2x.jpg' ) as $file ) {
+			$this->touch_upload( '2026/02/' . $file );
+		}
+
+		$this->touch_upload( '2026/02/mixed.jpg.webp' );
+
+		$base = Helpers::get_upload_baseurl() . '/2026/02/';
+		$html = '<img src="' . $base . 'mixed.jpg" srcset="'
+			. $base . 'mixed.jpg 600w, '
+			. $base . 'mixed@2x.jpg 2x" alt="" />';
 
 		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
 	}

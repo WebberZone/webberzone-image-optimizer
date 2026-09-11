@@ -419,7 +419,7 @@ class Settings {
 			'convert_sizes'     => array(
 				'id'      => 'convert_sizes',
 				'name'    => esc_html__( 'Image sizes to convert', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. A responsive image only switches format when every size in its srcset has been converted, so excluding a size that appears in your themes markup disables the optimization for those images.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. Missing intermediate copies are omitted from the optimized srcset, but the smallest and widest or highest-density copies must exist before that format is offered. Excluding an edge size used by your theme can therefore disable that format for those images.', 'webberzone-image-optimizer' ),
 				'type'    => 'multicheck',
 				'default' => $defaults['convert_sizes'],
 				'options' => self::get_size_options(),

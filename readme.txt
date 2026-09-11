@@ -34,7 +34,7 @@ By default, each optimized copy is written alongside the original with the new e
 
 Images are wrapped in a `<picture>` element, so the *browser* chooses the format. That matters more than it sounds: the common alternative is to vary the response on the `Accept` header, which returns different bytes for a single URL. Any cache in front of that — a page cache plugin, a CDN — which ignores `Vary` will happily hand a WebP file to a browser that cannot display it. A `<picture>` element has no such failure mode.
 
-Responsive images are handled properly. Every candidate in an image's `srcset` is mapped to its optimized copy, with the width descriptors preserved exactly. If even one size in the set is missing, the whole image falls back to the original rather than letting the browser request a file that does not exist.
+Responsive images are handled properly. Each format's `<source>` lists only the optimized `srcset` candidates that exist, with their descriptors preserved exactly. Missing intermediate copies are omitted, while a missing smallest, widest or highest-density copy withholds that format so payload and image quality cannot regress. The original `<img>` remains as the fallback.
 
 For images referenced from a stylesheet, where the browser is never offered a choice, the Delivery tab generates ready-to-paste Apache and nginx rules, complete with the `Vary: Accept` header those rules require.
 
@@ -94,7 +94,7 @@ There are three common reasons, and the Media library column tells you which one
 
 **The image is not hosted on your site.** Only files inside your own uploads directory can be optimized. Posts imported from another site often keep image URLs pointing back at the original domain, and those are left alone.
 
-**One size in the set could not be made smaller.** A lossy optimized copy that misses the minimum saving is retried once at a lower quality and discarded if it still misses. Lossless copies are simply discarded when they miss. A responsive image is all-or-nothing: if any single size in its `srcset` has no optimized copy, the whole image falls back to the original. This is deliberate — offering the browser a set with a gap in it would let it request a file that does not exist. It happens most often on large photographs that were already heavily compressed, where the full-size version loses to the original even though every smaller size wins.
+**One size in the set could not be made smaller.** A lossy optimized copy that misses the minimum saving is retried once at a lower quality and discarded if it still misses. Lossless copies are simply discarded when they miss. Missing intermediate copies are left out of the optimized `srcset`, so the browser can still use the copies that exist. If the smallest, widest or highest-density copy is missing, that optimized format is withheld to avoid over-downloading or serving an undersized image where the original set offered a better choice.
 
 **Your server cannot produce that format.** Check the settings screen, which marks any format your server cannot encode.
 
@@ -117,9 +117,13 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
 **Added**
 
 * Media Library filter for optimized, not-yet-optimized, skipped and failed images. Thanks to [muneeb-ashraf](https://github.com/muneeb-ashraf).
-* One lower-quality retry for a lossy copy that misses the minimum saving, so a single oversized size no longer drops a whole responsive image back to the original. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`.
+* One lower-quality retry for a lossy copy that misses the minimum saving, preserving more optimized candidates before discarding a stubborn size. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`.
 * A Bulk Optimize warning when images are queued but the background worker has stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
 * A note in the Media Library column, on the attachment screen and in `wp wzio convert` when a copy needed a lower quality than the one configured.
+
+**Changed**
+
+* Optimized `<picture>` sources now omit missing intermediate `srcset` candidates while requiring the smallest and widest or highest-density candidates. Complete format sets are listed before partial sets.
 
 **Security**
 
@@ -140,4 +144,4 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 == Upgrade Notice ==
 
 = 1.1.0 =
-A size that could not be made smaller no longer drops the whole responsive image back to the original, and Bulk Optimize warns when the background worker has stopped. Includes a security hardening fix.
+Responsive images now use eligible optimized sizes while preserving the original set's smallest and largest coverage. Bulk Optimize detects a stalled worker, and lossy conversions get a lower-quality retry. Includes security hardening.

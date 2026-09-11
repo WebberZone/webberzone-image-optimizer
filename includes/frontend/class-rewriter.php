@@ -235,26 +235,34 @@ class Rewriter {
 			return $html;
 		}
 
-		$sources = array();
+		$complete_sources           = array();
+		$partial_sources            = array();
+		$required_candidate_indexes = self::get_required_candidate_indexes( $candidates );
 
 		// Every format the plugin knows about, not just the ones this server can
 		// encode: a sidecar is offered whenever the file is on disk.
 		foreach ( Helpers::get_formats() as $format ) {
-			$mapped = array();
+			$mapped             = array();
+			$missing_required   = false;
+			$missing_candidates = false;
 
-			foreach ( $candidates as $candidate ) {
+			foreach ( $candidates as $index => $candidate ) {
 				$sidecar = Resolver::resolve( $candidate[0], $format );
 
-				// Require every candidate to prevent requests for missing sizes.
 				if ( '' === $sidecar ) {
-					$mapped = array();
-					break;
+					if ( in_array( $index, $required_candidate_indexes, true ) ) {
+						$missing_required = true;
+						break;
+					}
+
+					$missing_candidates = true;
+					continue;
 				}
 
 				$mapped[] = trim( $sidecar . ' ' . $candidate[1], " \t\n\r\0\x0B" );
 			}
 
-			if ( empty( $mapped ) ) {
+			if ( $missing_required || empty( $mapped ) ) {
 				continue;
 			}
 
@@ -268,8 +276,16 @@ class Rewriter {
 				$source .= sprintf( ' sizes="%s"', esc_attr( $sizes ) );
 			}
 
-			$sources[] = $source . ' />';
+			if ( $missing_candidates ) {
+				$partial_sources[] = $source . ' />';
+			} else {
+				$complete_sources[] = $source . ' />';
+			}
 		}
+
+		// Complete formats must precede partial formats so a partial AVIF source
+		// cannot shadow a complete WebP source in browsers that support both.
+		$sources = array_merge( $complete_sources, $partial_sources );
 
 		if ( empty( $sources ) ) {
 			$this->maybe_queue_lazily( $attachment_id );
@@ -281,6 +297,63 @@ class Rewriter {
 		$html = $tags->get_updated_html();
 
 		return '<picture>' . implode( '', $sources ) . $html . '</picture>';
+	}
+
+	/**
+	 * Identify the candidates required to preserve the original set's coverage.
+	 *
+	 * Missing intermediate candidates can be omitted because the browser selects
+	 * from the URLs actually present in the optimized source. The smallest and
+	 * widest or highest-density candidates must remain available to avoid
+	 * over-downloading or serving an undersized image where the original set
+	 * offered a better choice. Unrecognised or mixed descriptor sets retain the
+	 * conservative all-candidates rule.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<int, array{0: string, 1: string}> $candidates Candidates.
+	 * @return array<int, int> Required candidate indexes.
+	 */
+	private static function get_required_candidate_indexes( array $candidates ): array {
+		$descriptor_type = '';
+		$values          = array();
+
+		foreach ( $candidates as $index => $candidate ) {
+			$descriptor = $candidate[1];
+
+			if ( preg_match( '/^([1-9][0-9]*)w$/D', $descriptor, $matches ) ) {
+				$type  = 'width';
+				$value = (float) $matches[1];
+			} elseif ( preg_match( '/^([0-9]*\.?[0-9]+)x$/D', $descriptor, $matches ) && (float) $matches[1] > 0 ) {
+				$type  = 'density';
+				$value = (float) $matches[1];
+			} else {
+				return array_keys( $candidates );
+			}
+
+			if ( '' !== $descriptor_type && $descriptor_type !== $type ) {
+				return array_keys( $candidates );
+			}
+
+			$descriptor_type  = $type;
+			$values[ $index ] = $value;
+		}
+
+		if ( empty( $values ) ) {
+			return array_keys( $candidates );
+		}
+
+		$minimum = min( $values );
+		$maximum = max( $values );
+
+		return array_keys(
+			array_filter(
+				$values,
+				static function ( float $value ) use ( $minimum, $maximum ): bool {
+					return $minimum === $value || $maximum === $value;
+				}
+			)
+		);
 	}
 
 	/**
