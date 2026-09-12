@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [settings, webberzone-image-optimizer]
 status: publish
 order: 1
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) settings live at **Media → Image Optimizer**, across four tabs: General, Quality, Delivery and Advanced.
 

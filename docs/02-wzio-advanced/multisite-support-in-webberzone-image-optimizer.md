@@ -6,10 +6,9 @@ sections: ["02-wzio-advanced"]
 tags: [multisite, webberzone-image-optimizer]
 status: publish
 order: 1
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is multisite-aware: settings, the conversion queue and per-image conversion records are all per site, exactly as if each site had its own separate installation.
 

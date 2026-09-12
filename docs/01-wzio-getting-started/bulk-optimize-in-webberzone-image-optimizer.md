@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [bulk, queue, webberzone-image-optimizer]
 status: publish
 order: 2
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 The Bulk Optimize screen in [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts your existing media library. Find it at **Media → Bulk Optimize**.
 

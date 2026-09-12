@@ -6,10 +6,9 @@ sections: ["02-wzio-advanced"]
 tags: [developer, webberzone-image-optimizer, wp-cli]
 status: publish
 order: 3
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) registers WP-CLI commands under `wp wzio`, useful for converting a library from a script, cron job, or deployment step without opening the admin screens.
 

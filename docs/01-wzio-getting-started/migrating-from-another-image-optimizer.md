@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [avif, migration, webberzone-image-optimizer, webp]
 status: publish
 order: 4
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 If your site already runs ShortPixel, Imagify, EWWW Image Optimizer or a similar plugin, the WebP and AVIF files it generated are ordinary files sitting next to your originals. [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) can serve those existing files as they are. There is no import step, nothing is renamed, and nothing is converted a second time.
 

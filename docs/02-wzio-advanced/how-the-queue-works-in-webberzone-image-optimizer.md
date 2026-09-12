@@ -6,10 +6,9 @@ sections: ["02-wzio-advanced"]
 tags: [bulk, queue, webberzone-image-optimizer]
 status: publish
 order: 2
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts images through a database-backed queue rather than during a page render. This is what makes the Bulk Optimize screen resumable and keeps front-end visitors from ever waiting on an encode.
 
@@ -67,7 +66,7 @@ A row stuck in `processing` for more than 10 minutes — a worker killed by a fa
 
 WP-Cron is not a real scheduler. It runs at the end of a page load, by sending a loopback request back to your own site, so it advances the queue only when someone visits. If `DISABLE_WP_CRON` is set with nothing else running WordPress cron, or the loopback request is blocked — by HTTP authentication, a firewall, or a host that does not allow a site to request itself — the scheduled event never fires and the queue sits at the same number indefinitely.
 
-The Bulk Optimize screen watches for this and warns you when it happens. It does not go by the scheduled event's timestamp, which is always overdue on a site that simply has not had a visitor for a while. Instead it notes each time it sees images waiting, and records each time the worker actually runs. Only when a whole 15-minute window passes with images still waiting and no worker run does it tell you the queue has stopped. That means a low-traffic site is never accused of a broken cron, and the warning needs a second visit to the screen to appear.
+The Bulk Optimize screen watches for this and warns you when it happens. It does not go by the scheduled event's timestamp, which is always overdue on a site that has not had a visitor for a while. Instead it notes each time it sees images waiting, and records each time the worker actually runs. Only when a whole 15-minute window passes with images still waiting and no worker run does it tell you the queue has stopped. That means a low-traffic site is never accused of a broken cron, and the warning needs a second visit to the screen to appear.
 
 Anything that runs the worker counts: WP-Cron, a system cron entry calling `wp cron event run`, and `wp wzio run`. The warning clears itself as soon as one of them runs a batch, and never appears while the queue is empty or while **Process the queue in the background** is switched off.
 

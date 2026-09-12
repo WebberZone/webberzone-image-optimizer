@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [avif, comparison, webberzone-image-optimizer, webp]
 status: publish
 order: 5
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. The comparison here covers three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs. If you are moving from one of those, see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/) for how to carry over the files they generated.
 
@@ -39,7 +38,7 @@ AVIF quality isn't touched by the plugin at all — it inherits whatever WordPre
 
 ```php
 public function get_available_values( array $settings ): array {
-    $levels = apply_filters( 'webpc_option_quality_levels', [[ 75, 80, 85, 90, 95 ]] );
+    $levels = apply_filters( 'webpc_option_quality_levels', [ 75, 80, 85, 90, 95 ] );
     // ...
 }
 ```

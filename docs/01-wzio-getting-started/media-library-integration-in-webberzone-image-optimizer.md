@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [media-library, webberzone-image-optimizer]
 status: publish
 order: 3
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) adds a status column and per-image actions to the Media Library list view (**Media → Library**, list mode) for every image it can optimize.
 

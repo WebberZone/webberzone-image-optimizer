@@ -6,10 +6,9 @@ sections: ["01-wzio-getting-started"]
 tags: [avif, getting-started, webberzone-image-optimizer, webp]
 status: publish
 order: 0
-toc: true
 ---
 
-[toc]
+[kbtoc]
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) converts the images already in your media library to WebP and AVIF, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, and everything happens on your own server — there is no external service, no API key, no account and no upload limit.
 

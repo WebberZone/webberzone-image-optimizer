@@ -6,7 +6,6 @@ sections: ["03-wzio-developer-docs"]
 tags: [avif, developer, drivers, performance, webberzone-image-optimizer]
 status: publish
 order: 1
-toc: true
 ---
 
 The **AVIF encoder effort** setting is a 0–6 dial that belongs to the plugin, not to any encoder. Each driver translates it into its own backend's native speed scale. This page records the measurements behind that translation so the numbers do not have to be re-derived.
@@ -29,7 +28,7 @@ Both encoders count the opposite way from the plugin: 0 is the slowest and highe
 
 ## Why effort 4 maps to the knee
 
-Measured over a 57-image corpus of photographs, UI screenshots and transparent graphics, at quality 50, CPU time normalised per megapixel:
+Measured over a 57-image corpus of photographs, UI screenshots and transparent graphics, at quality 50, CPU time normalized per megapixel:
 
 | Speed | Imagick CPU ms/MP | Imagick bytes/px | GD CPU ms/MP | GD bytes/px |
 |---|---|---|---|---|
