@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-09-12T06:58:46+00:00\n"
+"POT-Creation-Date: 2026-09-12T09:03:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: webberzone-image-optimizer\n"
@@ -798,29 +798,29 @@ msgstr[0] ""
 msgstr[1] ""
 
 #. translators: %s: directory path.
-#: includes/drivers/class-driver.php:124
+#: includes/drivers/class-driver.php:111
 #, php-format
 msgid "Could not create or write to the directory %s."
 msgstr ""
 
-#: includes/drivers/class-driver.php:132
+#: includes/drivers/class-driver.php:119
 msgid "Could not create a temporary file for the conversion."
 msgstr ""
 
-#: includes/drivers/class-driver.php:146
+#: includes/drivers/class-driver.php:133
 msgid "The encoder did not produce an image."
 msgstr ""
 
-#: includes/drivers/class-driver.php:152
+#: includes/drivers/class-driver.php:139
 msgid "The converted image was not small enough to keep."
 msgstr ""
 
-#: includes/drivers/class-driver.php:158
+#: includes/drivers/class-driver.php:145
 msgid "Could not move the converted file into place."
 msgstr ""
 
 #. translators: %s: image format.
-#: includes/drivers/class-gd-driver.php:107
+#: includes/drivers/class-gd-driver.php:123
 #, php-format
 msgid "GD on this server cannot encode %s."
 msgstr ""
