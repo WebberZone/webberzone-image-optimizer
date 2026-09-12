@@ -120,7 +120,7 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
 * One lower-quality retry for a lossy copy that misses the minimum saving, preserving more optimized candidates before discarding a stubborn size. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`. The retry is skipped where the server's encoder ignores the quality setting, because it would produce an identical file at twice the cost.
 * A Bulk Optimize warning when images are queued but the background worker has stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
 * A note in the Media Library column, on the attachment screen and in `wp wzio convert` when a copy needed a lower quality than the one configured.
-* A warning on the Formats setting that AVIF is CPU-heavy and runs on every image size, with a pointer to turning off Convert new uploads or lowering the AVIF effort if uploads slow down.
+* A note on the Formats setting that AVIF costs a few times more CPU than WebP and runs on every image size, pointing at Convert new uploads as the way to move that work into the background queue.
 
 **Changed**
 
