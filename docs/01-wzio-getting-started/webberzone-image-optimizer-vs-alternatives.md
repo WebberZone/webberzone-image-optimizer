@@ -17,7 +17,7 @@ Every claim below was checked by Claude directly against each plugin's own sourc
 
 ## Quality and encoder control
 
-**WebberZone Image Optimizer** exposes independent numeric controls per format on the Quality tab: **WebP quality** (1–100, default `82`), **AVIF quality** (1–100, default `50`), **WebP encoder effort** (0–6, default `6`), **AVIF encoder effort** (0–6, default `4`), and a **Lossless for PNG sources** toggle (default on). See [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for the full reference.
+**WebberZone Image Optimizer** exposes independent numeric controls per format on the Quality tab: **WebP quality** (1–100, default `82`), **AVIF quality** (1–100, default `50`), **WebP encoder effort** (0–6, default `6`), **AVIF encoder effort** (0–6, default `4`), and a **Lossless for PNG sources** toggle (default on, applying to WebP). See [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for the full reference.
 
 **Modern Image Formats** has no quality setting anywhere in its admin screen. WebP quality is hardcoded in `hooks.php`:
 
@@ -108,7 +108,7 @@ WebP Express and Converter for Media both default to server-level rewriting: `.h
 | WebP + AVIF together, free | Yes | No (one format at a time) | No AVIF | No (AVIF is paid) |
 | Granular quality (1–100) | Yes, per format | No | Yes, per source type | No (5 presets) |
 | Encoder effort control | Yes, both formats | No | Partial (cwebp only) | No |
-| Lossless PNG | Yes | No | Near-lossless only | No |
+| Lossless PNG | Yes (WebP) | No | Near-lossless only | No |
 | Bulk-converts existing library | Yes, resumable queue | No (core regenerate only) | Yes | Yes |
 | Native WP-CLI | Yes (5 commands) | No | Yes | Yes |
 | `<picture>` delivery by default | Yes | No (experimental, opt-in) | No | No |

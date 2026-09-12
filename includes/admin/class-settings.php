@@ -404,7 +404,7 @@ class Settings {
 			'formats'           => array(
 				'id'      => 'formats',
 				'name'    => esc_html__( 'Formats to generate', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'AVIF is smaller than WebP but slower to encode and unsupported by a few older browsers. Enable both to serve each browser its smallest option. Warning: AVIF is CPU-heavy and runs on every image size. If uploads slow down, turn off Convert new uploads and lower the AVIF effort on the Quality tab.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'AVIF is smaller than WebP but unsupported by a few older browsers. Enable both to serve each browser its smallest option. AVIF costs a few times more CPU than WebP and runs on every image size, so if uploads slow down, turn off Convert new uploads to move the work to the background queue.', 'webberzone-image-optimizer' ),
 				'type'    => 'multicheck',
 				'default' => $defaults['formats'],
 				'options' => self::get_format_options(),
@@ -483,7 +483,10 @@ class Settings {
 			'effort_webp'    => array(
 				'id'      => 'effort_webp',
 				'name'    => esc_html__( 'WebP encoder effort', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Between 0 and 6. Higher spends more CPU for a smaller file at the same quality. Lower it if bulk runs time out.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Between 0 and 6. Higher spends more CPU for a smaller file at the same quality. Lower it if bulk runs time out.', 'webberzone-image-optimizer' )
+					. ( 'gd' === ( Capabilities::get()['formats']['webp'] ?? '' )
+						? ' ' . esc_html__( 'This server encodes WebP with GD, which offers no effort control, so this setting has no effect here.', 'webberzone-image-optimizer' )
+						: '' ),
 				'type'    => 'number',
 				'default' => $defaults['effort_webp'],
 				'min'     => 0,
@@ -493,7 +496,7 @@ class Settings {
 			'effort_avif'    => array(
 				'id'      => 'effort_avif',
 				'name'    => esc_html__( 'AVIF encoder effort', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Between 0 and 6. AVIF is much slower than WebP, so the default is lower. Lower it again if conversions are dragging.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Between 0 and 6. The default is the best measured balance; above it files shrink very little for a lot more CPU. The speed this maps to depends on which encoder your server has.', 'webberzone-image-optimizer' ),
 				'type'    => 'number',
 				'default' => $defaults['effort_avif'],
 				'min'     => 0,
@@ -510,7 +513,7 @@ class Settings {
 			'lossless_png'   => array(
 				'id'      => 'lossless_png',
 				'name'    => esc_html__( 'Lossless for PNG sources', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'No quality loss for PNG sources. Right for logos and line art, much larger for photographs saved as PNG.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Encode the WebP copy of a PNG source with no quality loss. Right for logos and line art, much larger for photographs saved as PNG. AVIF ignores this, because a lossless AVIF is usually bigger than the PNG it came from.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['lossless_png'],
 			),

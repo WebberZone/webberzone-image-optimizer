@@ -55,7 +55,7 @@ class Capabilities {
 	 * @since 1.0.0
 	 *
 	 * @param bool $force Whether to discard the cached report and probe again.
-	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>} Report.
+	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>, quality: array<string, bool>} Report.
 	 */
 	public static function get( bool $force = false ): array {
 		if ( ! $force && null !== self::$cache ) {
@@ -79,13 +79,14 @@ class Capabilities {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>} Report.
+	 * @return array{version: string, drivers: array<string, array<string, bool>>, formats: array<string, string>, quality: array<string, bool>} Report.
 	 */
 	private static function probe(): array {
 		$report = array(
 			'version' => WZIO_VERSION,
 			'drivers' => array(),
 			'formats' => array(),
+			'quality' => array(),
 		);
 
 		$source = self::write_probe_image();
@@ -105,7 +106,17 @@ class Capabilities {
 
 				if ( '' !== $source && $driver->supports( $format ) ) {
 					$target = $source . '.' . $format;
-					$result = $driver->convert( $source, $target, $format, array( 'quality' => 70 ) );
+
+					// A probe only answers yes or no, so it encodes at the cheapest effort.
+					$result = $driver->convert(
+						$source,
+						$target,
+						$format,
+						array(
+							'quality' => 70,
+							'effort'  => 0,
+						)
+					);
 					$works  = ( true === $result );
 
 					Helpers::delete_file( $target );
@@ -116,6 +127,7 @@ class Capabilities {
 				// First driver that works owns the format.
 				if ( $works && ! isset( $report['formats'][ $format ] ) ) {
 					$report['formats'][ $format ] = $name;
+					$report['quality'][ $format ] = self::quality_changes_output( $driver, $source, $format );
 				}
 			}
 		}
@@ -125,6 +137,75 @@ class Capabilities {
 		}
 
 		return $report;
+	}
+
+	/**
+	 * Whether an encoder actually acts on the quality argument.
+	 *
+	 * Some ImageMagick builds ignore quality for AVIF entirely, which turns the
+	 * lower-quality retry into a guaranteed second encode of an identical file.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  Driver $driver Driver to test.
+	 * @param  string $source Absolute path to the probe image.
+	 * @param  string $format Target format slug.
+	 * @return bool True when two qualities produce different output.
+	 */
+	private static function quality_changes_output( Driver $driver, string $source, string $format ): bool {
+		$hashes = array();
+
+		foreach ( array( 20, 90 ) as $quality ) {
+			$target = $source . '.q' . $quality . '.' . $format;
+			$result = $driver->convert(
+				$source,
+				$target,
+				$format,
+				array(
+					'quality' => $quality,
+					'effort'  => 0,
+				)
+			);
+
+			clearstatcache( true, $target );
+
+			if ( true !== $result || ! file_exists( $target ) ) {
+				Helpers::delete_file( $target );
+
+				// An inconclusive probe must not disable the retry.
+				return true;
+			}
+
+			$hash = md5_file( $target );
+
+			Helpers::delete_file( $target );
+
+			if ( false === $hash ) {
+				return true;
+			}
+
+			$hashes[] = $hash;
+		}
+
+		// Compared by content, not length: two qualities can land on the same
+		// byte count while encoding differently, and only identical bytes prove
+		// the encoder discarded the quality argument.
+		return $hashes[0] !== $hashes[1];
+	}
+
+	/**
+	 * Whether the driver serving a format acts on the quality argument.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  string $format Target format slug.
+	 * @return bool True when quality changes the encoded output.
+	 */
+	public static function quality_is_honoured( string $format ): bool {
+		$report = self::get();
+
+		// Absent from a report written before this probe existed.
+		return (bool) ( $report['quality'][ $format ] ?? true );
 	}
 
 	/**

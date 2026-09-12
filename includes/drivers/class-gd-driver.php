@@ -64,6 +64,43 @@ class GD_Driver extends Driver {
 	}
 
 	/**
+	 * Whether the source format can carry transparency.
+	 *
+	 * Declared here rather than on the shared base class, where it could collide
+	 * with a name a third-party driver already uses.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  array<string, mixed> $args Encoding arguments.
+	 * @return bool True when the source may carry an alpha channel.
+	 */
+	protected static function source_has_alpha( array $args ): bool {
+		// An unknown source takes the cautious path; only JPEG rules alpha out.
+		return 'image/jpeg' !== ( $args['mime'] ?? '' );
+	}
+
+	/**
+	 * Map the plugin's 0-6 effort onto the encoder's own speed scale.
+	 *
+	 * The encoder counts the other way: libavif treats 0 as the slowest and 10 as
+	 * the fastest, though 9 and 10 produce identical output. Effort 4, the
+	 * default, is the measured knee.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param  int  $effort       Plugin effort level, 0 to 6.
+	 * @param  bool $source_alpha Whether the source can carry transparency.
+	 * @return int libavif speed, 0 to 9.
+	 */
+	protected static function avif_speed( int $effort, bool $source_alpha ): int {
+		$speeds = array( 9, 9, 9, 8, 7, 6, 4 );
+		$speed  = $speeds[ max( 0, min( 6, $effort ) ) ];
+
+		// Speed 9 inflates a transparent source by up to two fifths.
+		return $source_alpha ? min( 8, $speed ) : $speed;
+	}
+
+	/**
 	 * Encode a source image into the target format.
 	 *
 	 * @since 1.0.0
@@ -77,6 +114,8 @@ class GD_Driver extends Driver {
 	public function convert( string $source, string $destination, string $format, array $args ) {
 		$args = $this->parse_args( $args );
 
+		$avif_speed = self::avif_speed( $args['effort'], self::source_has_alpha( $args ) );
+
 		if ( ! $this->supports( $format ) ) {
 			return new \WP_Error(
 				'wzio_gd_unsupported',
@@ -87,7 +126,7 @@ class GD_Driver extends Driver {
 
 		return $this->write_atomic(
 			$destination,
-			function ( string $temp ) use ( $source, $format, $args ): bool {
+			function ( string $temp ) use ( $source, $format, $args, $avif_speed ): bool {
 				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				$contents = file_get_contents( $source );
 
@@ -122,7 +161,7 @@ class GD_Driver extends Driver {
 
 				// imageavif() arrived in PHP 8.1. supports() has already confirmed
 				// it exists; calling it indirectly keeps older PHP parseable.
-				return (bool) call_user_func( 'imageavif', $image, $temp, $args['lossless'] ? -1 : $args['quality'] );
+				return (bool) call_user_func( 'imageavif', $image, $temp, $args['quality'], $avif_speed );
 			},
 			$args['max_bytes']
 		);

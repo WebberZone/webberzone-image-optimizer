@@ -27,7 +27,7 @@ Leave every box unchecked to convert all sizes, which is what you want unless di
 **Minimum saving (%)**
 Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. The same threshold decides whether a copy inherited from another optimizer is kept or replaced. Default: `5`. Range: `0`–`90`.
 
-A lossy copy that misses the threshold is not thrown away immediately — it is retried once at a lower quality, giving that size another chance to be served. The retry drops the configured quality by 15%, rounded, and never goes below quality 40: WebP at 82 retries at 70, AVIF at 50 retries at 42. A copy that still misses the threshold after that retry is discarded, and lossless PNG copies are never retried because they have no quality to lower. When a copy is kept after a retry, the Media Library and `wp wzio convert` both say so. Developers can adjust or switch off the retry with the `wzio_conversion_retry_step` filter — return `0` to disable it.
+A lossy copy that misses the threshold is not thrown away immediately — it is retried once at a lower quality, giving that size another chance to be served. The retry drops the configured quality by 15%, rounded, and never goes below quality 40: WebP at 82 retries at 70, AVIF at 50 retries at 42. A copy that still misses the threshold after that retry is discarded. Lossless copies are never retried because they have no quality to lower, and neither are formats whose encoder on your server ignores the quality setting — some ImageMagick builds do this for AVIF, where a retry would spend a second encode producing an identical file. When a copy is kept after a retry, the Media Library and `wp wzio convert` both say so. Developers can adjust or switch off the retry with the `wzio_conversion_retry_step` filter — return `0` to disable it.
 
 **Optimized file naming**
 Controls how the generated WebP/AVIF file is named. **Append the new extension** (`photo.jpg.webp`) is the safe default — every file has a unique name and nothing can collide. **Replace the extension** (`photo.webp`) produces shorter filenames but can collide if the same folder contains both `photo.jpg` and `photo.png`, silently overwriting one optimized copy with the other. Only choose Replace if you are sure your uploads never share a filename across extensions. Default: `append`.
@@ -46,13 +46,15 @@ Between 1 and 100. Default: `50`. AVIF and WebP quality numbers are not comparab
 Between 0 and 6. Default: `6`. Higher values spend more CPU time searching for a smaller file at identical visual quality. Because conversion happens once and the result is served many times, the highest setting is usually the right trade — lower it if bulk runs are timing out.
 
 **AVIF encoder effort**
-Between 0 and 6. Default: `4`. AVIF encoding is much slower than WebP, so the default is lower. Very large images are also stepped down automatically, because the file-size gain per pixel at high effort is small once an image runs into the tens of megapixels. Raise this for smaller files at the cost of longer conversion times.
+Between 0 and 6. Default: `4`. This is a relative scale, not an encoder setting: each backend maps it onto its own speed range, so the same number can mean different work on different servers. The default sits at the measured point where files stop getting meaningfully smaller — raising it costs a great deal more CPU for very little, and lowering it below the default trades a few per cent of file size for a lot of speed. A source that can carry transparency is never taken to the fastest setting, where its file can grow by two fifths.
 
 **Strip metadata**
 Remove EXIF, GPS and embedded thumbnails from the optimized copies. The color profile is always kept, so colors will not shift. Your original files are never modified either way. Default: on.
 
 **Lossless for PNG sources**
-Encode PNG sources without any quality loss. Right for logos, screenshots and line art; produces much larger files for photographs saved as PNG. Default: on.
+Encode the WebP copy of a PNG source without any quality loss. Right for logos, screenshots and line art; produces much larger files for photographs saved as PNG. Default: on.
+
+This applies to WebP only. A lossless AVIF is almost always larger than the PNG it came from — on a representative sample it was too large to keep for every screenshot and graphic tested — so PNG sources are encoded to AVIF at the configured AVIF quality instead.
 
 ## Delivery
 

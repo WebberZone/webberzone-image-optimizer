@@ -454,11 +454,15 @@ class Converter {
 
 		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
-		// Lowering quality cannot change a lossless encode, so it never gets the retry.
-		$lossless = ! empty( $args['lossless'] ) && 'image/png' === $mime;
+		$lossless_source = ! empty( $args['lossless'] ) && 'image/png' === $mime;
 
 		foreach ( $args['formats'] as $format ) {
 			$destination = Helpers::sidecar_path( $path, $format );
+
+			// Lossless AVIF outgrows the source PNG for most graphics, so the
+			// promise holds for WebP only. Lowering quality cannot change a
+			// lossless encode, so it never gets the retry either.
+			$lossless = $lossless_source && 'webp' === $format;
 
 			// Quality on a skip entry is the one that failed, so it describes no file
 			// and must never be inherited by a sidecar that happens to be on disk.
@@ -519,6 +523,7 @@ class Converter {
 				'strip'     => ! empty( $args['strip'] ),
 				'effort'    => (int) ( $args['effort_webp'] ?? 6 ),
 				'dims'      => compact( 'width', 'height' ),
+				'mime'      => $mime,
 				'max_bytes' => $max_bytes,
 			);
 
@@ -539,7 +544,12 @@ class Converter {
 
 			// Check both signals: built-in drivers reject an oversized encode, while
 			// third-party drivers may return success and rely on this size backstop.
-			if ( ! $lossless && ( is_wp_error( $result ) || 'larger' === ( $entry['skip'] ?? '' ) ) ) {
+			// A driver that ignores quality returns the same bytes, so retrying it
+			// only buys a second encode of an image already judged expensive.
+			if ( ! $lossless
+				&& Capabilities::quality_is_honoured( $format )
+				&& ( is_wp_error( $result ) || 'larger' === ( $entry['skip'] ?? '' ) )
+			) {
 				$retry_quality = self::get_retry_quality( $driver_args['quality'], $format, $path, $driver_args );
 
 				if ( $retry_quality < $driver_args['quality'] ) {

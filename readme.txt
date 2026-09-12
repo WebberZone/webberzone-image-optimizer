@@ -117,13 +117,17 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
 **Added**
 
 * Media Library filter for optimized, not-yet-optimized, skipped and failed images. Thanks to [muneeb-ashraf](https://github.com/muneeb-ashraf).
-* One lower-quality retry for a lossy copy that misses the minimum saving, preserving more optimized candidates before discarding a stubborn size. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`.
+* One lower-quality retry for a lossy copy that misses the minimum saving, preserving more optimized candidates before discarding a stubborn size. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`. The retry is skipped where the server's encoder ignores the quality setting, because it would produce an identical file at twice the cost.
 * A Bulk Optimize warning when images are queued but the background worker has stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
 * A note in the Media Library column, on the attachment screen and in `wp wzio convert` when a copy needed a lower quality than the one configured.
 
 **Changed**
 
 * Optimized `<picture>` sources now omit missing intermediate `srcset` candidates while requiring the smallest and widest or highest-density candidates. Complete format sets are listed before partial sets.
+* AVIF encoder effort now maps onto each encoder's own speed scale rather than one shared invented scale, with the default sitting at the measured point where files stop getting meaningfully smaller. This cuts AVIF conversion time by roughly thirty times on ImageMagick servers for a few per cent of file size.
+* A source that can carry transparency is never encoded at the fastest AVIF speed, where its file can grow by two fifths for no gain.
+* Lossless encoding of PNG sources now applies to WebP only. A lossless AVIF is almost always larger than the PNG it came from, so it was discarded anyway.
+* The capability probe encodes at the cheapest effort. It only answers whether a format works, so it no longer runs the slowest encode the plugin is capable of.
 
 **Security**
 
@@ -131,6 +135,9 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
 
 **Fixed**
 
+* The AVIF encoder effort setting had no effect on servers that use GD, which never received it and fell back to its own default.
+* The AVIF quality setting was ignored for PNG sources on servers that use GD. The encoder was handed its own default quality instead, which was neither the lossless encode the setting implied nor the quality configured on the Quality tab.
+* Very large images were automatically pushed towards a faster encoder setting, which could make them substantially larger instead of merely quicker.
 * Images were wrapped in a second `<picture>` element when content and template rewriting both ran.
 * An image whose conversion stopped the background worker was claimed again indefinitely, because the abandoned attempt was never counted against its retry budget.
 * A single attachment could run far past the batch time budget. The worker now stops between files and resumes after the last file it attempted.
