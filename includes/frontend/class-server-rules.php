@@ -200,14 +200,14 @@ class Server_Rules {
 	 * @return string HTML.
 	 */
 	public static function get_settings_description(): string {
-		$intro = '<p>' . esc_html__( 'Images referenced from a stylesheet cannot be rewritten in markup, because the browser is never offered a choice. If you want those optimized too, add one of the blocks below to your web server configuration. Everything else on this tab works without any server changes.', 'webberzone-image-optimizer' ) . '</p>'
-		. '<p>' . esc_html__( 'Both blocks send a Vary: Accept header. Do not remove it: without it a CDN or page cache can hand a WebP file to a browser that cannot display it.', 'webberzone-image-optimizer' ) . '</p>';
+		$intro = '<p>' . esc_html__( 'Images referenced from a stylesheet cannot be rewritten in markup. To optimize those too, add one of the blocks below to your server configuration. Everything else on this tab works without server changes.', 'webberzone-image-optimizer' ) . '</p>'
+		. '<p>' . esc_html__( 'Both blocks send a Vary: Accept header. Do not remove it, or a cache can hand WebP to a browser that cannot display it.', 'webberzone-image-optimizer' ) . '</p>';
 
 		// Raw read: wzio_get_option() would recurse back into get_settings_defaults(), which builds this.
 		$raw = get_option( \WebberZone\Image_Optimizer\Options_API::SETTINGS_OPTION, array() );
 
 		if ( is_array( $raw ) && 'replace' === ( $raw['sidecar_naming'] ?? 'append' ) ) {
-			$intro .= '<p><strong>' . esc_html__( 'These rules assume the "Append the new extension" file naming option. With "Replace the extension" selected, they will not find your optimized files.', 'webberzone-image-optimizer' ) . '</strong></p>';
+			$intro .= '<p><strong>' . esc_html__( 'These rules assume the Append naming option. With Replace selected they will not find your optimized files.', 'webberzone-image-optimizer' ) . '</strong></p>';
 		}
 
 		$apache = '<p><strong>' . esc_html__( 'Apache or LiteSpeed — add above the WordPress rules in .htaccess', 'webberzone-image-optimizer' ) . '</strong></p>'
@@ -216,7 +216,7 @@ class Server_Rules {
 
 		$nginx = '<p><strong>' . esc_html__( 'nginx — add the map to the http block, the location to the relevant server block, then reload', 'webberzone-image-optimizer' ) . '</strong></p>'
 		. '<textarea rows="10" class="large-text code" readonly onclick="this.select();">' . esc_textarea( self::get_nginx_rules() ) . '</textarea>'
-		. '<p class="description">' . esc_html__( 'nginx cannot reload its own configuration from PHP, so this block has to be added and reloaded by hand — there is no one-click option here.', 'webberzone-image-optimizer' ) . '</p>';
+		. '<p class="description">' . esc_html__( 'nginx cannot reload itself from PHP, so this block has to be added and reloaded by hand.', 'webberzone-image-optimizer' ) . '</p>';
 
 		return $intro . $apache . $nginx;
 	}

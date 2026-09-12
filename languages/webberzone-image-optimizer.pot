@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: WebberZone Image Optimizer 1.0.2\n"
+"Project-Id-Version: WebberZone Image Optimizer 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/webberzone-image-optimizer\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-27T13:20:25+00:00\n"
+"POT-Creation-Date: 2026-09-12T03:27:52+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: webberzone-image-optimizer\n"
@@ -63,7 +63,7 @@ msgid "Settings"
 msgstr ""
 
 #: includes/admin/class-admin.php:118
-#: includes/admin/class-bulk-page.php:72
+#: includes/admin/class-bulk-page.php:73
 #: includes/admin/class-settings.php:771
 msgid "Bulk Optimize"
 msgstr ""
@@ -79,214 +79,261 @@ msgstr ""
 msgid "More Plugins"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:71
-#: includes/admin/class-bulk-page.php:156
+#: includes/admin/class-bulk-page.php:72
+#: includes/admin/class-bulk-page.php:158
 msgid "Bulk Optimize Images"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:120
+#: includes/admin/class-bulk-page.php:121
 msgid "Building the queue…"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:121
+#: includes/admin/class-bulk-page.php:122
 msgid "Optimizing…"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:122
+#: includes/admin/class-bulk-page.php:123
 msgid "Paused. Nothing is lost — press Start to carry on."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:123
+#: includes/admin/class-bulk-page.php:124
 msgid "All done."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:124
+#: includes/admin/class-bulk-page.php:125
 msgid "Every image is already optimized."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:125
+#: includes/admin/class-bulk-page.php:126
 msgid "Something went wrong. The queue is intact; try again."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:126
+#: includes/admin/class-bulk-page.php:127
 msgid "Another process is working through the queue. Waiting…"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:127
+#: includes/admin/class-bulk-page.php:128
 msgid "Clear the queue? Images already optimized stay optimized."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:128
+#: includes/admin/class-bulk-page.php:129
 msgid "remaining"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:129
+#: includes/admin/class-bulk-page.php:130
 msgid "saved"
 msgstr ""
 
 #. translators: 1: original total size, 2: percentage saved.
-#: includes/admin/class-bulk-page.php:131
+#: includes/admin/class-bulk-page.php:132
 #, php-format
 msgid "Bandwidth saved of %1$s originally (%2$s%)"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:146
-#: includes/admin/class-bulk-page.php:297
+#: includes/admin/class-bulk-page.php:147
+#: includes/admin/class-bulk-page.php:337
 msgid "You do not have permission to optimize images."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:160
+#: includes/admin/class-bulk-page.php:164
 msgid "This server cannot encode WebP or AVIF. Ask your host to enable the Imagick extension, or GD compiled with WebP support."
 msgstr ""
 
 #. translators: %s: settings page URL.
-#: includes/admin/class-bulk-page.php:168
+#: includes/admin/class-bulk-page.php:172
 #, php-format
 msgid "No output formats are selected, so there is nothing to generate. <a href=\"%s\">Choose a format</a> first."
 msgstr ""
 
 #. translators: %s: comma separated list of formats.
-#: includes/admin/class-bulk-page.php:180
+#: includes/admin/class-bulk-page.php:184
 #, php-format
 msgid "Generating: %s. Your original images are never modified — every optimized copy is written alongside the original."
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:181
+#: includes/admin/class-bulk-page.php:185
 msgid "nothing"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:189
+#: includes/admin/class-bulk-page.php:193
 msgid "Images in the library"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:193
+#: includes/admin/class-bulk-page.php:197
 msgid "Already optimized"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:197
+#: includes/admin/class-bulk-page.php:201
 msgid "Waiting in the queue"
 msgstr ""
 
 #. translators: 1: original total size, 2: percentage saved.
-#: includes/admin/class-bulk-page.php:206
+#: includes/admin/class-bulk-page.php:210
 #, php-format
 msgid "Bandwidth saved of %1$s originally (%2$s%%)"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:211
+#: includes/admin/class-bulk-page.php:215
 msgid "Bandwidth saved"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:224
+#: includes/admin/class-bulk-page.php:228
 msgid "Start optimizing"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:225
+#: includes/admin/class-bulk-page.php:229
 msgid "Pause"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:226
+#: includes/admin/class-bulk-page.php:230
 msgid "Clear queue"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:229
+#: includes/admin/class-bulk-page.php:233
 msgid "Re-optimize images that are already done"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:235
+#: includes/admin/class-bulk-page.php:239
 msgid "Images that could not be optimized"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:239
+#: includes/admin/class-bulk-page.php:243
 msgid "Image"
 msgstr ""
 
-#: includes/admin/class-bulk-page.php:240
+#: includes/admin/class-bulk-page.php:244
 msgid "Reason"
 msgstr ""
 
-#: includes/admin/class-media-library.php:86
+#: includes/admin/class-bulk-page.php:281
+msgid "Page-load cron is switched off by DISABLE_WP_CRON, and nothing else has run the queue since it was last checked."
+msgstr ""
+
+#: includes/admin/class-bulk-page.php:283
+msgid "The queue has not moved since it was last checked, so WP-Cron or the loopback request it depends on may not be working."
+msgstr ""
+
+#. translators: 1: WP-CLI command, 2: example system cron entry.
+#: includes/admin/class-bulk-page.php:288
+#, php-format
+msgid "Run %1$s to process the queue now. For ongoing processing, add a system cron entry such as %2$s"
+msgstr ""
+
+#: includes/admin/class-bulk-page.php:295
+msgid "Queued images are not being optimized in the background."
+msgstr ""
+
+#: includes/admin/class-media-library.php:105
 msgid "Optimizing"
 msgstr ""
 
-#: includes/admin/class-media-library.php:87
-#: includes/admin/class-media-library.php:126
+#: includes/admin/class-media-library.php:106
+#: includes/admin/class-media-library.php:145
 msgid "That image could not be optimized. Check the Bulk Optimize screen for the reason."
 msgstr ""
 
-#: includes/admin/class-media-library.php:88
+#: includes/admin/class-media-library.php:107
 msgid "Connection interrupted. Progress so far was saved — click Optimize again to continue."
 msgstr ""
 
 #. translators: %d: number of images.
-#: includes/admin/class-media-library.php:113
+#: includes/admin/class-media-library.php:132
 #, php-format
 msgid "Optimized copies deleted for %d image. The originals are untouched."
 msgid_plural "Optimized copies deleted for %d images. The originals are untouched."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin/class-media-library.php:124
+#: includes/admin/class-media-library.php:143
 msgid "Optimized copies regenerated. The original image was not modified."
 msgstr ""
 
-#: includes/admin/class-media-library.php:125
+#: includes/admin/class-media-library.php:144
 msgid "Optimized copies deleted. The original image is untouched and is being served again."
 msgstr ""
 
-#: includes/admin/class-media-library.php:127
+#: includes/admin/class-media-library.php:146
 msgid "Another optimization run is in progress, so this image was left alone. Try again in a moment."
 msgstr ""
 
-#: includes/admin/class-media-library.php:150
+#: includes/admin/class-media-library.php:169
+#: includes/admin/class-media-library.php:191
 msgid "Optimized"
 msgstr ""
 
-#: includes/admin/class-media-library.php:172
+#: includes/admin/class-media-library.php:190
+msgid "All optimization statuses"
+msgstr ""
+
+#: includes/admin/class-media-library.php:192
+msgid "Not yet optimized"
+msgstr ""
+
+#: includes/admin/class-media-library.php:193
+msgid "Skipped"
+msgstr ""
+
+#: includes/admin/class-media-library.php:194
+msgid "Failed"
+msgstr ""
+
+#: includes/admin/class-media-library.php:198
+msgid "Filter by optimization status"
+msgstr ""
+
+#: includes/admin/class-media-library.php:338
 msgid "Not an image that can be optimized"
 msgstr ""
 
-#: includes/admin/class-media-library.php:179
+#: includes/admin/class-media-library.php:345
 msgid "Not yet"
 msgstr ""
 
 #. translators: 1: number of files, 2: bytes saved, 3: percentage saved.
-#: includes/admin/class-media-library.php:187
+#: includes/admin/class-media-library.php:353
 #, php-format
 msgid "%1$d files, %2$s smaller (%3$d%%)"
 msgstr ""
 
-#: includes/admin/class-media-library.php:212
-#: includes/admin/class-media-library.php:329
+#. translators: %d: number of files.
+#: includes/admin/class-media-library.php:378
+#, php-format
+msgid "%d copy needed a lower quality to come out smaller than the original."
+msgid_plural "%d copies needed a lower quality to come out smaller than the original."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin/class-media-library.php:408
+#: includes/admin/class-media-library.php:527
 msgid "Optimize"
 msgstr ""
 
-#: includes/admin/class-media-library.php:221
-#: includes/admin/class-media-library.php:237
-#: includes/admin/class-media-library.php:336
+#: includes/admin/class-media-library.php:417
+#: includes/admin/class-media-library.php:433
+#: includes/admin/class-media-library.php:534
 msgid "Delete optimized copies"
 msgstr ""
 
-#: includes/admin/class-media-library.php:296
+#: includes/admin/class-media-library.php:492
 msgid "Image optimization"
 msgstr ""
 
-#: includes/admin/class-media-library.php:299
+#: includes/admin/class-media-library.php:495
 msgid "Not yet optimized."
 msgstr ""
 
 #. translators: 1: number of files, 2: bytes saved, 3: percentage saved.
-#: includes/admin/class-media-library.php:305
+#: includes/admin/class-media-library.php:501
 #, php-format
 msgid "%1$d files, %2$s smaller (%3$d%%)."
 msgstr ""
 
-#: includes/admin/class-media-library.php:380
-#: includes/admin/class-media-library.php:418
+#: includes/admin/class-media-library.php:578
+#: includes/admin/class-media-library.php:616
 msgid "You do not have permission to optimize this image."
 msgstr ""
 
-#: includes/admin/class-media-library.php:425
+#: includes/admin/class-media-library.php:623
 msgid "Another optimization is already running. Try again in a moment."
 msgstr ""
 
@@ -453,7 +500,7 @@ msgid "Formats to generate"
 msgstr ""
 
 #: includes/admin/class-settings.php:407
-msgid "AVIF files are smaller than WebP but take longer to encode and are understood by slightly fewer browsers. Generating both lets each visitor receive the smallest file their browser can read. Formats your server cannot encode are listed as unavailable."
+msgid "AVIF is smaller than WebP but slower to encode and unsupported by a few older browsers. Enable both to serve each browser its smallest option. Warning: AVIF is CPU-heavy and runs on every image size. If uploads slow down, turn off Convert new uploads and lower the AVIF effort on the Quality tab."
 msgstr ""
 
 #: includes/admin/class-settings.php:414
@@ -461,7 +508,7 @@ msgid "Convert new uploads"
 msgstr ""
 
 #: includes/admin/class-settings.php:415
-msgid "Generate the optimized copies as soon as an image is uploaded or its thumbnails are regenerated."
+msgid "Convert as soon as an image is uploaded or its thumbnails are regenerated. Turn this off to convert through the background queue instead, keeping the work out of the upload request."
 msgstr ""
 
 #: includes/admin/class-settings.php:421
@@ -469,7 +516,7 @@ msgid "Image sizes to convert"
 msgstr ""
 
 #: includes/admin/class-settings.php:422
-msgid "Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. Missing intermediate copies are omitted from the optimized srcset, but the smallest and widest or highest-density copies must exist before that format is offered. Excluding an edge size used by your theme can therefore disable that format for those images."
+msgid "Leave every box unchecked to convert all sizes. If you do tick some, include the smallest and the largest: a format is withheld when an edge size is missing."
 msgstr ""
 
 #: includes/admin/class-settings.php:429
@@ -477,7 +524,7 @@ msgid "Minimum saving (%)"
 msgstr ""
 
 #: includes/admin/class-settings.php:430
-msgid "Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit."
+msgid "Discard an optimized copy unless it is at least this much smaller. Small or already-compressed images often grow when re-encoded."
 msgstr ""
 
 #: includes/admin/class-settings.php:439
@@ -485,7 +532,7 @@ msgid "Optimized file naming"
 msgstr ""
 
 #: includes/admin/class-settings.php:440
-msgid "Append keeps the original extension and adds the new one, e.g. photo.jpg.webp — this is the safe default. Replace produces photo.webp instead, but if a folder ever contains both photo.jpg and photo.png, their optimized copies would collide on the same photo.webp file and one would silently overwrite the other. Only choose Replace if you are sure your uploads never share a filename across extensions."
+msgid "Append gives photo.jpg.webp and is the safe default. Replace gives photo.webp, which silently overwrites when photo.jpg and photo.png share a folder."
 msgstr ""
 
 #: includes/admin/class-settings.php:444
@@ -501,7 +548,7 @@ msgid "WebP quality"
 msgstr ""
 
 #: includes/admin/class-settings.php:466
-msgid "Between 1 and 100. The default of 82 is visually indistinguishable from the original for most photographs. Values above 90 grow the file quickly for very little visible gain."
+msgid "Between 1 and 100. The default of 82 is visually lossless for most photographs; above 90 mostly adds bytes."
 msgstr ""
 
 #: includes/admin/class-settings.php:475
@@ -509,7 +556,7 @@ msgid "AVIF quality"
 msgstr ""
 
 #: includes/admin/class-settings.php:476
-msgid "Between 1 and 100. AVIF and WebP quality numbers are not comparable: AVIF at 50 looks about the same as WebP at 82 while producing a noticeably smaller file."
+msgid "Between 1 and 100. Not comparable to WebP: AVIF at 50 looks like WebP at 82 but produces a smaller file."
 msgstr ""
 
 #: includes/admin/class-settings.php:485
@@ -517,7 +564,7 @@ msgid "WebP encoder effort"
 msgstr ""
 
 #: includes/admin/class-settings.php:486
-msgid "Between 0 and 6. Higher values spend more CPU time searching for a smaller file at identical visual quality. Because conversion happens once and the result is served many times, the highest setting is usually the right trade. Lower it if bulk runs are timing out."
+msgid "Between 0 and 6. Higher spends more CPU for a smaller file at the same quality. Lower it if bulk runs time out."
 msgstr ""
 
 #: includes/admin/class-settings.php:495
@@ -525,7 +572,7 @@ msgid "AVIF encoder effort"
 msgstr ""
 
 #: includes/admin/class-settings.php:496
-msgid "Between 0 and 6. AVIF encoding is much slower than WebP, so the default is lower. The plugin also automatically speeds up encoding for very large images where the quality gain per pixel is small. Raise this for smaller files at the cost of longer conversion times."
+msgid "Between 0 and 6. AVIF is much slower than WebP, so the default is lower. Lower it again if conversions are dragging."
 msgstr ""
 
 #: includes/admin/class-settings.php:505
@@ -533,7 +580,7 @@ msgid "Strip metadata"
 msgstr ""
 
 #: includes/admin/class-settings.php:506
-msgid "Remove EXIF, GPS and embedded thumbnails from the optimized copies. The colour profile is always kept, so colours will not shift. Your original files are never modified."
+msgid "Remove EXIF, GPS and embedded thumbnails from the copies. Color profiles are kept and your originals are never modified."
 msgstr ""
 
 #: includes/admin/class-settings.php:512
@@ -541,7 +588,7 @@ msgid "Lossless for PNG sources"
 msgstr ""
 
 #: includes/admin/class-settings.php:513
-msgid "Encode PNG sources without any quality loss. This is the right choice for logos, screenshots and line art, but produces much larger files for photographs saved as PNG."
+msgid "No quality loss for PNG sources. Right for logos and line art, much larger for photographs saved as PNG."
 msgstr ""
 
 #: includes/admin/class-settings.php:534
@@ -549,7 +596,7 @@ msgid "Serve optimized images"
 msgstr ""
 
 #: includes/admin/class-settings.php:535
-msgid "Wrap images in a picture element so the browser picks the best format it supports. Because the choice is made by the browser rather than the server, this works correctly behind page caches and CDNs."
+msgid "Wrap images in a picture element so the browser picks the format. The server never varies its response, so this is safe behind caches and CDNs."
 msgstr ""
 
 #: includes/admin/class-settings.php:541
@@ -565,7 +612,7 @@ msgid "Theme and block images"
 msgstr ""
 
 #: includes/admin/class-settings.php:549
-msgid "Rewrite featured images, gallery images and any image rendered by a theme or block through the WordPress image functions."
+msgid "Rewrite featured images, galleries and anything rendered through the WordPress image functions."
 msgstr ""
 
 #: includes/admin/class-settings.php:555
@@ -573,11 +620,11 @@ msgid "Whole page (buffered)"
 msgstr ""
 
 #: includes/admin/class-settings.php:557
-msgid "Catch images printed directly by a page builder or a hard-coded template by rewriting the whole page through the WordPress template enhancement output buffer. This catches the most images but costs a little memory on every request, so leave it off unless you can see images the two options above are missing."
+msgid "Rewrite the whole page to catch images printed directly by a page builder or hard-coded template. Costs a little memory per request, so leave it off unless the options above are missing images."
 msgstr ""
 
 #: includes/admin/class-settings.php:558
-msgid "Requires WordPress 6.9 or later, which provides the template enhancement output buffer this option uses."
+msgid "Requires WordPress 6.9 or later."
 msgstr ""
 
 #: includes/admin/class-settings.php:565
@@ -589,7 +636,7 @@ msgid "Images per batch"
 msgstr ""
 
 #: includes/admin/class-settings.php:587
-msgid "How many attachments to process in a single bulk step. Lower this if your server times out during a bulk run; raise it to finish faster on a fast server."
+msgid "Attachments per bulk step. Lower this if bulk runs time out."
 msgstr ""
 
 #: includes/admin/class-settings.php:596
@@ -597,7 +644,7 @@ msgid "Process the queue in the background"
 msgstr ""
 
 #: includes/admin/class-settings.php:597
-msgid "Keep working through the queue on a schedule even when the bulk screen is closed. Turn this off if you would rather the queue only advance while you watch it."
+msgid "Keep working through the queue on a schedule even when the bulk screen is closed."
 msgstr ""
 
 #: includes/admin/class-settings.php:603
@@ -605,7 +652,7 @@ msgid "Queue images on first view"
 msgstr ""
 
 #: includes/admin/class-settings.php:604
-msgid "When a page references an image that has not been converted yet, serve the original immediately and add the image to the queue. Nothing is ever converted during a page render, so visitors never wait for an encode."
+msgid "Queue an unconverted image the first time a page references it, serving the original meanwhile. Nothing is ever encoded during a page render."
 msgstr ""
 
 #: includes/admin/class-settings.php:610
@@ -613,7 +660,7 @@ msgid "Exclude paths"
 msgstr ""
 
 #: includes/admin/class-settings.php:611
-msgid "One fragment per line. Any image whose path inside the uploads folder contains one of these fragments is left alone, for example 2019/07 or /logos/."
+msgid "One fragment per line, for example 2019/07 or /logos/. Matching paths inside the uploads folder are left alone."
 msgstr ""
 
 #: includes/admin/class-settings.php:617
@@ -621,7 +668,7 @@ msgid "Delete optimized files on uninstall"
 msgstr ""
 
 #: includes/admin/class-settings.php:618
-msgid "Remove every generated WebP and AVIF file when the plugin is deleted. Your original images are never touched either way. Leave this off if you may reinstall later and would rather not convert everything again."
+msgid "Remove every generated WebP and AVIF file when the plugin is deleted. Your originals are never touched."
 msgstr ""
 
 #: includes/admin/class-settings.php:624
@@ -629,7 +676,7 @@ msgid "Delete settings and records on uninstall"
 msgstr ""
 
 #: includes/admin/class-settings.php:625
-msgid "Remove the settings, the queue table and the per-image conversion records when the plugin is deleted."
+msgid "Remove the settings, queue table and per-image records when the plugin is deleted."
 msgstr ""
 
 #: includes/admin/class-settings.php:643
@@ -712,27 +759,39 @@ msgstr ""
 msgid "Follow us"
 msgstr ""
 
-#: includes/class-converter.php:80
-#: includes/class-converter.php:138
+#: includes/class-converter.php:115
+#: includes/class-converter.php:215
 msgid "This attachment is not an image the plugin can convert."
 msgstr ""
 
-#: includes/class-converter.php:90
-#: includes/class-converter.php:148
+#: includes/class-converter.php:125
+#: includes/class-converter.php:225
 msgid "No image files were found on disk for this attachment."
 msgstr ""
 
-#: includes/class-converter.php:310
+#: includes/class-converter.php:437
 msgid "The source file could not be read."
 msgstr ""
 
-#: includes/class-converter.php:372
+#: includes/class-converter.php:511
 msgid "Not enough memory to decode this image."
 msgstr ""
 
 #: includes/class-processor.php:69
 msgid "Every minute (WebberZone Image Optimizer)"
 msgstr ""
+
+#: includes/class-queue.php:355
+msgid "The worker stopped before this image finished."
+msgstr ""
+
+#. translators: %d: number of optimized copies.
+#: includes/cli/class-cli.php:181
+#, php-format
+msgid "%d optimized copy needed a lower quality than configured to come out smaller than the original."
+msgid_plural "%d optimized copies needed a lower quality than configured to come out smaller than the original."
+msgstr[0] ""
+msgstr[1] ""
 
 #. translators: %s: directory path.
 #: includes/drivers/class-driver.php:111
@@ -763,15 +822,15 @@ msgid "GD on this server cannot encode %s."
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:203
-msgid "Images referenced from a stylesheet cannot be rewritten in markup, because the browser is never offered a choice. If you want those optimized too, add one of the blocks below to your web server configuration. Everything else on this tab works without any server changes."
+msgid "Images referenced from a stylesheet cannot be rewritten in markup. To optimize those too, add one of the blocks below to your server configuration. Everything else on this tab works without server changes."
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:204
-msgid "Both blocks send a Vary: Accept header. Do not remove it: without it a CDN or page cache can hand a WebP file to a browser that cannot display it."
+msgid "Both blocks send a Vary: Accept header. Do not remove it, or a cache can hand WebP to a browser that cannot display it."
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:210
-msgid "These rules assume the \"Append the new extension\" file naming option. With \"Replace the extension\" selected, they will not find your optimized files."
+msgid "These rules assume the Append naming option. With Replace selected they will not find your optimized files."
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:213
@@ -783,7 +842,7 @@ msgid "nginx — add the map to the http block, the location to the relevant ser
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:219
-msgid "nginx cannot reload its own configuration from PHP, so this block has to be added and reloaded by hand — there is no one-click option here."
+msgid "nginx cannot reload itself from PHP, so this block has to be added and reloaded by hand."
 msgstr ""
 
 #: includes/frontend/class-server-rules.php:233
