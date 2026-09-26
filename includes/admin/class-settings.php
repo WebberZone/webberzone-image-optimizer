@@ -284,6 +284,9 @@ class Settings {
 			'default_none'         => esc_html__( 'None', 'webberzone-image-optimizer' ),
 			'button_label'         => esc_html__( 'Choose File', 'webberzone-image-optimizer' ),
 			'previous_saved'       => esc_html__( 'Previously saved', 'webberzone-image-optimizer' ),
+			'repeater_move_up'     => esc_html__( 'Move item up', 'webberzone-image-optimizer' ),
+			'repeater_move_down'   => esc_html__( 'Move item down', 'webberzone-image-optimizer' ),
+			'repeater_remove_item' => esc_html__( 'Remove item', 'webberzone-image-optimizer' ),
 		);
 
 		return apply_filters( self::$prefix . '_translation_strings', $strings ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
