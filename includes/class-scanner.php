@@ -128,6 +128,49 @@ class Scanner {
 	}
 
 	/**
+	 * Queue PNG attachments holding a skipped copy the lossy fallback may now rescue.
+	 *
+	 * Their queue rows are already done, so a normal scan would never revisit them.
+	 *
+	 * @since 1.1.1
+	 *
+	 * @return int Number of attachments queued.
+	 */
+	public static function requeue_png_skips(): int {
+		global $wpdb;
+
+		if ( ! \wzio_get_option( 'lossless_png', true ) || (int) \wzio_get_option( 'png_lossy_quality', 95 ) < 1 ) {
+			return 0;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT m.post_id FROM {$wpdb->postmeta} m
+				 INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id
+				 WHERE m.meta_key = %s
+				 AND p.post_type = 'attachment'
+				 AND p.post_mime_type = 'image/png'
+				 AND m.meta_value LIKE %s",
+				Attachment_Meta::META_KEY,
+				'%' . $wpdb->esc_like( 's:6:"larger"' ) . '%'
+			)
+		);
+
+		$ids = array_map( 'intval', (array) $ids );
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		Queue::add( $ids, true );
+		Processor::maybe_schedule();
+		self::flush_counts();
+
+		return count( $ids );
+	}
+
+	/**
 	 * Get a page of attachment IDs that could be converted.
 	 *
 	 * @since 1.0.0

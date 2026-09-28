@@ -33,7 +33,7 @@ class Database {
 	 * @since 1.0.0
 	 * @var   string
 	 */
-	const VERSION = '1.1';
+	const VERSION = '1.2';
 
 	/**
 	 * Memoised table existence checks, keyed by table name.
@@ -176,11 +176,17 @@ class Database {
 	 * @return void
 	 */
 	public static function maybe_upgrade(): void {
-		if ( get_option( self::VERSION_OPTION ) === self::VERSION && self::is_installed() ) {
+		$previous = get_option( self::VERSION_OPTION );
+
+		if ( self::VERSION === $previous && self::is_installed() ) {
 			return;
 		}
 
 		self::install();
+
+		if ( $previous && version_compare( (string) $previous, '1.2', '<' ) ) {
+			Scanner::requeue_png_skips();
+		}
 	}
 
 	/**

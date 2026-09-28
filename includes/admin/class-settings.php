@@ -11,6 +11,8 @@ namespace WebberZone\Image_Optimizer\Admin;
 
 use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Frontend\Server_Rules;
+use WebberZone\Image_Optimizer\Options_API;
+use WebberZone\Image_Optimizer\Scanner;
 use WebberZone\Image_Optimizer\Util\Hook_Registry;
 
 // If this file is called directly, abort.
@@ -90,6 +92,7 @@ class Settings {
 		Hook_Registry::add_filter( 'plugin_action_links_' . plugin_basename( WZIO_PLUGIN_FILE ), array( $this, 'plugin_actions_links' ) );
 
 		Hook_Registry::add_filter( self::$prefix . '_settings_sanitize', array( $this, 'change_settings_on_save' ), 99 );
+		Hook_Registry::add_action( 'update_option_' . self::$prefix . '_settings', array( $this, 'maybe_requeue_png_skips' ), 10, 2 );
 
 		Hook_Registry::add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_htaccess_assets' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_install_htaccess', array( $this, 'ajax_install_htaccess' ) );
@@ -341,6 +344,7 @@ class Settings {
 			'effort_avif'               => 4,
 			'strip_metadata'            => 1,
 			'lossless_png'              => 1,
+			'png_lossy_quality'         => 95,
 
 			// Delivery.
 			'enable_delivery'           => 1,
@@ -463,7 +467,7 @@ class Settings {
 	public static function settings_quality() {
 		$defaults = self::get_defaults();
 		$settings = array(
-			'quality_webp'   => array(
+			'quality_webp'      => array(
 				'id'      => 'quality_webp',
 				'name'    => esc_html__( 'WebP quality', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 1 and 100. The default of 82 is visually lossless for most photographs; above 90 mostly adds bytes.', 'webberzone-image-optimizer' ),
@@ -473,7 +477,7 @@ class Settings {
 				'max'     => 100,
 				'size'    => 'small',
 			),
-			'quality_avif'   => array(
+			'quality_avif'      => array(
 				'id'      => 'quality_avif',
 				'name'    => esc_html__( 'AVIF quality', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 1 and 100. Not comparable to WebP: AVIF at 50 looks like WebP at 82 but produces a smaller file.', 'webberzone-image-optimizer' ),
@@ -483,7 +487,7 @@ class Settings {
 				'max'     => 100,
 				'size'    => 'small',
 			),
-			'effort_webp'    => array(
+			'effort_webp'       => array(
 				'id'      => 'effort_webp',
 				'name'    => esc_html__( 'WebP encoder effort', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 0 and 6. Higher spends more CPU for a smaller file at the same quality. Lower it if bulk runs time out.', 'webberzone-image-optimizer' )
@@ -496,7 +500,7 @@ class Settings {
 				'max'     => 6,
 				'size'    => 'small',
 			),
-			'effort_avif'    => array(
+			'effort_avif'       => array(
 				'id'      => 'effort_avif',
 				'name'    => esc_html__( 'AVIF encoder effort', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Between 0 and 6. The default is the best measured balance; above it files shrink very little for a lot more CPU. The speed this maps to depends on which encoder your server has.', 'webberzone-image-optimizer' ),
@@ -506,19 +510,29 @@ class Settings {
 				'max'     => 6,
 				'size'    => 'small',
 			),
-			'strip_metadata' => array(
+			'strip_metadata'    => array(
 				'id'      => 'strip_metadata',
 				'name'    => esc_html__( 'Strip metadata', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Remove EXIF, GPS and embedded thumbnails from the copies. Color profiles are kept and your originals are never modified.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['strip_metadata'],
 			),
-			'lossless_png'   => array(
+			'lossless_png'      => array(
 				'id'      => 'lossless_png',
 				'name'    => esc_html__( 'Lossless for PNG sources', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Encode the WebP copy of a PNG source with no quality loss. Right for logos and line art, much larger for photographs saved as PNG. AVIF ignores this, because a lossless AVIF is usually bigger than the PNG it came from.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['lossless_png'],
+			),
+			'png_lossy_quality' => array(
+				'id'      => 'png_lossy_quality',
+				'name'    => esc_html__( 'PNG lossy fallback quality', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'When a lossless WebP copy of a PNG does not reach the minimum saving, try once more as lossy WebP at this quality. PNGs already reduced to a small color palette usually need this. Applies only when Lossless for PNG sources is on. Set to 0 to never encode a PNG lossily; lossy copies made earlier stay until you re-optimize.', 'webberzone-image-optimizer' ),
+				'type'    => 'number',
+				'default' => $defaults['png_lossy_quality'],
+				'min'     => 0,
+				'max'     => 100,
+				'size'    => 'small',
 			),
 		);
 
@@ -701,6 +715,28 @@ class Settings {
 		}
 
 		return $settings;
+	}
+
+	/**
+	 * Retry skipped PNG copies when the PNG encoding settings change.
+	 *
+	 * @since 1.1.1
+	 *
+	 * @param mixed $old_value Previous settings.
+	 * @param mixed $value     New settings.
+	 * @return void
+	 */
+	public function maybe_requeue_png_skips( $old_value, $value ): void {
+		$old_value = is_array( $old_value ) ? $old_value : array();
+		$value     = is_array( $value ) ? $value : array();
+
+		foreach ( array( 'lossless_png', 'png_lossy_quality' ) as $key ) {
+			if ( (string) ( $old_value[ $key ] ?? '' ) !== (string) ( $value[ $key ] ?? '' ) ) {
+				Options_API::flush_cache();
+				Scanner::requeue_png_skips();
+				return;
+			}
+		}
 	}
 
 	/**

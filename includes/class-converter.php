@@ -67,6 +67,7 @@ class Converter {
 					'avif' => self::get_quality( 'avif' ),
 				),
 				'lossless'    => (bool) \wzio_get_option( 'lossless_png', true ),
+				'png_lossy'   => max( 0, min( 100, (int) \wzio_get_option( 'png_lossy_quality', 95 ) ) ),
 			)
 		);
 
@@ -372,6 +373,7 @@ class Converter {
 			'formats'        => array_values( (array) ( $args['formats'] ?? array() ) ),
 			'quality'        => (array) ( $args['quality'] ?? array() ),
 			'lossless'       => ! empty( $args['lossless'] ),
+			'png_lossy'      => (int) ( $args['png_lossy'] ?? 0 ),
 			'strip'          => ! empty( $args['strip'] ),
 			'min_saving'     => (int) ( $args['min_saving'] ?? 5 ),
 			'effort_webp'    => (int) ( $args['effort_webp'] ?? 6 ),
@@ -455,6 +457,7 @@ class Converter {
 		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
 		$lossless_source = ! empty( $args['lossless'] ) && 'image/png' === $mime;
+		$png_lossy       = max( 0, min( 100, (int) ( $args['png_lossy'] ?? 0 ) ) );
 
 		foreach ( $args['formats'] as $format ) {
 			$destination = Helpers::sidecar_path( $path, $format );
@@ -492,7 +495,7 @@ class Converter {
 			// A previous run decided this file is not worth converting.
 			if ( empty( $args['force'] )
 				&& isset( $existing[ $format ]['skip'] )
-				&& ! self::skip_predates_retry( $existing[ $format ], $lossless )
+				&& ! self::skip_predates_retry( $existing[ $format ], $lossless, $png_lossy )
 			) {
 				$record[ $format ] = $existing[ $format ];
 				continue;
@@ -541,6 +544,26 @@ class Converter {
 			$quality = $lossless ? null : $driver_args['quality'];
 			$reduced = false;
 			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, false, $known_reduced );
+
+			// Palette PNGs leave lossless WebP almost nothing to remove. The configured
+			// fallback is the floor, so the lossy retry below never follows it.
+			if ( $lossless
+				&& $png_lossy > 0
+				&& ( is_wp_error( $result ) || 'larger' === ( $entry['skip'] ?? '' ) )
+			) {
+				$driver_args['lossless'] = false;
+				$driver_args['quality']  = $png_lossy;
+				$result                  = $driver->convert( $path, $destination, $format, $driver_args );
+
+				if ( is_wp_error( $result ) && 'wzio_encode_larger' !== $result->get_error_code() ) {
+					$record[ $format ] = Attachment_Meta::error_entry( $result->get_error_message() );
+					continue;
+				}
+
+				$quality = $png_lossy;
+				$reduced = true;
+				$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced );
+			}
 
 			// Check both signals: built-in drivers reject an oversized encode, while
 			// third-party drivers may return success and rely on this size backstop.
@@ -616,19 +639,27 @@ class Converter {
 	 *
 	 * Such an entry gets one more chance, because the run that wrote it had no
 	 * retry to offer. The attempt always records a quality, so it settles for good.
+	 * A lossless skip is also reopened when the PNG lossy fallback now allows a
+	 * lower quality than the one it last tried.
 	 *
 	 * @since 1.1.0
+	 * @since 1.1.1 Added the `$png_lossy` parameter.
 	 *
-	 * @param  array<string, mixed> $entry    Stored format entry.
-	 * @param  bool                 $lossless Whether this source encodes losslessly.
+	 * @param  array<string, mixed> $entry     Stored format entry.
+	 * @param  bool                 $lossless  Whether this source encodes losslessly.
+	 * @param  int                  $png_lossy Lossy fallback quality for lossless sources, or 0 when off.
 	 * @return bool True when the entry should be attempted once more.
 	 */
-	private static function skip_predates_retry( array $entry, bool $lossless ): bool {
-		if ( $lossless ) {
+	private static function skip_predates_retry( array $entry, bool $lossless, int $png_lossy = 0 ): bool {
+		if ( 'larger' !== ( $entry['skip'] ?? '' ) ) {
 			return false;
 		}
 
-		return 'larger' === ( $entry['skip'] ?? '' ) && ! isset( $entry['quality'] );
+		if ( $lossless ) {
+			return $png_lossy > 0 && ( ! isset( $entry['quality'] ) || (int) $entry['quality'] > $png_lossy );
+		}
+
+		return ! isset( $entry['quality'] );
 	}
 
 	/**

@@ -634,6 +634,7 @@ class AdaptiveRetryTest extends WP_UnitTestCase
         $max_bytes = (int) ( filesize($this->source) * 0.95 );
         $args = self::conversion_args();
         $args['lossless'] = true;
+        $args['png_lossy'] = 0;
 
         WZIO_Retry_Test_Driver::reset(array( $max_bytes + 1, $max_bytes - 1 ));
 
@@ -642,5 +643,137 @@ class AdaptiveRetryTest extends WP_UnitTestCase
         $this->assertCount(1, WZIO_Retry_Test_Driver::$calls);
         $this->assertSame('larger', $record['webp']['skip']);
         $this->assertArrayNotHasKey('quality', $record['webp']);
+    }
+
+    /**
+     * A lossless miss falls back to one lossy encode at the configured quality.
+     */
+    public function test_a_lossless_miss_falls_back_to_lossy()
+    {
+        $max_bytes = (int) ( filesize($this->source) * 0.95 );
+        $args = self::conversion_args();
+        $args['lossless'] = true;
+        $args['png_lossy'] = 82;
+
+        WZIO_Retry_Test_Driver::reset(array( $max_bytes + 1, $max_bytes - 1 ));
+
+        $record = Converter::convert_file($this->source, $args);
+
+        $this->assertCount(2, WZIO_Retry_Test_Driver::$calls);
+        $this->assertTrue(WZIO_Retry_Test_Driver::$calls[0]['lossless']);
+        $this->assertFalse(WZIO_Retry_Test_Driver::$calls[1]['lossless']);
+        $this->assertSame(82, WZIO_Retry_Test_Driver::$calls[1]['quality']);
+        $this->assertSame($max_bytes - 1, $record['webp']['bytes']);
+        $this->assertSame(82, $record['webp']['quality']);
+        $this->assertTrue($record['webp']['reduced']);
+    }
+
+    /**
+     * A lossless encode that reaches the minimum saving never falls back.
+     */
+    public function test_a_lossless_hit_does_not_fall_back()
+    {
+        $max_bytes = (int) ( filesize($this->source) * 0.95 );
+        $args = self::conversion_args();
+        $args['lossless'] = true;
+        $args['png_lossy'] = 82;
+
+        WZIO_Retry_Test_Driver::reset(array( $max_bytes - 1 ));
+
+        $record = Converter::convert_file($this->source, $args);
+
+        $this->assertCount(1, WZIO_Retry_Test_Driver::$calls);
+        $this->assertArrayNotHasKey('quality', $record['webp']);
+    }
+
+    /**
+     * The fallback quality is the floor, so no lower-quality retry follows it.
+     */
+    public function test_the_lossy_fallback_is_not_retried()
+    {
+        $max_bytes = (int) ( filesize($this->source) * 0.95 );
+        $args = self::conversion_args();
+        $args['lossless'] = true;
+        $args['png_lossy'] = 82;
+
+        WZIO_Retry_Test_Driver::reset(array( $max_bytes + 1, $max_bytes + 1, $max_bytes - 1 ));
+
+        $record = Converter::convert_file($this->source, $args);
+
+        $this->assertCount(2, WZIO_Retry_Test_Driver::$calls);
+        $this->assertSame('larger', $record['webp']['skip']);
+        $this->assertSame(82, $record['webp']['quality']);
+    }
+
+    /**
+     * A lossless skip recorded without the fallback gets one more chance.
+     */
+    public function test_a_lossless_skip_reopens_for_the_fallback()
+    {
+        $max_bytes = (int) ( filesize($this->source) * 0.95 );
+        $args = self::conversion_args();
+        $args['force'] = false;
+        $args['lossless'] = true;
+        $args['png_lossy'] = 82;
+
+        WZIO_Retry_Test_Driver::reset(array( $max_bytes + 1, $max_bytes - 1 ));
+
+        $record = Converter::convert_file($this->source, $args, array( 'webp' => array( 'skip' => 'larger' ) ));
+
+        $this->assertCount(2, WZIO_Retry_Test_Driver::$calls);
+        $this->assertSame($max_bytes - 1, $record['webp']['bytes']);
+    }
+
+    /**
+     * A lossless skip stays settled when the fallback is off.
+     */
+    public function test_a_lossless_skip_stays_when_the_fallback_is_off()
+    {
+        $args = self::conversion_args();
+        $args['force'] = false;
+        $args['lossless'] = true;
+        $args['png_lossy'] = 0;
+        $existing = array( 'webp' => array( 'skip' => 'larger' ) );
+
+        WZIO_Retry_Test_Driver::reset(array());
+
+        $record = Converter::convert_file($this->source, $args, $existing);
+
+        $this->assertCount(0, WZIO_Retry_Test_Driver::$calls);
+        $this->assertSame($existing['webp'], $record['webp']);
+    }
+
+    /**
+     * A fallback skip reopens only when a lower fallback quality is configured.
+     */
+    public function test_a_fallback_skip_reopens_only_below_its_quality()
+    {
+        $max_bytes = (int) ( filesize($this->source) * 0.95 );
+        $args = self::conversion_args();
+        $args['force'] = false;
+        $args['lossless'] = true;
+        $args['png_lossy'] = 82;
+        $existing = array(
+            'webp' => array(
+                'skip'    => 'larger',
+                'quality' => 82,
+            ),
+        );
+
+        WZIO_Retry_Test_Driver::reset(array());
+
+        $record = Converter::convert_file($this->source, $args, $existing);
+
+        $this->assertCount(0, WZIO_Retry_Test_Driver::$calls);
+        $this->assertSame($existing['webp'], $record['webp']);
+
+        $args['png_lossy'] = 70;
+
+        WZIO_Retry_Test_Driver::reset(array( $max_bytes + 1, $max_bytes - 1 ));
+
+        $record = Converter::convert_file($this->source, $args, $existing);
+
+        $this->assertCount(2, WZIO_Retry_Test_Driver::$calls);
+        $this->assertSame(70, $record['webp']['quality']);
     }
 }
