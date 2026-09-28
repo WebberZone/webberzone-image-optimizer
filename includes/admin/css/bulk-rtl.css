@@ -4,6 +4,11 @@
  * @package WebberZone\Image_Optimizer
  */
 
+/* WordPress gives .button a display that overrides the hidden attribute. */
+.wzio-actions [hidden] {
+	display: none;
+}
+
 .wzio-bulk .wzio-lede {
 	max-width: 46rem;
 	font-size: 14px;

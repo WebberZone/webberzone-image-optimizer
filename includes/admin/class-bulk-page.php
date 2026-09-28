@@ -316,7 +316,8 @@ class Bulk_Page {
 
 		return array(
 			'total'         => Scanner::count_candidates(),
-			'optimized'     => Scanner::count_optimized(),
+			// Images queued again still carry a record, so they would be counted twice.
+			'optimized'     => max( 0, Scanner::count_optimized() - Queue::count_requeued() ),
 			'remaining'     => Processor::get_remaining(),
 			'done'          => (int) $counts[ Queue::DONE ] + (int) $counts[ Queue::SKIPPED ],
 			'saved'         => $saved,

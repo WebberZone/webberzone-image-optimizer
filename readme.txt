@@ -128,6 +128,8 @@ Release date: 28 September 2026
 
 * Images processed while no encoder was available were marked Not supported permanently, so neither Optimize nor the bulk scan converted them once an encoder became available. They are now retried, and affected images are queued again automatically.
 * Re-optimize images that are already done on the Bulk Optimize screen, and `wp wzio queue --force`, queued finished images again but the queue then kept their existing copies and recorded skips, so nothing was re-encoded. Queued images are now re-encoded as intended.
+* On the Bulk Optimize screen, images queued again were counted as both Already optimized and Waiting in the queue.
+* The Pause button showed on the Bulk Optimize screen even when nothing was running.
 
 = 1.1.1 =
 

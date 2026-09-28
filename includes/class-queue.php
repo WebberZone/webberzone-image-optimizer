@@ -568,6 +568,36 @@ class Queue {
 	}
 
 	/**
+	 * Count waiting or in-progress rows whose attachment already has a conversion record.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return int Row count.
+	 */
+	public static function count_requeued(): int {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return 0;
+		}
+
+		$table = Database::get_table();
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(DISTINCT q.attachment_id) FROM `{$table}` q INNER JOIN {$wpdb->postmeta} m ON m.post_id = q.attachment_id AND m.meta_key = %s WHERE q.status IN (%s, %s)",
+				Attachment_Meta::META_KEY,
+				self::PENDING,
+				self::PROCESSING
+			)
+		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
+		return $count;
+	}
+
+	/**
 	 * Get the IDs of every attachment whose row failed.
 	 *
 	 * @since 1.1.2
