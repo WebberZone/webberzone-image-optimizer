@@ -82,6 +82,9 @@ class Processor {
 	 * @return array{processed: int, converted: int, failed: int, skipped: int, deferred: int, saved: int, remaining: int, locked: bool} Result.
 	 */
 	public static function run_batch( ?int $limit = null ): array {
+		// Cron can run before any admin request has applied the schema upgrade.
+		Database::maybe_upgrade();
+
 		$result = array(
 			'processed' => 0,
 			'converted' => 0,
@@ -214,6 +217,10 @@ class Processor {
 	 */
 	private static function process_row( $row, array $overrides = array() ): array {
 		$attachment_id = (int) $row->attachment_id;
+
+		if ( ! empty( $row->reencode ) ) {
+			$overrides['force'] = true;
+		}
 
 		// The attachment may have been deleted since it was queued.
 		if ( ! Converter::is_convertible_attachment( $attachment_id ) ) {

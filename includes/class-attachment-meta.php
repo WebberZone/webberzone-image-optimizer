@@ -181,6 +181,57 @@ class Attachment_Meta {
 	}
 
 	/**
+	 * Count the format entries that were skipped or failed.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array{files: array<string, array<string, mixed>>} $record Conversion record.
+	 * @return int Number of retryable entries.
+	 */
+	public static function count_retryable( array $record ): int {
+		$count = 0;
+
+		foreach ( $record['files'] as $file_record ) {
+			foreach ( Helpers::get_formats() as $format ) {
+				if ( isset( $file_record[ $format ]['skip'] ) || isset( $file_record[ $format ]['error'] ) ) {
+					++$count;
+				}
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Forget skipped and failed entries so the next pass attempts them again.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return int Number of entries cleared.
+	 */
+	public static function clear_retryable( int $attachment_id ): int {
+		$record  = self::get( $attachment_id );
+		$cleared = 0;
+
+		foreach ( $record['files'] as $basename => $file_record ) {
+			foreach ( Helpers::get_formats() as $format ) {
+				if ( isset( $file_record[ $format ]['skip'] ) || isset( $file_record[ $format ]['error'] ) ) {
+					unset( $record['files'][ $basename ][ $format ] );
+					++$cleared;
+				}
+			}
+		}
+
+		if ( $cleared > 0 ) {
+			self::set( $attachment_id, $record );
+			self::delete_progress( $attachment_id );
+		}
+
+		return $cleared;
+	}
+
+	/**
 	 * Get the record for a single source file within an attachment.
 	 *
 	 * @since 1.0.0

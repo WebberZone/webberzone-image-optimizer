@@ -9,11 +9,15 @@
 	var config = window.wzioOptimize || {};
 	var strings = config.strings || {};
 
-	function post(id) {
+	function post(id, retry) {
 		var body = new URLSearchParams();
 		body.append('action', 'wzio_optimize_attachment');
 		body.append('nonce', config.nonce);
 		body.append('id', id);
+
+		if (retry) {
+			body.append('retry', '1');
+		}
 
 		return fetch(config.ajaxUrl, {
 			method: 'POST',
@@ -42,12 +46,12 @@
 			});
 	}
 
-	function step(link, id, original) {
-		post(id)
+	function step(link, id, original, retry) {
+		post(id, retry)
 			.then(function (data) {
 				if (!data.done) {
 					link.textContent = strings.optimizing + ' ' + data.index + '/' + data.total;
-					step(link, id, original);
+					step(link, id, original, false);
 					return;
 				}
 
@@ -83,6 +87,6 @@
 		link.classList.add('wzio-busy');
 		link.textContent = strings.optimizing;
 
-		step(link, link.getAttribute('data-id'), original);
+		step(link, link.getAttribute('data-id'), original, '1' === link.getAttribute('data-retry'));
 	});
 })();

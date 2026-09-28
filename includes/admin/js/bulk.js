@@ -103,6 +103,7 @@
 		els.pause.hidden = !state;
 		els.reset.disabled = state;
 		els.force.disabled = state;
+		els.retry.disabled = state;
 	}
 
 	function step() {
@@ -145,6 +146,7 @@
 
 		post('wzio_bulk_scan', {
 			force: els.force.checked ? '1' : '0',
+			retry: els.retry.checked && 0 === afterId ? '1' : '0',
 			after_id: afterId,
 		})
 			.then(function (stats) {
@@ -205,6 +207,7 @@
 			pause: byId('wzio-pause'),
 			reset: byId('wzio-reset'),
 			force: byId('wzio-force'),
+			retry: byId('wzio-retry'),
 			progress: byId('wzio-progress'),
 			fill: byId('wzio-progress-fill'),
 			text: byId('wzio-progress-text'),

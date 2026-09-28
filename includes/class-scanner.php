@@ -171,6 +171,86 @@ class Scanner {
 	}
 
 	/**
+	 * Queue attachments holding copies skipped for want of an encoder that now exists.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return int Number of attachments queued.
+	 */
+	public static function requeue_unsupported_skips(): int {
+		global $wpdb;
+
+		$available = array_filter(
+			(array) Converter::get_args()['formats'],
+			static function ( $format ): bool {
+				return null !== Capabilities::get_driver( (string) $format );
+			}
+		);
+
+		if ( empty( $available ) ) {
+			return 0;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value LIKE %s",
+				Attachment_Meta::META_KEY,
+				'%' . $wpdb->esc_like( 's:11:"unsupported"' ) . '%'
+			)
+		);
+
+		$ids = array_map( 'intval', (array) $ids );
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		Queue::add( $ids, true );
+		Processor::maybe_schedule();
+		self::flush_counts();
+
+		return count( $ids );
+	}
+
+	/**
+	 * Clear skipped and failed results and queue those attachments for another attempt.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return int Number of attachments queued.
+	 */
+	public static function requeue_retryable(): int {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND ( meta_value LIKE %s OR meta_value LIKE %s )",
+				Attachment_Meta::META_KEY,
+				'%' . $wpdb->esc_like( 's:4:"skip"' ) . '%',
+				'%' . $wpdb->esc_like( 's:5:"error"' ) . '%'
+			)
+		);
+
+		$ids = array_values( array_unique( array_merge( array_map( 'intval', (array) $ids ), Queue::get_failed_ids() ) ) );
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		foreach ( $ids as $attachment_id ) {
+			Attachment_Meta::clear_retryable( $attachment_id );
+		}
+
+		Queue::add( $ids, true );
+		Processor::maybe_schedule();
+		self::flush_counts();
+
+		return count( $ids );
+	}
+
+	/**
 	 * Get a page of attachment IDs that could be converted.
 	 *
 	 * @since 1.0.0
@@ -255,7 +335,7 @@ class Scanner {
 				break;
 			}
 
-			Queue::add( $ids, $force );
+			Queue::add( $ids, $force, $force );
 
 			$queued  += $found;
 			$after_id = (int) end( $ids );

@@ -58,9 +58,10 @@ class Media_Library {
 		Hook_Registry::add_filter( 'posts_where', array( $this, 'filter_attachments_by_status' ), 10, 2 );
 		Hook_Registry::add_action( 'admin_post_wzio_optimize_attachment', array( $this, 'handle_optimize' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_restore_attachment', array( $this, 'handle_restore' ) );
+		Hook_Registry::add_action( 'admin_post_wzio_retry_attachment', array( $this, 'handle_retry' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_optimize_attachment', array( $this, 'ajax_optimize' ) );
 		Hook_Registry::add_action( 'admin_notices', array( $this, 'render_notice' ) );
-		Hook_Registry::add_action( 'attachment_submitbox_misc_actions', array( $this, 'render_submitbox' ) );
+		Hook_Registry::add_action( 'attachment_submitbox_misc_actions', array( $this, 'render_submitbox' ), 20 );
 		Hook_Registry::add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 	}
 
@@ -109,7 +110,14 @@ class Media_Library {
 			)
 		);
 
-		wp_add_inline_style( 'wp-admin', '.wzio-optimize-error{color:#b32d2e}' );
+		wp_enqueue_style(
+			'wzio-media',
+			WZIO_PLUGIN_URL . 'includes/admin/css/media' . $minimize . '.css',
+			array(),
+			WZIO_VERSION
+		);
+
+		add_thickbox();
 	}
 
 	/**
@@ -339,24 +347,349 @@ class Media_Library {
 			return;
 		}
 
-		$totals = Attachment_Meta::get_totals( $post_id );
+		self::render_summary( $post_id );
+	}
+
+	/**
+	 * Render the per-format summary, savings and details link for an attachment.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return void
+	 */
+	private static function render_summary( int $attachment_id ): void {
+		$totals = Attachment_Meta::get_totals( $attachment_id );
+		$record = Attachment_Meta::get( $attachment_id );
 
 		if ( 0 === $totals['files'] ) {
-			esc_html_e( 'Not yet', 'webberzone-image-optimizer' );
+			$status = Queue::get_status( $attachment_id );
+
+			if ( Queue::FAILED === $status ) {
+				echo '<span class="wzio-status-failed">' . esc_html__( 'Failed', 'webberzone-image-optimizer' ) . '</span>';
+			} elseif ( Queue::PENDING === $status || Queue::PROCESSING === $status ) {
+				esc_html_e( 'Queued', 'webberzone-image-optimizer' );
+			} elseif ( ! empty( $record['files'] ) ) {
+				esc_html_e( 'Original kept: no copy came out smaller', 'webberzone-image-optimizer' );
+			} else {
+				esc_html_e( 'Not yet optimized', 'webberzone-image-optimizer' );
+			}
+
+			if ( ! empty( $record['files'] ) ) {
+				echo '<br />';
+				self::render_details( $attachment_id, $record, $totals );
+			}
+
 			return;
 		}
 
 		$percent = $totals['source'] > 0 ? round( ( $totals['saved'] / $totals['source'] ) * 100 ) : 0;
 
+		echo '<div class="wzio-summary"><span class="dashicons dashicons-yes" aria-hidden="true"></span>';
+
+		foreach ( self::get_format_counts( $record ) as $format => $count ) {
+			printf(
+				'<span class="wzio-summary-line">%s</span>',
+				wp_kses(
+					sprintf(
+						/* translators: 1: number of image sizes, 2: format name such as WebP. */
+						_n( '%1$s size converted to %2$s', '%1$s sizes converted to %2$s', $count, 'webberzone-image-optimizer' ),
+						'<strong>' . (int) $count . '</strong>',
+						esc_html( self::get_format_label( $format ) )
+					),
+					array( 'strong' => array() )
+				)
+			);
+		}
+
 		printf(
-		/* translators: 1: number of files, 2: bytes saved, 3: percentage saved. */
-			esc_html__( '%1$d files, %2$s smaller (%3$d%%)', 'webberzone-image-optimizer' ),
-			(int) $totals['files'],
-			esc_html( Helpers::format_bytes( $totals['saved'] ) ),
-			(int) $percent
+			'<span class="wzio-summary-line">%s</span>',
+			esc_html(
+				sprintf(
+					/* translators: %d: percentage saved. */
+					__( 'Total savings %d%%', 'webberzone-image-optimizer' ),
+					(int) $percent
+				)
+			)
 		);
 
-		self::render_reduced_note( (int) $totals['reduced'], '<br /><span class="wzio-reduced-note">%s</span>' );
+		self::render_reduced_note( (int) $totals['reduced'], '<span class="wzio-reduced-note">%s</span>' );
+
+		self::render_details( $attachment_id, $record, $totals );
+
+		echo '</div>';
+	}
+
+	/**
+	 * Count the converted files per target format.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  array{files: array<string, array<string, mixed>>} $record Conversion record.
+	 * @return array<string, int> Format to number of converted files, only formats with at least one.
+	 */
+	private static function get_format_counts( array $record ): array {
+		$counts = array();
+
+		foreach ( Helpers::get_formats() as $format ) {
+			foreach ( $record['files'] as $file_record ) {
+				if ( Attachment_Meta::is_converted( $file_record, $format ) ) {
+					$counts[ $format ] = ( $counts[ $format ] ?? 0 ) + 1;
+				}
+			}
+		}
+
+		return $counts;
+	}
+
+	/**
+	 * Human-readable name for a target format.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  string $format Format slug.
+	 * @return string Label.
+	 */
+	private static function get_format_label( string $format ): string {
+		$labels = array(
+			'webp' => 'WebP',
+			'avif' => 'AVIF',
+		);
+
+		return $labels[ $format ] ?? strtoupper( $format );
+	}
+
+	/**
+	 * Render the "Details" link and the hidden per-size table it opens in a Thickbox.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  int                                                                         $attachment_id Attachment ID.
+	 * @param  array{updated: int, files: array<string, array<string, mixed>>}             $record        Conversion record.
+	 * @param  array{source: int, converted: int, saved: int, formats: array<string, int>} $totals        Totals.
+	 * @return void
+	 */
+	private static function render_details( int $attachment_id, array $record, array $totals ): void {
+		$box_id = 'wzio-details-' . $attachment_id;
+		$title  = sprintf(
+			/* translators: %s: file name. */
+			__( 'Optimization details for %s', 'webberzone-image-optimizer' ),
+			wp_basename( (string) get_attached_file( $attachment_id ) )
+		);
+		$formats = array();
+
+		// Only show formats that were attempted, so a disabled format adds no empty column.
+		foreach ( Helpers::get_formats() as $format ) {
+			foreach ( $record['files'] as $file_record ) {
+				if ( isset( $file_record[ $format ] ) ) {
+					$formats[] = $format;
+					break;
+				}
+			}
+		}
+
+		printf(
+			'<a href="%1$s" class="thickbox wzio-details-link" title="%2$s">%3$s</a>',
+			esc_url( '#TB_inline?width=760&height=560&inlineId=' . $box_id ),
+			esc_attr( $title ),
+			esc_html__( 'Details', 'webberzone-image-optimizer' )
+		);
+
+		$enabled_sizes = Converter::get_enabled_sizes();
+		$source_total  = 0;
+
+		foreach ( $record['files'] as $file_record ) {
+			$source_total += (int) ( $file_record['size'] ?? 0 );
+		}
+		?>
+		<div id="<?php echo esc_attr( $box_id ); ?>" hidden>
+			<div class="wzio-details">
+				<div class="wzio-details-table-wrap">
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th scope="col"><?php esc_html_e( 'Size', 'webberzone-image-optimizer' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Dimensions', 'webberzone-image-optimizer' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Original', 'webberzone-image-optimizer' ); ?></th>
+								<?php foreach ( $formats as $format ) : ?>
+									<th scope="col"><?php echo esc_html( self::get_format_label( $format ) ); ?></th>
+								<?php endforeach; ?>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( self::get_size_rows( $attachment_id ) as $row ) : ?>
+								<?php $file_record = $record['files'][ $row['file'] ] ?? array(); ?>
+								<tr>
+									<td><?php echo esc_html( $row['label'] ); ?></td>
+									<td><?php echo esc_html( $row['dimensions'] ); ?></td>
+									<?php if ( empty( $file_record ) ) : ?>
+										<td class="wzio-muted" colspan="<?php echo (int) ( count( $formats ) + 1 ); ?>">
+											<?php
+											echo ( '' !== $row['size'] && null !== $enabled_sizes && ! in_array( $row['size'], $enabled_sizes, true ) )
+												? esc_html__( 'Size not selected in settings', 'webberzone-image-optimizer' )
+												: esc_html__( 'Not converted', 'webberzone-image-optimizer' );
+											?>
+										</td>
+									<?php else : ?>
+										<?php $source = (int) ( $file_record['size'] ?? 0 ); ?>
+										<td><?php echo $source > 0 ? esc_html( Helpers::format_bytes( $source ) ) : '&#8212;'; ?></td>
+										<?php foreach ( $formats as $format ) : ?>
+											<?php self::render_format_cell( $file_record, $format, $source ); ?>
+										<?php endforeach; ?>
+									<?php endif; ?>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colspan="2"><?php esc_html_e( 'Combined', 'webberzone-image-optimizer' ); ?></td>
+								<td><?php echo esc_html( Helpers::format_bytes( $source_total ) ); ?></td>
+								<?php foreach ( $formats as $format ) : ?>
+									<td><?php echo isset( $totals['formats'][ $format ] ) ? esc_html( Helpers::format_bytes( (int) $totals['formats'][ $format ] ) ) : '&#8212;'; ?></td>
+								<?php endforeach; ?>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<?php if ( $totals['source'] > 0 ) : ?>
+					<p class="wzio-details-total">
+						<?php
+						printf(
+							/* translators: 1: percentage saved, 2: bytes saved. */
+							esc_html__( 'Total savings %1$d%% (%2$s)', 'webberzone-image-optimizer' ),
+							(int) round( ( $totals['saved'] / $totals['source'] ) * 100 ),
+							esc_html( Helpers::format_bytes( $totals['saved'] ) )
+						);
+						?>
+					</p>
+				<?php endif; ?>
+				<?php if ( $record['updated'] > 0 ) : ?>
+					<p class="wzio-details-updated">
+						<?php
+						printf(
+							/* translators: %s: human-readable time difference, such as "7 minutes". */
+							esc_html__( 'Last optimized %s ago.', 'webberzone-image-optimizer' ),
+							esc_html( human_time_diff( (int) $record['updated'] ) )
+						);
+						?>
+					</p>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render one format's cell in the details table.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  array<string, mixed> $file_record File record.
+	 * @param  string               $format      Format slug.
+	 * @param  int                  $source      Source file size in bytes.
+	 * @return void
+	 */
+	private static function render_format_cell( array $file_record, string $format, int $source ): void {
+		if ( Attachment_Meta::is_converted( $file_record, $format ) ) {
+			$bytes = (int) $file_record[ $format ]['bytes'];
+			$label = Helpers::format_bytes( $bytes );
+
+			if ( $source > 0 ) {
+				/* translators: 1: file size, 2: percentage saved. */
+				$label = sprintf( __( '%1$s (−%2$d%%)', 'webberzone-image-optimizer' ), $label, (int) round( ( max( 0, $source - $bytes ) / $source ) * 100 ) );
+			}
+
+			echo '<td>' . esc_html( $label ) . '</td>';
+			return;
+		}
+
+		$entry = (array) ( $file_record[ $format ] ?? array() );
+
+		if ( isset( $entry['error'] ) ) {
+			printf(
+				'<td class="wzio-status-failed" title="%1$s">%2$s</td>',
+				esc_attr( (string) $entry['error'] ),
+				esc_html__( 'Failed', 'webberzone-image-optimizer' )
+			);
+			return;
+		}
+
+		$reasons = array(
+			'larger'      => __( 'Larger than original', 'webberzone-image-optimizer' ),
+			'animated'    => __( 'Animated, skipped', 'webberzone-image-optimizer' ),
+			'unsupported' => __( 'Not supported', 'webberzone-image-optimizer' ),
+			'occupied'    => __( 'Name already in use', 'webberzone-image-optimizer' ),
+		);
+		$skip    = (string) ( $entry['skip'] ?? '' );
+
+		printf(
+			'<td class="wzio-muted">%s</td>',
+			isset( $reasons[ $skip ] ) ? esc_html( $reasons[ $skip ] ) : '&#8212;'
+		);
+	}
+
+	/**
+	 * List the original and each registered size of an attachment for the details table.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return array<int, array{label: string, size: string, file: string, dimensions: string}> Rows.
+	 */
+	private static function get_size_rows( int $attachment_id ): array {
+		$meta = wp_get_attachment_metadata( $attachment_id );
+		$meta = is_array( $meta ) ? $meta : array();
+		$main = (string) get_attached_file( $attachment_id );
+		$rows = array();
+
+		/** This filter is documented in wp-admin/includes/media.php */
+		$names = (array) apply_filters(
+			'image_size_names_choose',
+			array(
+				'thumbnail' => __( 'Thumbnail' ), // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
+				'medium'    => __( 'Medium' ), // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
+				'large'     => __( 'Large' ), // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
+			)
+		);
+
+		if ( '' !== $main ) {
+			$rows[] = array(
+				'label'      => __( 'Original', 'webberzone-image-optimizer' ),
+				'size'       => '',
+				'file'       => wp_basename( $main ),
+				'dimensions' => self::format_dimensions( $meta ),
+			);
+		}
+
+		foreach ( (array) ( $meta['sizes'] ?? array() ) as $size_name => $size ) {
+			if ( ! is_array( $size ) || empty( $size['file'] ) ) {
+				continue;
+			}
+
+			$rows[] = array(
+				'label'      => isset( $names[ $size_name ] ) ? (string) $names[ $size_name ] : (string) $size_name,
+				'size'       => (string) $size_name,
+				'file'       => wp_basename( (string) $size['file'] ),
+				'dimensions' => self::format_dimensions( $size ),
+			);
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Format width and height from image metadata.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  array<string, mixed> $data Metadata holding width and height.
+	 * @return string Dimensions, or an em dash when unknown.
+	 */
+	private static function format_dimensions( array $data ): string {
+		$width  = (int) ( $data['width'] ?? 0 );
+		$height = (int) ( $data['height'] ?? 0 );
+
+		return ( $width > 0 && $height > 0 ) ? $width . '×' . $height : '—';
 	}
 
 	/**
@@ -409,6 +742,10 @@ class Media_Library {
 		);
 
 		$record = Attachment_Meta::get( (int) $post->ID );
+
+		if ( self::can_retry( (int) $post->ID, $record ) ) {
+			$actions['wzio_retry'] = self::get_retry_link( (int) $post->ID );
+		}
 
 		if ( ! empty( $record['files'] ) ) {
 			$actions['wzio_restore'] = sprintf(
@@ -485,39 +822,12 @@ class Media_Library {
 			return;
 		}
 
-		$totals = Attachment_Meta::get_totals( $attachment_id );
 		$record = Attachment_Meta::get( $attachment_id );
 
 		echo '<div class="misc-pub-section misc-pub-wzio">';
 		echo '<strong>' . esc_html__( 'Image optimization', 'webberzone-image-optimizer' ) . '</strong><br />';
 
-		if ( 0 === $totals['files'] ) {
-			esc_html_e( 'Not yet optimized.', 'webberzone-image-optimizer' );
-		} else {
-			$percent = $totals['source'] > 0 ? round( ( $totals['saved'] / $totals['source'] ) * 100 ) : 0;
-
-			printf(
-			/* translators: 1: number of files, 2: bytes saved, 3: percentage saved. */
-				esc_html__( '%1$d files, %2$s smaller (%3$d%%).', 'webberzone-image-optimizer' ),
-				(int) $totals['files'],
-				esc_html( Helpers::format_bytes( $totals['saved'] ) ),
-				(int) $percent
-			);
-
-			self::render_reduced_note( (int) $totals['reduced'], '<br /><span class="wzio-reduced-note">%s</span>' );
-
-			if ( ! empty( $totals['formats'] ) ) {
-				echo '<ul class="wzio-submitbox-formats">';
-				foreach ( $totals['formats'] as $format => $bytes ) {
-					printf(
-						'<li>%1$s: %2$s</li>',
-						esc_html( strtoupper( $format ) ),
-						esc_html( Helpers::format_bytes( $bytes ) )
-					);
-				}
-				echo '</ul>';
-			}
-		}
+		self::render_summary( $attachment_id );
 
 		echo '<p class="wzio-submitbox-actions">';
 		printf(
@@ -526,6 +836,10 @@ class Media_Library {
 			(int) $attachment_id,
 			esc_html__( 'Optimize', 'webberzone-image-optimizer' )
 		);
+
+		if ( self::can_retry( $attachment_id, $record ) ) {
+			echo ' | ' . self::get_retry_link( $attachment_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
 
 		if ( ! empty( $record['files'] ) ) {
 			printf(
@@ -537,6 +851,36 @@ class Media_Library {
 		echo '</p>';
 
 		echo '</div>';
+	}
+
+	/**
+	 * Whether an attachment has skipped or failed copies worth another attempt.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  int                                               $attachment_id Attachment ID.
+	 * @param  array{files: array<string, array<string, mixed>>} $record        Conversion record.
+	 * @return bool True when a retry is offered.
+	 */
+	private static function can_retry( int $attachment_id, array $record ): bool {
+		return Attachment_Meta::count_retryable( $record ) > 0 || Queue::FAILED === Queue::get_status( $attachment_id );
+	}
+
+	/**
+	 * Build the Retry link, which the AJAX script runs with a retry flag.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return string Link markup.
+	 */
+	private static function get_retry_link( int $attachment_id ): string {
+		return sprintf(
+			'<a href="%1$s" class="wzio-optimize-attachment" data-id="%2$d" data-retry="1">%3$s</a>',
+			esc_url( self::get_action_url( 'wzio_retry_attachment', $attachment_id ) ),
+			$attachment_id,
+			esc_html__( 'Retry', 'webberzone-image-optimizer' )
+		);
 	}
 
 	/**
@@ -601,6 +945,27 @@ class Media_Library {
 	}
 
 	/**
+	 * Retry skipped and failed copies of one attachment as the no-JS fallback.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return void
+	 */
+	public function handle_retry(): void {
+		$attachment_id = $this->validate_action( 'wzio_retry_attachment' );
+
+		Attachment_Meta::clear_retryable( $attachment_id );
+
+		$outcome = Processor::process_attachment( $attachment_id, false );
+
+		if ( $outcome['locked'] ) {
+			$this->redirect_back( 'busy' );
+		}
+
+		$this->redirect_back( Queue::FAILED === $outcome['status'] ? 'failed' : 'optimized' );
+	}
+
+	/**
 	 * Convert the next file of an attachment over AJAX, one file per call.
 	 *
 	 * @since 1.0.0
@@ -617,6 +982,10 @@ class Media_Library {
 		}
 
 		if ( Queue::PROCESSING !== Queue::get_status( $attachment_id ) ) {
+			if ( ! empty( $_POST['retry'] ) ) {
+				Attachment_Meta::clear_retryable( $attachment_id );
+			}
+
 			Queue::add( array( $attachment_id ), true );
 
 			if ( null === Queue::claim_attachment( $attachment_id ) ) {

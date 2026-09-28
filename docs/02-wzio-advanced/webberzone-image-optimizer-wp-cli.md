@@ -44,7 +44,7 @@ Adds every unconverted attachment to the background queue, the same queue the Bu
 wp wzio queue
 ```
 
-- `--force` — re-queue attachments that already have a conversion record.
+- `--force` — re-queue attachments that already have a conversion record, and re-encode their copies when the queue processes them, the same as **Re-optimize images that are already done** on the Bulk Optimize screen.
 
 The scan walks the library in pages of 500 attachments with no time limit, unlike the Bulk Optimize screen, which has to build the queue across several time-bounded passes to stay inside the PHP request limit. Queuing also schedules the background worker, so the queue starts draining on its own if **Process the queue in the background** is enabled. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/).
 

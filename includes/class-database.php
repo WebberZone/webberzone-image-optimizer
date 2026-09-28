@@ -33,7 +33,7 @@ class Database {
 	 * @since 1.0.0
 	 * @var   string
 	 */
-	const VERSION = '1.2';
+	const VERSION = '1.3';
 
 	/**
 	 * Memoised table existence checks, keyed by table name.
@@ -74,6 +74,7 @@ class Database {
 			attachment_id bigint(20) UNSIGNED NOT NULL,
 			status varchar(20) NOT NULL DEFAULT 'pending',
 			attempts tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+			reencode tinyint(1) UNSIGNED NOT NULL DEFAULT 0,
 			source_bytes bigint(20) NOT NULL DEFAULT 0,
 			saved bigint(20) NOT NULL DEFAULT 0,
 			error varchar(255) NOT NULL DEFAULT '',

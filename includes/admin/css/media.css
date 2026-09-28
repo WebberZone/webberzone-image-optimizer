@@ -1,0 +1,79 @@
+.wzio-optimize-error,
+.wzio-status-failed {
+	color: #b32d2e;
+}
+
+.wzio-summary {
+	margin: 0;
+	padding-left: 22px;
+	position: relative;
+	line-height: 1.6;
+}
+
+.wzio-summary .dashicons {
+	position: absolute;
+	left: 0;
+	top: 1px;
+	color: #00a32a;
+}
+
+.wzio-summary-line {
+	display: block;
+}
+
+.wzio-reduced-note {
+	display: block;
+	color: #646970;
+	font-size: 12px;
+}
+
+.wzio-details {
+	padding: 4px 2px 16px;
+}
+
+.wzio-details h2 {
+	margin: 12px 0 16px;
+	font-size: 1.3em;
+	word-break: break-all;
+}
+
+.wzio-details-table-wrap {
+	overflow-x: auto;
+}
+
+.wzio-details table {
+	width: 100%;
+}
+
+.wzio-details td.wzio-muted {
+	color: #646970;
+	font-style: italic;
+}
+
+.wzio-details tfoot td {
+	font-weight: 600;
+}
+
+.wzio-details-total {
+	font-weight: 600;
+	margin: 16px 0 4px;
+}
+
+.wzio-details-updated {
+	color: #646970;
+	margin: 0;
+}
+
+.misc-pub-section.misc-pub-wzio {
+	border-top: 1px solid #dcdcde;
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+.misc-pub-wzio .wzio-summary {
+	margin: 6px 0;
+}
+
+.misc-pub-wzio .wzio-submitbox-actions {
+	margin: 8px 0 0;
+}

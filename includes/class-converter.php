@@ -129,7 +129,7 @@ class Converter {
 
 		$record       = Attachment_Meta::get( $attachment_id );
 		$deadline     = (float) ( $args['deadline'] ?? 0 );
-		$use_progress = 0 < $deadline && empty( $args['force'] );
+		$use_progress = 0 < $deadline;
 		$context      = '';
 		$processed    = array();
 		$complete     = true;
@@ -340,12 +340,25 @@ class Converter {
 	 */
 	private static function file_is_settled( array $existing, array $formats ): bool {
 		foreach ( $formats as $format ) {
-			if ( ! isset( $existing[ $format ] ) ) {
+			if ( ! isset( $existing[ $format ] ) || self::is_stale_skip( (array) $existing[ $format ], $format ) ) {
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Whether a skip recorded because no encoder was available can now be retried.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param  array<string, mixed> $entry  Stored format entry.
+	 * @param  string               $format Target format slug.
+	 * @return bool True when an encoder for the format is now available.
+	 */
+	private static function is_stale_skip( array $entry, string $format ): bool {
+		return 'unsupported' === ( $entry['skip'] ?? '' ) && null !== Capabilities::get_driver( $format );
 	}
 
 	/**
@@ -379,6 +392,7 @@ class Converter {
 			'effort_webp'    => (int) ( $args['effort_webp'] ?? 6 ),
 			'effort_avif'    => (int) ( $args['effort_avif'] ?? 4 ),
 			'sidecar_naming' => (string) \wzio_get_option( 'sidecar_naming', 'append' ),
+			'force'          => ! empty( $args['force'] ),
 		);
 
 		return hash( 'sha256', (string) wp_json_encode( $context ) );
@@ -496,6 +510,7 @@ class Converter {
 			if ( empty( $args['force'] )
 				&& isset( $existing[ $format ]['skip'] )
 				&& ! self::skip_predates_retry( $existing[ $format ], $lossless, $png_lossy )
+				&& ! self::is_stale_skip( $existing[ $format ], $format )
 			) {
 				$record[ $format ] = $existing[ $format ];
 				continue;

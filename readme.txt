@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -109,6 +109,26 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.1.2 =
+
+Release date: 28 September 2026
+
+**Added**
+
+* Redesigned Optimized column in the Media Library: converted sizes per format, total savings and a Details link that opens a per-size table showing original size, WebP and AVIF sizes, and why any size was skipped.
+* Retry action in the Media Library and the Edit Media Save box for images with skipped or failed copies. It clears those results and converts the image again.
+* Retry skipped and failed images checkbox on the Bulk Optimize screen, which does the same for every affected image in one run.
+
+**Changed**
+
+* The Image optimization section in the Edit Media Save box now sits below the file details and uses the same summary and Details table.
+* Images with no optimized copy now show Failed, Queued or Original kept in the Optimized column instead of Not yet.
+
+**Fixed**
+
+* Images processed while no encoder was available were marked Not supported permanently, so neither Optimize nor the bulk scan converted them once an encoder became available. They are now retried, and affected images are queued again automatically.
+* Re-optimize images that are already done on the Bulk Optimize screen, and `wp wzio queue --force`, queued finished images again but the queue then kept their existing copies and recorded skips, so nothing was re-encoded. Queued images are now re-encoded as intended.
+
 = 1.1.1 =
 
 Release date: 28 September 2026
@@ -164,6 +184,9 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
 For the changelog of earlier versions, please refer to the [releases page on GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases).
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+A clearer Optimized column with a per-size Details table, a Retry action, and a fix for images stuck as Not supported after an encoder became available.
 
 = 1.1.1 =
 PNGs that lossless WebP could not shrink now get a lossy WebP copy at a quality you control, and earlier skips are retried automatically. Also fixes a stale Already optimized count and a fatal error when saving corrupted settings.

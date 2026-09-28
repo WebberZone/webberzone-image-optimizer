@@ -68,15 +68,18 @@ class Queue {
 	const MAX_ATTEMPTS = 3;
 
 	/**
-	 * Add attachments, resetting existing rows only when forced.
+	 * Add attachments, resetting existing rows only when requeued.
 	 *
 	 * @since 1.0.0
 	 *
 	 * @param  array<int, int> $attachment_ids Attachment IDs.
-	 * @param  bool            $force          Whether to requeue rows that already finished.
+	 * @since 1.1.2 Added the `$reencode` parameter.
+	 *
+	 * @param  bool            $requeue        Whether to requeue rows that already finished.
+	 * @param  bool            $reencode       Whether the next pass should re-encode copies that are already up to date.
 	 * @return int Number of rows written.
 	 */
-	public static function add( array $attachment_ids, bool $force = false ): int {
+	public static function add( array $attachment_ids, bool $requeue = false, bool $reencode = false ): int {
 		global $wpdb;
 
 		$attachment_ids = array_values( array_unique( array_filter( array_map( 'intval', $attachment_ids ) ) ) );
@@ -90,15 +93,19 @@ class Queue {
 		$rows  = array();
 
 		foreach ( $attachment_ids as $id ) {
-			$rows[] = $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s)', $id, self::PENDING, '', $now, $now );
+			$rows[] = $reencode
+				? $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s, 1)', $id, self::PENDING, '', $now, $now )
+				: $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s)', $id, self::PENDING, '', $now, $now );
 		}
 
 		$values = implode( ',', $rows );
 
-		$sql = "INSERT INTO `{$table}` (attachment_id, status, attempts, saved, error, created, updated) VALUES {$values} ";
+		// Only name the column when it is needed, so a queue write before the schema upgrade still succeeds.
+		$columns = $reencode ? ', reencode' : '';
+		$sql     = "INSERT INTO `{$table}` (attachment_id, status, attempts, saved, error, created, updated{$columns}) VALUES {$values} ";
 
-		if ( $force ) {
-			$sql .= 'ON DUPLICATE KEY UPDATE status = VALUES(status), attempts = 0, error = VALUES(error), updated = VALUES(updated)';
+		if ( $requeue ) {
+			$sql .= 'ON DUPLICATE KEY UPDATE status = VALUES(status), attempts = 0, error = VALUES(error), updated = VALUES(updated)' . ( $reencode ? ', reencode = 1' : '' );
 		} else {
 			// Touching `id` is the standard no-op that keeps a duplicate from erroring.
 			$sql .= 'ON DUPLICATE KEY UPDATE id = id';
@@ -294,10 +301,11 @@ class Queue {
          // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 			$wpdb->query(
 				$wpdb->prepare(
-					"UPDATE `{$table}` SET status = %s, attempts = attempts + 1, error = %s, updated = %s WHERE id = %d",
+					"UPDATE `{$table}` SET status = %s, attempts = attempts + 1, error = %s, updated = %s, reencode = IF( %s = 'pending', reencode, 0 ) WHERE id = %d",
 					$status,
 					mb_substr( $error, 0, 250 ),
 					current_time( 'mysql' ),
+					$status,
 					$id
 				)
 			);
@@ -317,9 +325,10 @@ class Queue {
 				'saved'        => $saved,
 				'error'        => mb_substr( $error, 0, 250 ),
 				'updated'      => current_time( 'mysql' ),
+				'reencode'     => 0,
 			),
 			array( 'id' => $id ),
-			array( '%s', '%d', '%d', '%s', '%s' ),
+			array( '%s', '%d', '%d', '%s', '%s', '%d' ),
 			array( '%d' )
 		);
 
@@ -556,6 +565,28 @@ class Queue {
 		$wpdb->delete( $table, array( 'status' => self::PROCESSING ), array( '%s' ) );
 
 		self::flush_counts();
+	}
+
+	/**
+	 * Get the IDs of every attachment whose row failed.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return array<int, int> Attachment IDs.
+	 */
+	public static function get_failed_ids(): array {
+		global $wpdb;
+
+		if ( ! Database::is_installed() ) {
+			return array();
+		}
+
+		$table = Database::get_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+		$ids = $wpdb->get_col( $wpdb->prepare( "SELECT attachment_id FROM `{$table}` WHERE status = %s", self::FAILED ) );
+
+		return array_map( 'intval', (array) $ids );
 	}
 
 	/**

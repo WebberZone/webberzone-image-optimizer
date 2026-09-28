@@ -232,6 +232,10 @@ class Bulk_Page {
 					<input type="checkbox" id="wzio-force" />
 		<?php esc_html_e( 'Re-optimize images that are already done', 'webberzone-image-optimizer' ); ?>
 				</label>
+				<label class="wzio-force">
+					<input type="checkbox" id="wzio-retry" />
+					<?php esc_html_e( 'Retry skipped and failed images', 'webberzone-image-optimizer' ); ?>
+				</label>
 			</p>
 
 		<?php $failures = Queue::get_failures(); ?>
@@ -354,10 +358,16 @@ class Bulk_Page {
      // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$force = isset( $_POST['force'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['force'] ) );
      // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$retry = isset( $_POST['retry'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['retry'] ) );
+     // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$after_id = isset( $_POST['after_id'] ) ? absint( wp_unslash( $_POST['after_id'] ) ) : 0;
 
 		if ( 0 === $after_id ) {
 			Scanner::flush_counts();
+
+			if ( $retry ) {
+				Scanner::requeue_retryable();
+			}
 		}
 
 		$pass = Scanner::enqueue_batch( $after_id, $force );

@@ -64,12 +64,20 @@ class Capabilities {
 
 		$report = $force ? false : get_option( self::OPTION );
 
+		$probed = false;
+
 		if ( ! is_array( $report ) || ( $report['version'] ?? '' ) !== WZIO_VERSION ) {
 			$report = self::probe();
+			$probed = true;
 			update_option( self::OPTION, $report, false );
 		}
 
 		self::$cache = $report;
+
+		// A fresh probe may have found an encoder that earlier runs lacked.
+		if ( $probed && ! empty( $report['formats'] ) ) {
+			Scanner::requeue_unsupported_skips();
+		}
 
 		return $report;
 	}
