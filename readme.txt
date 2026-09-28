@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -109,6 +109,16 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.1.1 =
+
+Release date: 28 September 2026
+
+**Fixed**
+
+* The Already optimized count on the Bulk Optimize screen could stay at its old value after the background queue finished, while Bandwidth saved had already updated.
+* Saving settings caused a fatal error when the stored settings option held something other than an array.
+* The hook registry used `spl_object_hash()`, which is deprecated in PHP 8.6.
+
 = 1.1.0 =
 
 Release date: 12 September 2026
@@ -151,5 +161,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.1.0 =
-Responsive images now use eligible optimized sizes while preserving the original set's smallest and largest coverage. Bulk Optimize detects a stalled worker, and lossy conversions get a lower-quality retry. Includes security hardening.
+= 1.1.1 =
+Fixes the Already optimized count on the Bulk Optimize screen staying stale after the background queue finishes, and a fatal error when saving corrupted settings.
