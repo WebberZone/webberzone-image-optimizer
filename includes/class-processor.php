@@ -150,6 +150,10 @@ class Processor {
 			self::maybe_schedule();
 		} else {
 			self::unschedule();
+
+			if ( $result['processed'] > 0 ) {
+				Scanner::flush_counts();
+			}
 		}
 
 		return $result;
