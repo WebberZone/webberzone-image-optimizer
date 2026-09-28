@@ -113,6 +113,10 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 Release date: 28 September 2026
 
+**Added**
+
+* PNG lossy fallback quality setting. A PNG whose lossless WebP copy misses the minimum saving is tried once more as lossy WebP at this quality, default 95. PNGs skipped earlier are queued again automatically.
+
 **Fixed**
 
 * The Already optimized count on the Bulk Optimize screen could stay at its old value after the background queue finished, while Bandwidth saved had already updated.
@@ -162,4 +166,4 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 == Upgrade Notice ==
 
 = 1.1.1 =
-Fixes the Already optimized count on the Bulk Optimize screen staying stale after the background queue finishes, and a fatal error when saving corrupted settings.
+PNGs that lossless WebP could not shrink now get a lossy WebP copy at a quality you control, and earlier skips are retried automatically. Also fixes a stale Already optimized count and a fatal error when saving corrupted settings.
