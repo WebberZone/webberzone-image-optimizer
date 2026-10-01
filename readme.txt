@@ -109,6 +109,27 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.2.0 =
+
+Release date: Unreleased
+
+**Added**
+
+* Compress original images: an opt-in setting that recompresses served JPEG files (and PNG files when pngquant or oxipng is available) in place. Every file is backed up first, the backup is never overwritten, and Restore originals brings back the file and its dimensions from the Media Library, the Edit Media Save box and `wp wzio restore-originals`. Also available as `wp wzio compress`.
+* Maximum image dimension setting, which filters `big_image_size_threshold` for new uploads. WordPress keeps the unscaled upload, and scaling can be disabled entirely.
+* Resize existing originals: shrinks the served main file of existing images to the maximum dimension before compression, with the previous dimensions and sub-sizes stored for restore. Use `wp wzio compress --resize`.
+* Bulk Optimize and `wp wzio status` report original bytes saved, backup disk usage and the number of images resized separately from WebP and AVIF savings.
+* Warning when another image optimizer is active, since compressing the same originals twice degrades quality.
+
+**Changed**
+
+* Originals are modified only when Compress original images is enabled, always with a verified backup and a restore path. The unscaled WordPress original is never touched.
+* Uninstalling keeps the backups by default. Enable Delete original backups on uninstall to remove them.
+
+**Fixed**
+
+* Per-attachment lock files in the backup folder are now removed when the operation finishes instead of accumulating.
+
 = 1.1.2 =
 
 Release date: 28 September 2026

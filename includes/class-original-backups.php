@@ -116,20 +116,32 @@ class Original_Backups {
 			return $root;
 		}
 		$path = $root . '/attachment-' . $id . '.lock';
-		if ( is_link( $path ) ) {
-			return new \WP_Error( 'wzio_original_locked', __( 'This attachment cannot be locked safely.', 'webberzone-image-optimizer' ) );
-		}
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-		$handle = fopen( $path, 'c' );
-		if ( false === $handle ) {
-			return new \WP_Error( 'wzio_original_locked', __( 'This attachment could not be locked.', 'webberzone-image-optimizer' ) );
-		}
-		if ( ! flock( $handle, LOCK_EX | LOCK_NB ) ) {
-            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		for ( $attempt = 0; $attempt < 3; $attempt++ ) {
+			if ( is_link( $path ) ) {
+				return new \WP_Error( 'wzio_original_locked', __( 'This attachment cannot be locked safely.', 'webberzone-image-optimizer' ) );
+			}
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+			$handle = fopen( $path, 'c' );
+			if ( false === $handle ) {
+				return new \WP_Error( 'wzio_original_locked', __( 'This attachment could not be locked.', 'webberzone-image-optimizer' ) );
+			}
+			if ( ! flock( $handle, LOCK_EX | LOCK_NB ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+				fclose( $handle );
+				return new \WP_Error( 'wzio_original_locked', __( 'Another operation is processing this attachment.', 'webberzone-image-optimizer' ) );
+			}
+			clearstatcache( true, $path );
+			$held = fstat( $handle );
+			$disk = @stat( $path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			// A releasing process unlinks the file while holding the lock, so a stale inode means we locked a deleted file.
+			if ( $held && $disk && $held['ino'] === $disk['ino'] ) {
+				return $handle;
+			}
+			flock( $handle, LOCK_UN );
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			fclose( $handle );
-			return new \WP_Error( 'wzio_original_locked', __( 'Another operation is processing this attachment.', 'webberzone-image-optimizer' ) );
 		}
-		return $handle;
+		return new \WP_Error( 'wzio_original_locked', __( 'This attachment could not be locked.', 'webberzone-image-optimizer' ) );
 	}
 
 	/**
@@ -158,6 +170,10 @@ class Original_Backups {
 	 * @return void
 	 */
 	public static function release( $handle ): void {
+		$meta = stream_get_meta_data( $handle );
+		if ( ! empty( $meta['uri'] ) && ! is_link( $meta['uri'] ) ) {
+			@unlink( $meta['uri'] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.WP.AlternativeFunctions.unlink_unlink
+		}
 		flock( $handle, LOCK_UN );
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		fclose( $handle );
