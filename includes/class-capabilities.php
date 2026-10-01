@@ -326,5 +326,44 @@ class Capabilities {
 	public static function flush(): void {
 		self::$cache = null;
 		delete_option( self::OPTION );
+		delete_option( 'wzio_original_capabilities' );
+	}
+	/**
+	 * Verify original encoders separately from delivery formats.
+	 *
+	 * @param bool $force Refresh cached probes.
+	 * @return array{jpeg: bool, png: bool} Original encoders.
+	 */
+	public static function get_originals( bool $force = false ): array {
+		$tool   = Original_Tools::find();
+		$key    = ( defined( 'WZIO_VERSION' ) ? WZIO_VERSION : '1.2.0' ) . ':' . $tool['path'] . ':' . ( class_exists( '\\Imagick' ) ? 'imagick' : 'gd' );
+		$cached = get_option( 'wzio_original_capabilities' );
+		if ( ! $force && is_array( $cached ) && ( $cached['key'] ?? '' ) === $key ) {
+			return $cached['encoders'];
+		}
+		$encoders = array(
+			'jpeg' => false,
+			'png'  => false,
+		);
+		$source   = self::write_probe_image();
+		if ( '' !== $source ) {
+			$driver = new \WebberZone\Image_Optimizer\Drivers\Original_Driver();
+			foreach ( array( 'jpeg', 'png' ) as $format ) {
+				$destination         = $source . '.' . $format;
+				$result              = $driver->convert( $source, $destination, $format, array() );
+				$encoders[ $format ] = ! is_wp_error( $result );
+				wp_delete_file( $destination );
+			}
+			wp_delete_file( $source );
+		}
+		update_option(
+			'wzio_original_capabilities',
+			array(
+				'key'      => $key,
+				'encoders' => $encoders,
+			),
+			false
+		);
+		return $encoders;
 	}
 }

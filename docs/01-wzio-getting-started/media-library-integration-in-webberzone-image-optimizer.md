@@ -55,3 +55,11 @@ All three actions require the `edit_post` capability for that attachment and sho
 ## The attachment edit screen
 
 Opening a single attachment (**Media → Library** → click an image) shows the same summary at the bottom of the Save box, below the file details, including the **Details** link. The **Optimize**, **Retry** and **Delete optimized copies** links are there too, so you can convert or restore one image without going back to the list view.
+
+## Original compression and restore
+
+When original compression is enabled, the Optimized column adds the number of compressed sizes and any main-file dimension change. **Details** includes a **Compressed** column with before/after bytes or the reason the original was kept.
+
+**Restore originals** appears in row actions and the Save box while backups exist. It is also available as a Media Library bulk action. It restores files and dimensions, removes successfully restored backups and queues modern copies for regeneration without immediately compressing the originals again. **Delete optimized copies** continues to remove sidecars only and keeps these backups.
+
+An explicit per-image **Optimize** action can compress a restored attachment again. See [Compressing and Restoring Original Images](https://webberzone.com/support/knowledgebase/compressing-and-restoring-original-images/).

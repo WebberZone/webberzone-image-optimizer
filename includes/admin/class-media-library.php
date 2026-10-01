@@ -8,7 +8,10 @@
 namespace WebberZone\Image_Optimizer\Admin;
 
 use WebberZone\Image_Optimizer\Attachment_Meta;
+use WebberZone\Image_Optimizer\Original_Backups;
+use WebberZone\Image_Optimizer\Original_Optimizer;
 use WebberZone\Image_Optimizer\Converter;
+use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
@@ -57,6 +60,7 @@ class Media_Library {
 		Hook_Registry::add_action( 'pre_get_posts', array( $this, 'filter_by_status' ) );
 		Hook_Registry::add_filter( 'posts_where', array( $this, 'filter_attachments_by_status' ), 10, 2 );
 		Hook_Registry::add_action( 'admin_post_wzio_optimize_attachment', array( $this, 'handle_optimize' ) );
+		Hook_Registry::add_action( 'admin_post_wzio_restore_originals', array( $this, 'handle_restore_originals' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_restore_attachment', array( $this, 'handle_restore' ) );
 		Hook_Registry::add_action( 'admin_post_wzio_retry_attachment', array( $this, 'handle_retry' ) );
 		Hook_Registry::add_action( 'wp_ajax_wzio_optimize_attachment', array( $this, 'ajax_optimize' ) );
@@ -128,6 +132,21 @@ class Media_Library {
 	 * @return void
 	 */
 	public function render_notice(): void {
+		$screen = get_current_screen();
+		if ( $screen && current_user_can( 'manage_options' ) && \wzio_get_option( 'compress_originals', false ) && ( 'upload' === $screen->id || false !== strpos( $screen->id, 'wzio' ) ) ) {
+			$plugins = array_merge( (array) get_option( 'active_plugins', array() ), array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
+			foreach ( $plugins as $plugin ) {
+				if ( preg_match( '~^(tiny-compress-images|shortpixel-image-optimiser|imagify|ewww-image-optimizer|wp-smushit)/~', $plugin ) ) {
+					echo '<div class="notice notice-warning"><p>' . esc_html__( 'Another image optimizer is active. Enable original compression in only one optimizer to avoid repeated quality loss.', 'webberzone-image-optimizer' ) . '</p></div>';
+					break;
+				}
+			}
+			$encoders = Capabilities::get_originals();
+			if ( ! $encoders['jpeg'] || ! $encoders['png'] ) {
+				printf( '<div class="notice notice-info"><p>%s</p></div>', esc_html( sprintf( __( 'Original compression availability: JPEG %1$s; PNG %2$s. Unsupported originals are left unchanged.', 'webberzone-image-optimizer' ), $encoders['jpeg'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ), $encoders['png'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ) ) ) );
+			}
+		}
+
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['wzio_bulk_restored'] ) ) {
 			$count = absint( wp_unslash( $_GET['wzio_bulk_restored'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -148,10 +167,11 @@ class Media_Library {
 		$message = isset( $_GET['wzio_message'] ) ? sanitize_key( wp_unslash( $_GET['wzio_message'] ) ) : '';
 
 		$notices = array(
-			'optimized' => array( 'success', __( 'Optimized copies regenerated. The original image was not modified.', 'webberzone-image-optimizer' ) ),
-			'restored'  => array( 'success', __( 'Optimized copies deleted. The original image is untouched and is being served again.', 'webberzone-image-optimizer' ) ),
-			'failed'    => array( 'error', __( 'That image could not be optimized. Check the Bulk Optimize screen for the reason.', 'webberzone-image-optimizer' ) ),
-			'busy'      => array( 'warning', __( 'Another optimization run is in progress, so this image was left alone. Try again in a moment.', 'webberzone-image-optimizer' ) ),
+			'originals_restored' => array( 'success', __( 'Original files and dimensions restored. Modern copies will be rebuilt without recompressing originals.', 'webberzone-image-optimizer' ) ),
+			'optimized'          => array( 'success', __( 'Image optimization completed.', 'webberzone-image-optimizer' ) ),
+			'restored'           => array( 'success', __( 'Optimized copies deleted. The original image is untouched and is being served again.', 'webberzone-image-optimizer' ) ),
+			'failed'             => array( 'error', __( 'That image could not be optimized. Check the Bulk Optimize screen for the reason.', 'webberzone-image-optimizer' ) ),
+			'busy'               => array( 'warning', __( 'Another optimization run is in progress, so this image was left alone. Try again in a moment.', 'webberzone-image-optimizer' ) ),
 		);
 
 		if ( ! isset( $notices[ $message ] ) ) {
@@ -359,6 +379,17 @@ class Media_Library {
 	 * @return void
 	 */
 	private static function render_summary( int $attachment_id ): void {
+		$originals       = Original_Backups::get( $attachment_id );
+		$original_totals = Original_Backups::totals( $originals );
+		if ( $original_totals['compressed'] ) {
+			printf( '<span class="wzio-summary-line">%s</span>', esc_html( sprintf( _n( '%d size compressed', '%d sizes compressed', $original_totals['compressed'], 'webberzone-image-optimizer' ), $original_totals['compressed'] ) ) );
+			foreach ( $originals as $entry ) {
+				if ( ! empty( $entry['resized'] ) ) {
+					printf( '<span class="wzio-summary-line">%s</span>', esc_html( implode( '×', $entry['resized']['from'] ) . ' → ' . implode( '×', $entry['resized']['to'] ) ) );
+				}
+			}
+		}
+
 		$totals = Attachment_Meta::get_totals( $attachment_id );
 		$record = Attachment_Meta::get( $attachment_id );
 
@@ -511,6 +542,7 @@ class Media_Library {
 								<th scope="col"><?php esc_html_e( 'Size', 'webberzone-image-optimizer' ); ?></th>
 								<th scope="col"><?php esc_html_e( 'Dimensions', 'webberzone-image-optimizer' ); ?></th>
 								<th scope="col"><?php esc_html_e( 'Original', 'webberzone-image-optimizer' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Compressed', 'webberzone-image-optimizer' ); ?></th>
 								<?php foreach ( $formats as $format ) : ?>
 									<th scope="col"><?php echo esc_html( self::get_format_label( $format ) ); ?></th>
 								<?php endforeach; ?>
@@ -523,7 +555,7 @@ class Media_Library {
 									<td><?php echo esc_html( $row['label'] ); ?></td>
 									<td><?php echo esc_html( $row['dimensions'] ); ?></td>
 									<?php if ( empty( $file_record ) ) : ?>
-										<td class="wzio-muted" colspan="<?php echo (int) ( count( $formats ) + 1 ); ?>">
+										<td class="wzio-muted" colspan="<?php echo (int) ( count( $formats ) + 2 ); ?>">
 											<?php
 											echo ( '' !== $row['size'] && null !== $enabled_sizes && ! in_array( $row['size'], $enabled_sizes, true ) )
 												? esc_html__( 'Size not selected in settings', 'webberzone-image-optimizer' )
@@ -533,6 +565,7 @@ class Media_Library {
 									<?php else : ?>
 										<?php $source = (int) ( $file_record['size'] ?? 0 ); ?>
 										<td><?php echo $source > 0 ? esc_html( Helpers::format_bytes( $source ) ) : '&#8212;'; ?></td>
+									<td><?php echo esc_html( self::original_label( (array) ( $file_record['original'] ?? array() ) ) ); ?></td>
 										<?php foreach ( $formats as $format ) : ?>
 											<?php self::render_format_cell( $file_record, $format, $source ); ?>
 										<?php endforeach; ?>
@@ -544,6 +577,7 @@ class Media_Library {
 							<tr>
 								<td colspan="2"><?php esc_html_e( 'Combined', 'webberzone-image-optimizer' ); ?></td>
 								<td><?php echo esc_html( Helpers::format_bytes( $source_total ) ); ?></td>
+								<td>&#8212;</td>
 								<?php foreach ( $formats as $format ) : ?>
 									<td><?php echo isset( $totals['formats'][ $format ] ) ? esc_html( Helpers::format_bytes( (int) $totals['formats'][ $format ] ) ) : '&#8212;'; ?></td>
 								<?php endforeach; ?>
@@ -741,6 +775,9 @@ class Media_Library {
 			esc_html__( 'Optimize', 'webberzone-image-optimizer' )
 		);
 
+		if ( Original_Backups::get( (int) $post->ID ) ) {
+			$actions['wzio_restore_originals'] = sprintf( '<a href="%s">%s</a>', esc_url( self::get_action_url( 'wzio_restore_originals', (int) $post->ID ) ), esc_html__( 'Restore originals', 'webberzone-image-optimizer' ) );
+		}
 		$record = Attachment_Meta::get( (int) $post->ID );
 
 		if ( self::can_retry( (int) $post->ID, $record ) ) {
@@ -767,7 +804,8 @@ class Media_Library {
 	 * @return array<string, string> Bulk actions.
 	 */
 	public function add_bulk_actions( $actions ) {
-		$actions['wzio_restore'] = esc_html__( 'Delete optimized copies', 'webberzone-image-optimizer' );
+		$actions['wzio_restore_originals'] = esc_html__( 'Restore originals', 'webberzone-image-optimizer' );
+		$actions['wzio_restore']           = esc_html__( 'Delete optimized copies', 'webberzone-image-optimizer' );
 
 		return $actions;
 	}
@@ -783,6 +821,21 @@ class Media_Library {
 	 * @return string Redirect URL.
 	 */
 	public function handle_bulk_restore( $redirect_to, $doaction, $post_ids ) {
+		if ( 'wzio_restore_originals' === $doaction ) {
+			check_admin_referer( 'bulk-media' );
+			$failed = false;
+			foreach ( $post_ids as $post_id ) {
+				$post_id = (int) $post_id;
+				if ( ! current_user_can( 'edit_post', $post_id ) ) {
+					$failed = true;
+					continue;
+				}
+				if ( Original_Backups::get( $post_id ) && is_wp_error( Original_Optimizer::restore( $post_id ) ) ) {
+					$failed = true;
+				}
+			}
+			return add_query_arg( 'wzio_message', $failed ? 'failed' : 'originals_restored', $redirect_to );
+		}
 		if ( 'wzio_restore' !== $doaction ) {
 			return $redirect_to;
 		}
@@ -830,6 +883,9 @@ class Media_Library {
 		self::render_summary( $attachment_id );
 
 		echo '<p class="wzio-submitbox-actions">';
+		if ( Original_Backups::get( $attachment_id ) && current_user_can( 'edit_post', $attachment_id ) ) {
+			printf( '<a href="%s">%s</a> | ', esc_url( self::get_action_url( 'wzio_restore_originals', $attachment_id ) ), esc_html__( 'Restore originals', 'webberzone-image-optimizer' ) );
+		}
 		printf(
 			'<a href="%s" class="wzio-optimize-attachment" data-id="%d">%s</a>',
 			esc_url( self::get_action_url( 'wzio_optimize_attachment', $attachment_id ) ),
@@ -935,6 +991,7 @@ class Media_Library {
 	public function handle_optimize(): void {
 		$attachment_id = $this->validate_action( 'wzio_optimize_attachment' );
 
+		delete_post_meta( $attachment_id, '_wzio_originals_restored' );
 		$outcome = Processor::process_attachment( $attachment_id, false );
 
 		if ( $outcome['locked'] ) {
@@ -981,7 +1038,11 @@ class Media_Library {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to optimize this image.', 'webberzone-image-optimizer' ) ), 403 );
 		}
 
+		$explicit = false;
+
 		if ( Queue::PROCESSING !== Queue::get_status( $attachment_id ) ) {
+			$explicit = true;
+			delete_post_meta( $attachment_id, '_wzio_originals_restored' );
 			if ( ! empty( $_POST['retry'] ) ) {
 				Attachment_Meta::clear_retryable( $attachment_id );
 			}
@@ -993,7 +1054,7 @@ class Media_Library {
 			}
 		}
 
-		$step = Converter::convert_next_file( $attachment_id );
+		$step = Converter::convert_next_file( $attachment_id, $explicit ? array( 'originals_explicit' => true ) : array() );
 
 		if ( is_wp_error( $step ) ) {
 			Queue::complete( Queue::get_id( $attachment_id ), Queue::FAILED, 0, $step->get_error_message() );
@@ -1037,5 +1098,46 @@ class Media_Library {
 
 		wp_safe_redirect( add_query_arg( 'wzio_message', $message, $target ) );
 		exit;
+	}
+	/**
+	 * Restore originals for one authorized attachment.
+	 *
+	 * @return void
+	 */
+	public function handle_restore_originals(): void {
+		$id     = $this->validate_action( 'wzio_restore_originals' );
+		$result = Original_Optimizer::restore( $id );
+		if ( is_wp_error( $result ) ) {
+			wp_die( esc_html( $result->get_error_message() ) );
+		}
+		$this->redirect_back( 'originals_restored' );
+	}
+
+	/**
+	 * Format original-file compression and resize details.
+	 *
+	 * @param array $entry Original result.
+	 * @return string Label.
+	 */
+	private static function original_label( array $entry ): string {
+		if ( isset( $entry['error'] ) ) {
+			return (string) $entry['error'];
+		}
+		if ( ! isset( $entry['after'], $entry['before'] ) ) {
+			$reasons = array(
+				'quality'     => __( 'Already at target quality', 'webberzone-image-optimizer' ),
+				'larger'      => __( 'Minimum saving not met', 'webberzone-image-optimizer' ),
+				'unsupported' => __( 'Compression unavailable', 'webberzone-image-optimizer' ),
+			);
+			return $reasons[ $entry['skip'] ?? '' ] ?? '—';
+		}
+		$label = Helpers::format_bytes( (int) $entry['before'] ) . ' → ' . Helpers::format_bytes( (int) $entry['after'] );
+		if ( (int) $entry['before'] > 0 ) {
+			$label .= ' (−' . (int) round( 100 * max( 0, $entry['before'] - $entry['after'] ) / $entry['before'] ) . '%)';
+		}
+		if ( ! empty( $entry['resized'] ) ) {
+			$label .= ' (' . implode( '×', $entry['resized']['from'] ) . ' → ' . implode( '×', $entry['resized']['to'] ) . ')';
+		}
+		return $label;
 	}
 }

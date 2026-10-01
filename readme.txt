@@ -26,9 +26,9 @@ Almost certainly nothing you do not already have. WordPress cannot crop or resiz
 
 You do not have to guess. The plugin tests your server by actually encoding a small image with each backend at activation, rather than trusting what the extension claims to support, and the settings screen shows you exactly which formats came back working. If AVIF is unavailable the option is simply marked as such and WebP carries on normally.
 
-= Your originals are never modified =
+= Optional original compression with backups =
 
-By default, each optimized copy is written alongside the original with the new extension appended, so `photo.jpg` gains `photo.jpg.webp`. The *File naming* setting can switch this to replacing the extension instead (`photo.webp`) — see the settings screen for the trade-off before turning it on. Either way, nothing overwrites, replaces or re-saves your original file. Deactivating the plugin returns your site to serving the originals immediately, and no URL ever breaks.
+By default, each optimized copy is written alongside the original with the new extension appended, so `photo.jpg` gains `photo.jpg.webp`. The *File naming* setting can switch this to replacing the extension instead (`photo.webp`) — see the settings screen for the trade-off before turning it on. Sidecar generation leaves the source unchanged. Optional original compression recompresses served JPEG/PNG files with mandatory backups; optional resizing uses the maximum dimension. Use Restore originals to reverse these changes. Deactivation stops optimized delivery but does not restore compressed originals.
 
 = Delivery that survives caching =
 
@@ -70,7 +70,7 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 
 = Will this touch my original images? =
 
-No. Originals are never modified, moved or deleted. Every optimized file is a separate file written next to the original.
+By default, originals are unchanged and modern copies are separate files. Enable Compress original images to recompress served JPEG/PNG files with mandatory backups. Restore originals reverses compression and optional resizing. The unscaled upload retained by WordPress is left untouched.
 
 = What happens if I deactivate the plugin? =
 

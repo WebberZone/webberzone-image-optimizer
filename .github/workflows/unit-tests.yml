@@ -74,7 +74,7 @@ jobs:
 
       - name: Set up WordPress test environment
         run: |
-          sudo apt-get install -y subversion
+          sudo apt-get install -y subversion pngquant
           bash phpunit/install.sh wordpress_test root '' 127.0.0.1:3306 ${{ matrix.wp }}
 
       # --verbose prints the reason a test skipped. Without it a suite that

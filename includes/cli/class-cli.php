@@ -8,6 +8,8 @@
 namespace WebberZone\Image_Optimizer\CLI;
 
 use WebberZone\Image_Optimizer\Attachment_Meta;
+use WebberZone\Image_Optimizer\Original_Backups;
+use WebberZone\Image_Optimizer\Original_Optimizer;
 use WebberZone\Image_Optimizer\Capabilities;
 use WebberZone\Image_Optimizer\Converter;
 use WebberZone\Image_Optimizer\Cron_Health;
@@ -58,6 +60,11 @@ class CLI {
 		}
 
 		\WP_CLI::log( 'Active encoders: ' . ( empty( $report['formats'] ) ? 'none' : wp_json_encode( $report['formats'] ) ) );
+		\WP_CLI::log( 'Original encoders: ' . wp_json_encode( Capabilities::get_originals() ) );
+		$original_totals = Original_Backups::library_totals();
+		\WP_CLI::log( 'Original bytes saved: ' . Helpers::format_bytes( $original_totals['saved'] ) );
+		\WP_CLI::log( 'Backup disk usage: ' . Helpers::format_bytes( $original_totals['bytes'] ) );
+		\WP_CLI::log( 'Main images resized: ' . $original_totals['resized'] );
 		\WP_CLI::log( 'Configured formats: ' . implode( ', ', Converter::get_args()['formats'] ) );
 
 		$counts = Queue::get_counts();
@@ -75,7 +82,7 @@ class CLI {
 				$counts[ Queue::SKIPPED ]
 			)
 		);
-		\WP_CLI::log( sprintf( 'Saved so far: %s', Helpers::format_bytes( (int) ( $counts['bytes_saved'] ?? 0 ) ) ) );
+		\WP_CLI::log( sprintf( 'Saved so far: %s', Helpers::format_bytes( Scanner::get_byte_totals()['saved'] ) ) );
 	}
 
 	/**
@@ -346,5 +353,141 @@ class CLI {
 		}
 
 		\WP_CLI::success( sprintf( 'Deleted %d generated file(s).', $deleted ) );
+	}
+	/**
+	 * Compress served JPEG/PNG originals with immutable backups.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--ids=<ids>]
+	 * : Comma-separated attachment IDs. Omit for the whole library.
+	 *
+	 * [--dry-run]
+	 * : List candidate attachments without changing files, records or the queue.
+	 *
+	 * [--resize]
+	 * : Resize main files to the configured Maximum image dimension.
+	 *
+	 * @param array $args Positional arguments.
+	 * @param array $assoc_args Named arguments.
+	 * @return void
+	 */
+	public function compress( $args, $assoc_args ) {
+		unset( $args );
+		$resize = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'resize', false );
+		if ( $resize && ( ! \wzio_get_option( 'maximum_image_dimension', 0 ) || \wzio_get_option( 'disable_image_scaling', false ) ) ) {
+			\WP_CLI::error( 'Set a positive Maximum image dimension and enable scaling before using --resize.' );
+		}
+		$resize_filter = static function () use ( $resize ) {
+			return $resize;
+		};
+		add_filter( 'wzio_get_option_compress_originals', '__return_true' );
+		add_filter( 'wzio_get_option_resize_existing_originals', $resize_filter );
+		$failed = 0;
+		try {
+			foreach ( $this->original_ids( $assoc_args ) as $id ) {
+				if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false ) ) {
+					\WP_CLI::log( sprintf( '#%d: candidate for original compression%s; eligibility and savings are checked during encoding.', $id, $resize ? ' and resizing' : '' ) );
+					continue;
+				}
+				$result = Converter::convert_attachment( $id, array( 'originals_explicit' => true ) );
+				if ( is_wp_error( $result ) || ! empty( $result['failed'] ) ) {
+					++$failed;
+					\WP_CLI::warning( sprintf( '#%d: %s', $id, is_wp_error( $result ) ? $result->get_error_message() : implode( '; ', $result['errors'] ) ) );
+				}
+			}
+		} finally {
+			remove_filter( 'wzio_get_option_compress_originals', '__return_true' );
+			remove_filter( 'wzio_get_option_resize_existing_originals', $resize_filter );
+		}
+		if ( $failed ) {
+			\WP_CLI::error( sprintf( '%d attachment(s) failed; backups were retained.', $failed ) );
+		}
+		\WP_CLI::success( 'Original compression pass complete.' );
+	}
+
+	/**
+	 * Restore original files and dimensions from backups.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--ids=<ids>]
+	 * : Comma-separated attachment IDs.
+	 *
+	 * [--all]
+	 * : Restore every attachment with backups.
+	 *
+	 * [--dry-run]
+	 * : List attachments with backups without restoring them.
+	 *
+	 * @subcommand restore-originals
+	 * @param array $args Positional arguments.
+	 * @param array $assoc_args Named arguments.
+	 * @return void
+	 */
+	public function restore_originals( $args, $assoc_args ) {
+		unset( $args );
+		if ( empty( $assoc_args['ids'] ) && ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false ) ) {
+			\WP_CLI::error( 'Specify --ids or --all.' );
+		}
+		$failed = 0;
+		foreach ( $this->original_ids( $assoc_args, true ) as $id ) {
+			if ( ! Original_Backups::get( $id ) ) {
+				continue;
+			}
+			if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false ) ) {
+				\WP_CLI::log( sprintf( '#%d: would restore originals.', $id ) );
+				continue;
+			}
+			$result = Original_Optimizer::restore( $id );
+			if ( is_wp_error( $result ) ) {
+				++$failed;
+				\WP_CLI::warning( sprintf( '#%d: %s', $id, $result->get_error_message() ) );
+			}
+		}
+		if ( $failed ) {
+			\WP_CLI::error( sprintf( '%d attachment(s) could not be restored; recovery data was retained.', $failed ) );
+		}
+		\WP_CLI::success( 'Original restoration pass complete.' );
+	}
+
+	/**
+	 * Stream candidate IDs without loading the whole library into memory.
+	 *
+	 * @param array $arguments Command arguments.
+	 * @param bool  $backups_only Scan recorded backups instead of convertible attachments.
+	 * @return \Generator<int> IDs.
+	 */
+	private function original_ids( array $arguments, bool $backups_only = false ): \Generator {
+		if ( isset( $arguments['ids'] ) ) {
+			$ids = wp_parse_list( $arguments['ids'] );
+			if ( ! $ids ) {
+				\WP_CLI::error( '--ids must contain positive attachment IDs.' );
+			}
+			foreach ( $ids as $id ) {
+				if ( ! ctype_digit( (string) $id ) || (int) $id < 1 || ( 'attachment' !== get_post_type( (int) $id ) || ( ! $backups_only && ! Converter::is_convertible_attachment( (int) $id ) ) ) ) {
+					\WP_CLI::error( 'Every --ids value must identify a supported image attachment.' );
+				}
+			}
+			foreach ( array_unique( $ids ) as $id ) {
+				yield (int) $id;
+			}
+			return;
+		}
+		$after = 0;
+		do {
+			if ( $backups_only ) {
+				global $wpdb;
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+				$ids = array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND post_id > %d ORDER BY post_id LIMIT 250", Original_Backups::META_KEY, $after ) ) );
+			} else {
+				$ids = Scanner::get_candidate_ids( 250, $after, false );
+			}
+			$found = count( $ids );
+			foreach ( $ids as $id ) {
+				$after = (int) $id;
+				yield $after;
+			}
+		} while ( 250 === $found );
 	}
 }

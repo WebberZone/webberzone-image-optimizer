@@ -23,6 +23,26 @@ Generate the optimized copies as soon as an image is uploaded or its thumbnails 
 **Image sizes to convert**
 Leave every box unchecked to convert all sizes, which is what you want unless disk space is tight. Missing intermediate copies are omitted from the optimized `srcset`, but the smallest and widest or highest-density copies must exist before that format is offered. Excluding either edge size used by your theme can therefore disable that format for those images. Default: all sizes (nothing excluded).
 
+**Maximum image dimension**
+Set the maximum width or height, in pixels, for new uploads supported by WordPress large-image scaling. WordPress keeps the unscaled upload and serves a scaled copy, which the plugin uses to generate WebP and AVIF copies. Consider `1920` for most blogs or `2560` for photography. Empty or `0` preserves the WordPress threshold (normally `2560`), including changes made by other filters. Existing images are unchanged. Supported formats depend on your WordPress version and image editor. Default: `0`.
+
+**Disable upload scaling**
+Turn off WordPress large-image scaling for new uploads. This takes precedence over **Maximum image dimension**. A later site filter can override either setting. Default: off.
+
+**Compress original images**
+Recompress served JPEG files before generating WebP/AVIF copies. This is off by default. Each changed file has a verified backup, and **Restore originals** reverses the changes. The unscaled upload kept by WordPress is untouched. Use original compression in only one optimizer at a time. Default: off.
+
+**JPEG quality for originals**
+Target quality from `1` to `100`. When Imagick can detect a JPEG's existing quality, files already at or below the target are kept unless resizing is requested. GD cannot detect that quality; repeat runs use the recorded settings and first backup to avoid accumulated recompression. Default: `82`.
+
+**Compress PNG originals**
+Available only when a working local PNG tool is found. The plugin prefers lossless `oxipng`, with palette-reducing `pngquant` as a fallback when oxipng is not installed. Animated PNGs are not modified. Default: off.
+
+**Resize existing originals**
+Resize the served main file to **Maximum image dimension** while optimizing. Requires **Compress original images**, a positive maximum dimension and upload scaling enabled. PNG resizing also requires PNG original compression. Files within the cap are not resized. Existing thumbnail files and metadata remain available for embedded URLs; wider thumbnails are excluded from generated responsive candidates while the main image is resized. Default: off.
+
+Original compression and resizing run when an attachment is processed. Changing a setting does not enqueue the existing library automatically; use Bulk Optimize with **Re-optimize images that are already done**, or `wp wzio compress`. See [Compressing and Restoring Original Images](https://webberzone.com/support/knowledgebase/compressing-and-restoring-original-images/) for backups, restore and server requirements.
+
 **Minimum saving (%)**
 Discard an optimized copy unless it is at least this much smaller than the original. Small or already-compressed images frequently grow when re-encoded, and keeping those wastes disk space for no benefit. The same threshold decides whether a copy inherited from another optimizer is kept or replaced. Default: `5`. Range: `0`–`90`.
 
@@ -48,7 +68,7 @@ Between 0 and 6. Default: `6`. Higher values spend more CPU time searching for a
 Between 0 and 6. Default: `4`. This is a relative scale, not an encoder setting: each backend maps it onto its own speed range, so the same number can mean different work on different servers. The default sits at the measured point where files stop getting meaningfully smaller — raising it costs a great deal more CPU for very little, and lowering it below the default trades a few per cent of file size for a lot of speed. A source that can carry transparency is never taken to the fastest setting, where its file can grow by two fifths. The measurements behind the default, and the per-driver mapping it uses, are recorded in [How AVIF Encoder Speed Is Chosen](https://webberzone.com/support/knowledgebase/how-avif-encoder-speed-is-chosen/).
 
 **Strip metadata**
-Remove EXIF, GPS and embedded thumbnails from the optimized copies. The color profile is always kept, so colors will not shift. Your original files are never modified either way. Default: on.
+Remove EXIF, GPS and embedded thumbnails from the optimized copies. The color profile is always kept, so colors will not shift. The same metadata setting applies when optional original compression is enabled; backups retain the original bytes. Default: on.
 
 **Lossless for PNG sources**
 Encode the WebP copy of a PNG source without any quality loss. Right for logos, screenshots and line art; produces much larger files for photographs saved as PNG. Default: on.
@@ -95,7 +115,10 @@ When a page references an image that has not been converted yet, serve the origi
 One fragment per line. Any image whose path inside the uploads folder contains one of these fragments is left alone — for example `2019/07` or `/logos/`. Default: empty.
 
 **Delete optimized files on uninstall**
-Remove every generated WebP and AVIF file when the plugin is deleted. Original images are never touched either way. Leave this off if you may reinstall later and would rather not convert everything again. Default: off.
+Remove every generated WebP and AVIF file when the plugin is deleted. Compressed original images are left as they are either way. Leave this off if you may reinstall later and would rather not convert everything again. Default: off.
 
 **Delete settings and records on uninstall**
-Remove the settings, the queue table and the per-image conversion records when the plugin is deleted. Default: off.
+Remove the settings, the queue table and the per-image conversion records when the plugin is deleted. Restore records for original backups are kept while the backups exist. Default: off.
+
+**Delete original backups on uninstall**
+Permanently delete the original-image backup folder and its restore records when the plugin is deleted. Uninstalling never restores images, so the untouched originals of compressed images are lost for good; restore any you want back first. Default: off.

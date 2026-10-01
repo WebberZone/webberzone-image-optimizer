@@ -15,17 +15,18 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Creates reversible sidecar images without modifying originals.
+ * Creates sidecars after optional, reversible original-file optimization.
  *
  * @since 1.0.0
  */
 class Converter {
 
+
 	/**
 	 * Lowest quality a retry may drop to, whatever the step works out at.
 	 *
 	 * @since 1.1.0
-	 * @var int
+	 * @var   int
 	 */
 	const MIN_RETRY_QUALITY = 40;
 
@@ -36,7 +37,7 @@ class Converter {
 	 * keeps the drop even: WebP 82 loses 12 points, AVIF 50 loses 8.
 	 *
 	 * @since 1.1.0
-	 * @var float
+	 * @var   float
 	 */
 	const RETRY_STEP_RATIO = 0.15;
 
@@ -110,6 +111,36 @@ class Converter {
 	 * @return array{files: int, converted: int, skipped: int, failed: int, reduced: int, source: int, saved: int, errors: array<int, string>, complete: bool}|\WP_Error Summary or error.
 	 */
 	public static function convert_attachment( int $attachment_id, array $overrides = array(), ?array $meta = null ) {
+		return Original_Optimizer::locked(
+			$attachment_id,
+			static function () use ( $attachment_id, $overrides, $meta ) {
+				$result = null;
+				try {
+					if ( ! empty( $overrides['originals_explicit'] ) ) {
+						delete_post_meta( $attachment_id, '_wzio_originals_restored' );
+					}
+					$result = self::convert_attachment_locked( $attachment_id, $overrides, $meta );
+				} finally {
+					$saved = Original_Optimizer::update_metadata( $attachment_id );
+				}
+				if ( ! $saved && is_array( $result ) ) {
+					++$result['failed'];
+					$result['errors'][] = __( 'The updated image dimensions could not be saved to the attachment metadata.', 'webberzone-image-optimizer' );
+				}
+				return $result;
+			}
+		);
+	}
+
+	/**
+	 * Process an attachment while holding the original-file lock.
+	 *
+	 * @param  int        $attachment_id Attachment ID.
+	 * @param  array      $overrides     Conversion overrides.
+	 * @param  array|null $meta          Incoming metadata.
+	 * @return array|\WP_Error Processing result.
+	 */
+	private static function convert_attachment_locked( int $attachment_id, array $overrides = array(), ?array $meta = null ) {
 		if ( ! self::is_convertible_attachment( $attachment_id ) ) {
 			return new \WP_Error(
 				'wzio_not_convertible',
@@ -117,8 +148,9 @@ class Converter {
 			);
 		}
 
-		$args  = self::get_args( $overrides );
-		$files = self::get_attachment_files( $attachment_id, $meta );
+		$args                  = self::get_args( $overrides );
+		$args['attachment_id'] = $attachment_id;
+		$files                 = self::get_attachment_files( $attachment_id, $meta );
 
 		if ( empty( $files ) ) {
 			return new \WP_Error(
@@ -210,6 +242,31 @@ class Converter {
 	 * @return array{done: bool, index: int, total: int}|\WP_Error Progress, or error.
 	 */
 	public static function convert_next_file( int $attachment_id, array $overrides = array() ) {
+		return Original_Optimizer::locked(
+			$attachment_id,
+			static function () use ( $attachment_id, $overrides ) {
+				$result = null;
+				try {
+					$result = self::convert_next_file_locked( $attachment_id, $overrides );
+				} finally {
+					$saved = Original_Optimizer::update_metadata( $attachment_id );
+				}
+				if ( ! $saved && ! is_wp_error( $result ) ) {
+					return new \WP_Error( 'wzio_metadata', __( 'The updated image dimensions could not be saved to the attachment metadata.', 'webberzone-image-optimizer' ) );
+				}
+				return $result;
+			}
+		);
+	}
+
+	/**
+	 * Process an attachment while holding the original-file lock.
+	 *
+	 * @param  int   $attachment_id Attachment ID.
+	 * @param  array $overrides     Conversion overrides.
+	 * @return array|\WP_Error Processing result.
+	 */
+	private static function convert_next_file_locked( int $attachment_id, array $overrides = array() ) {
 		if ( ! self::is_convertible_attachment( $attachment_id ) ) {
 			return new \WP_Error(
 				'wzio_not_convertible',
@@ -217,8 +274,9 @@ class Converter {
 			);
 		}
 
-		$args  = self::get_args( $overrides );
-		$files = self::get_attachment_files( $attachment_id );
+		$args                  = self::get_args( $overrides );
+		$args['attachment_id'] = $attachment_id;
+		$files                 = self::get_attachment_files( $attachment_id );
 
 		if ( empty( $files ) ) {
 			return new \WP_Error(
@@ -235,14 +293,29 @@ class Converter {
 			Attachment_Meta::delete_progress( $attachment_id );
 		}
 
-		$total = count( $files );
-		$index = 0;
+		if ( ! empty( $overrides['originals_explicit'] ) ) {
+			foreach ( $record['files'] as $basename => $file_record ) {
+				if ( isset( $file_record['original']['error'] ) ) {
+					unset( $record['files'][ $basename ]['original'] );
+				}
+			}
+			Attachment_Meta::set( $attachment_id, $record );
+		}
+
+		$total  = count( $files );
+		$index  = 0;
+		$failed = array();
 
 		foreach ( $files as $basename => $path ) {
 			++$index;
 			$existing = $record['files'][ $basename ] ?? array();
 
-			if ( self::file_is_settled( $existing, $args['formats'] ) ) {
+			if ( isset( $existing['original']['error'] ) ) {
+				$failed[ $basename ] = $existing['original']['error'];
+				continue;
+			}
+
+			if ( self::file_is_settled( $existing, $args['formats'] ) && ! Original_Optimizer::needs_processing( $attachment_id, $existing, $path ) ) {
 				continue;
 			}
 
@@ -258,6 +331,17 @@ class Converter {
 		}
 
 		self::prune_orphans( $attachment_id, $record, $files );
+
+		if ( $failed ) {
+			return new \WP_Error(
+				'wzio_original_failed',
+				sprintf(
+					/* translators: %s: error message and file name */
+					__( 'Original compression failed: %s', 'webberzone-image-optimizer' ),
+					(string) reset( $failed ) . ' (' . (string) key( $failed ) . ')'
+				)
+			);
+		}
 
 		/** This action is documented in includes/class-converter.php */
 		do_action( 'wzio_attachment_converted', $attachment_id, self::summarise( $record, $files, $args ), $args );
@@ -298,6 +382,10 @@ class Converter {
 			$best   = 0;
 
 			++$summary['files'];
+			if ( isset( $result['original']['error'] ) ) {
+				++$summary['failed'];
+				$summary['errors'][] = $basename . ': ' . $result['original']['error'];
+			}
 
 			foreach ( $formats as $format ) {
 				$entry = $result[ $format ] ?? array();
@@ -374,25 +462,28 @@ class Converter {
 		$sources = array();
 
 		foreach ( $files as $basename => $path ) {
-			$sources[ $basename ] = array(
-				'path'  => wp_normalize_path( $path ),
-				'size'  => (int) filesize( $path ),
-				'mtime' => (int) filemtime( $path ),
-			);
+			// Original compression rewrites size and mtime mid-attachment, which would discard saved progress.
+			$sources[ $basename ] = array( 'path' => wp_normalize_path( $path ) );
+			if ( ! \wzio_get_option( 'compress_originals', false ) ) {
+				$sources[ $basename ]['size']  = (int) filesize( $path );
+				$sources[ $basename ]['mtime'] = (int) filemtime( $path );
+			}
 		}
 
 		$context = array(
-			'sources'        => $sources,
-			'formats'        => array_values( (array) ( $args['formats'] ?? array() ) ),
-			'quality'        => (array) ( $args['quality'] ?? array() ),
-			'lossless'       => ! empty( $args['lossless'] ),
-			'png_lossy'      => (int) ( $args['png_lossy'] ?? 0 ),
-			'strip'          => ! empty( $args['strip'] ),
-			'min_saving'     => (int) ( $args['min_saving'] ?? 5 ),
-			'effort_webp'    => (int) ( $args['effort_webp'] ?? 6 ),
-			'effort_avif'    => (int) ( $args['effort_avif'] ?? 4 ),
-			'sidecar_naming' => (string) \wzio_get_option( 'sidecar_naming', 'append' ),
-			'force'          => ! empty( $args['force'] ),
+			'sources'            => $sources,
+			'formats'            => array_values( (array) ( $args['formats'] ?? array() ) ),
+			'quality'            => (array) ( $args['quality'] ?? array() ),
+			'lossless'           => ! empty( $args['lossless'] ),
+			'png_lossy'          => (int) ( $args['png_lossy'] ?? 0 ),
+			'strip'              => ! empty( $args['strip'] ),
+			'min_saving'         => (int) ( $args['min_saving'] ?? 5 ),
+			'effort_webp'        => (int) ( $args['effort_webp'] ?? 6 ),
+			'effort_avif'        => (int) ( $args['effort_avif'] ?? 4 ),
+			'sidecar_naming'     => (string) \wzio_get_option( 'sidecar_naming', 'append' ),
+			'force'              => ! empty( $args['force'] ),
+			'originals'          => Original_Optimizer::settings(),
+			'compress_originals' => (bool) \wzio_get_option( 'compress_originals', false ),
 		);
 
 		return hash( 'sha256', (string) wp_json_encode( $context ) );
@@ -445,6 +536,30 @@ class Converter {
 	 */
 	public static function convert_file( string $path, array $args, array $existing = array() ): array {
 		$record = array( 'size' => 0 );
+		if ( isset( $existing['original'] ) ) {
+			$record['original'] = $existing['original'];
+		}
+		if ( ! empty( $args['attachment_id'] ) && \wzio_get_option( 'compress_originals', false ) && ! get_post_meta( (int) $args['attachment_id'], '_wzio_originals_restored', true ) && is_readable( $path ) ) {
+			$before_hash = Helpers::file_hash( $path );
+			$original    = Original_Optimizer::process_file( (int) $args['attachment_id'], $path );
+			$after_hash  = hash_file( 'sha256', $path );
+			if ( $original ) {
+				// An error keeps no settings or source hash, so needs_processing() treats it as unsettled.
+				if ( ! isset( $original['error'] ) ) {
+					$original['settings']    = hash( 'sha256', (string) wp_json_encode( Original_Optimizer::settings() ) );
+					$original['source_hash'] = (string) $after_hash;
+				}
+				$record['original'] = $original;
+			} elseif ( isset( $existing['original'] ) ) {
+				$record['original'] = $existing['original'];
+			}
+			if ( $after_hash !== $before_hash ) {
+				$args['force'] = true;
+				foreach ( Helpers::get_formats() as $format ) {
+					unset( $existing[ $format ] );
+				}
+			}
+		}
 
 		// Record every format so stepped conversion cannot retry this file forever.
 		if ( ! is_readable( $path ) ) {
@@ -725,11 +840,11 @@ class Converter {
 	 *
 	 * @since 1.0.1
 	 *
-	 * @param  string   $path        Absolute path to the source image.
-	 * @param  string   $destination Sidecar path.
-	 * @param  int      $max_bytes   Size the sidecar has to stay below.
-	 * @param  bool     $written     Whether this run wrote the sidecar.
-	 * @param  int|null $quality     Effective lossy quality attempted, when applicable.
+	 * @param  string   $path          Absolute path to the source image.
+	 * @param  string   $destination   Sidecar path.
+	 * @param  int      $max_bytes     Size the sidecar has to stay below.
+	 * @param  bool     $written       Whether this run wrote the sidecar.
+	 * @param  int|null $quality       Effective lossy quality attempted, when applicable.
 	 * @param  int|null $known_quality Quality recorded for an inherited sidecar, when known.
 	 * @param  bool     $reduced       Whether this run used the lower-quality retry.
 	 * @param  bool     $known_reduced Whether an inherited sidecar used the retry.
@@ -956,6 +1071,22 @@ class Converter {
 	 * @return int Number of files deleted.
 	 */
 	public static function delete_sidecars( int $attachment_id ): int {
+		$result = Original_Optimizer::locked(
+			$attachment_id,
+			static function () use ( $attachment_id ) {
+				return self::delete_sidecars_locked( $attachment_id );
+			}
+		);
+		return is_wp_error( $result ) ? 0 : $result;
+	}
+
+	/**
+	 * Remove sidecars while excluding concurrent source replacement and restore.
+	 *
+	 * @param  int $attachment_id Attachment ID.
+	 * @return int Deleted files.
+	 */
+	private static function delete_sidecars_locked( int $attachment_id ): int {
 		$record   = Attachment_Meta::get( $attachment_id );
 		$progress = Attachment_Meta::get_progress( $attachment_id );
 		$files    = self::get_attachment_files( $attachment_id );
@@ -976,7 +1107,7 @@ class Converter {
 		}
 
 		if ( '' === $dir ) {
-			Attachment_Meta::delete( $attachment_id );
+			Attachment_Meta::delete_sidecar_records( $attachment_id );
 			return 0;
 		}
 
@@ -992,7 +1123,7 @@ class Converter {
 			Resolver::invalidate_path( $dir . '/' . $basename );
 		}
 
-		Attachment_Meta::delete( $attachment_id );
+		Attachment_Meta::delete_sidecar_records( $attachment_id );
 
 		return $deleted;
 	}

@@ -105,7 +105,7 @@ class Admin {
 				'nav_label'    => esc_html__( 'WebberZone Image Optimizer admin shortcuts', 'webberzone-image-optimizer' ),
 				'eyebrow'      => esc_html__( 'WebberZone Image Optimizer', 'webberzone-image-optimizer' ),
 				'title'        => esc_html__( 'Smaller images, same picture.', 'webberzone-image-optimizer' ),
-				'text'         => esc_html__( 'Convert your media library to WebP and AVIF and let every browser download the smallest file it can read. Your original images are never modified.', 'webberzone-image-optimizer' ),
+				'text'         => esc_html__( 'Convert your media library to WebP and AVIF and let every browser download the smallest file it can read. Original compression is optional and always backed up for restore.', 'webberzone-image-optimizer' ),
 			),
 			'sections'   => array(
 				'settings' => array(

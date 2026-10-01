@@ -339,4 +339,35 @@ class Helpers {
 
 		return ! file_exists( $file );
 	}
+
+	/**
+	 * Memoized to skip re-reading unchanged source files; never use it for integrity checks or after a write.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @var array<string, array{0: int, 1: int, 2: string}>
+	 */
+	private static $hash_cache = array();
+
+	/**
+	 * SHA-256 of a file, reused within the request while its size and mtime are unchanged.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string $path Absolute path to the file.
+	 * @return string Hash, or an empty string when unreadable.
+	 */
+	public static function file_hash( string $path ): string {
+		clearstatcache( true, $path );
+		$size  = (int) filesize( $path );
+		$mtime = (int) filemtime( $path );
+		if ( isset( self::$hash_cache[ $path ] ) && self::$hash_cache[ $path ][0] === $size && self::$hash_cache[ $path ][1] === $mtime ) {
+			return self::$hash_cache[ $path ][2];
+		}
+		$hash = (string) hash_file( 'sha256', $path );
+		if ( '' !== $hash ) {
+			self::$hash_cache[ $path ] = array( $size, $mtime, $hash );
+		}
+		return $hash;
+	}
 }

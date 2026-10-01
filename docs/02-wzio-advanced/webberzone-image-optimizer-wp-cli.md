@@ -14,7 +14,7 @@ order: 3
 
 ## `wp wzio status`
 
-Shows which drivers and formats this server can encode, the currently configured formats, and how much of the library is converted.
+Shows which drivers and formats this server can encode, the currently configured formats, and how much of the library is converted. It also reports original encoder availability, original bytes saved, backup disk use and the number of resized main files.
 
 ```bash
 wp wzio status
@@ -35,6 +35,32 @@ wp wzio convert --formats=webp,avif --force
 - `--dry-run` — report what would be converted without writing anything.
 
 When a copy had to drop below the configured quality to come out smaller than the original, the command says so at the end — "N optimized copies needed a lower quality than configured to come out smaller than the original." See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
+
+## `wp wzio compress`
+
+Compress served JPEG/PNG originals with mandatory backups, then rebuild affected sidecars. PNGs follow the **Compress PNG originals** setting.
+
+```bash
+wp wzio compress --ids=123,456 --dry-run
+wp wzio compress --ids=123,456
+wp wzio compress --resize
+```
+
+- `--ids=<ids>` — comma-separated attachment IDs; omit to scan the whole library.
+- `--dry-run` — list candidates without changing files, records or the queue. Savings and encoding eligibility are determined during the actual run.
+- `--resize` — resize main files to the configured maximum dimension; requires a positive cap and scaling enabled. Without this flag, the command does not request resizing.
+
+## `wp wzio restore-originals`
+
+Restore backed-up files and dimensions, then queue sidecar-only regeneration.
+
+```bash
+wp wzio restore-originals --ids=123,456
+wp wzio restore-originals --all --dry-run
+wp wzio restore-originals --all
+```
+
+Specify `--ids` or `--all`. Failed restorations keep recovery data and produce a nonzero exit status. **Delete optimized copies** remains separate from original restoration.
 
 ## `wp wzio queue`
 
@@ -64,7 +90,7 @@ Each batch reports how many were converted, skipped and failed, and how many rem
 
 ## `wp wzio clean`
 
-Deletes the generated WebP and AVIF files. Your original images are never touched.
+Deletes the generated WebP and AVIF files. Your original images and their backups are never touched; use `wp wzio restore-originals` to restore compressed originals.
 
 ```bash
 wp wzio clean 7214

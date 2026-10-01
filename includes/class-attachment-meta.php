@@ -40,12 +40,28 @@ class Attachment_Meta {
 	const PROGRESS_META_KEY = '_wzio_progress';
 
 	/**
+	 * Post meta key holding the source bytes of converted files, for SQL sums.
+	 *
+	 * @since 1.1.2
+	 * @var string
+	 */
+	const SOURCE_META_KEY = '_wzio_source_bytes';
+
+	/**
+	 * Post meta key holding the bytes saved, for SQL sums.
+	 *
+	 * @since 1.1.2
+	 * @var string
+	 */
+	const SAVED_META_KEY = '_wzio_saved_bytes';
+
+	/**
 	 * Current record schema version.
 	 *
 	 * @since 1.0.0
 	 * @var int
 	 */
-	const SCHEMA = 1;
+	const SCHEMA = 2;
 
 	/**
 	 * Get the conversion record for an attachment.
@@ -86,7 +102,7 @@ class Attachment_Meta {
 	private static function get_record( int $attachment_id, string $meta_key ): array {
 		$data = get_post_meta( $attachment_id, $meta_key, true );
 
-		if ( ! is_array( $data ) || ( $data['v'] ?? 0 ) !== self::SCHEMA ) {
+		if ( ! is_array( $data ) || ! in_array( ( $data['v'] ?? 0 ), array( 1, self::SCHEMA ), true ) ) {
 			return self::empty_record();
 		}
 
@@ -133,6 +149,23 @@ class Attachment_Meta {
 		$record['updated'] = time();
 
 		update_post_meta( $attachment_id, self::META_KEY, $record );
+		self::set_byte_totals( $attachment_id, $record );
+	}
+
+	/**
+	 * Store the record's byte totals as numeric meta so the library can be summed in SQL.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param int                                               $attachment_id Attachment ID.
+	 * @param array{files: array<string, array<string, mixed>>} $record        Record.
+	 * @return void
+	 */
+	public static function set_byte_totals( int $attachment_id, array $record ): void {
+		$totals = self::summarise( $record );
+
+		update_post_meta( $attachment_id, self::SOURCE_META_KEY, $totals['source'] );
+		update_post_meta( $attachment_id, self::SAVED_META_KEY, $totals['saved'] );
 	}
 
 	/**
@@ -177,6 +210,8 @@ class Attachment_Meta {
 	 */
 	public static function delete( int $attachment_id ): void {
 		delete_post_meta( $attachment_id, self::META_KEY );
+		delete_post_meta( $attachment_id, self::SOURCE_META_KEY );
+		delete_post_meta( $attachment_id, self::SAVED_META_KEY );
 		self::delete_progress( $attachment_id );
 	}
 
@@ -192,6 +227,9 @@ class Attachment_Meta {
 		$count = 0;
 
 		foreach ( $record['files'] as $file_record ) {
+			if ( isset( $file_record['original']['error'] ) ) {
+				++$count;
+			}
 			foreach ( Helpers::get_formats() as $format ) {
 				if ( isset( $file_record[ $format ]['skip'] ) || isset( $file_record[ $format ]['error'] ) ) {
 					++$count;
@@ -215,6 +253,10 @@ class Attachment_Meta {
 		$cleared = 0;
 
 		foreach ( $record['files'] as $basename => $file_record ) {
+			if ( isset( $file_record['original']['error'] ) ) {
+				unset( $record['files'][ $basename ]['original'] );
+				++$cleared;
+			}
 			foreach ( Helpers::get_formats() as $format ) {
 				if ( isset( $file_record[ $format ]['skip'] ) || isset( $file_record[ $format ]['error'] ) ) {
 					unset( $record['files'][ $basename ][ $format ] );
@@ -325,8 +367,18 @@ class Attachment_Meta {
 	 * @return array{source: int, converted: int, saved: int, files: int, reduced: int, formats: array<string, int>} Totals.
 	 */
 	public static function get_totals( int $attachment_id ): array {
-		$record = self::get( $attachment_id );
+		return self::summarise( self::get( $attachment_id ) );
+	}
 
+	/**
+	 * Summarise the bytes stored and saved for a record.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param array{files: array<string, array<string, mixed>>} $record Record.
+	 * @return array{source: int, converted: int, saved: int, files: int, reduced: int, formats: array<string, int>} Totals.
+	 */
+	public static function summarise( array $record ): array {
 		$totals = array(
 			'source'    => 0,
 			'converted' => 0,
@@ -370,5 +422,30 @@ class Attachment_Meta {
 		}
 
 		return $totals;
+	}
+	/**
+	 * Drop disposable sidecar results while retaining original recovery summaries.
+	 *
+	 * @param int $attachment_id Attachment ID.
+	 * @return void
+	 */
+	public static function delete_sidecar_records( int $attachment_id ): void {
+		$record = self::get( $attachment_id );
+		foreach ( $record['files'] as $name => $file ) {
+			if ( isset( $file['original'] ) ) {
+				$record['files'][ $name ] = array(
+					'size'     => $file['size'] ?? 0,
+					'original' => $file['original'],
+				);
+			} else {
+				unset( $record['files'][ $name ] );
+			}
+		}
+		if ( $record['files'] ) {
+			self::set( $attachment_id, $record );
+			self::delete_progress( $attachment_id );
+		} else {
+			self::delete( $attachment_id );
+		}
 	}
 }

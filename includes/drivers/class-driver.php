@@ -112,6 +112,9 @@ abstract class Driver {
 			);
 		}
 
+		// wp_tempnam() is not loaded in cron or WP-CLI requests.
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
 		// wp_tempnam() requires a trailing slash to place the file in the directory.
 		$temp = wp_tempnam( basename( $destination ), trailingslashit( $dir ) );
 

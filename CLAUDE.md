@@ -53,7 +53,7 @@ The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parse
 
 ## Two decisions the whole design rests on
 
-1. **Sidecars are named via `Helpers::apply_sidecar_naming()`, never by string concatenation.** Default is append (`photo.jpg` → `photo.jpg.webp`); the `sidecar_naming` setting can switch a site to `replace` (`photo.webp`, collision risk explained on the settings screen). Both the filesystem path and the delivered URL must resolve through this one function or they can disagree and a visitor gets a 404. Originals are never modified — a hard invariant.
+1. **Sidecars are named via `Helpers::apply_sidecar_naming()`, never by string concatenation.** Default is append (`photo.jpg` → `photo.jpg.webp`); the `sidecar_naming` setting can switch a site to `replace` (`photo.webp`, collision risk explained on the settings screen). Both the filesystem path and the delivered URL must resolve through this one function or they can disagree and a visitor gets a 404. Originals are modified only when Compress original images is enabled, with a mandatory verified backup and restore path. The unserved WordPress original_image remains untouched.
 2. **`<picture>` rewriting, not `Accept`-header rewriting.** An `Accept` rewrite returns different bytes per URL, so a cache that ignores `Vary` serves one visitor's format to everyone; `<picture>` puts the choice in the browser, keeping the HTML identical for every visitor. The `Accept` rewrite exists only as *generated, hand-installed* server rules for CSS background images.
 
 Do not revisit either without a concrete reason.

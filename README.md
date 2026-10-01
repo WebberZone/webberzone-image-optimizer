@@ -14,7 +14,7 @@ Convert your WordPress media library to WebP and AVIF, and serve the best format
 
 ## What it does
 
-- Converts JPEG, PNG and GIF sources to WebP and/or AVIF **sidecar** files: `photo.jpg` → `photo.jpg.webp`. The original is never modified.
+- Converts JPEG, PNG and GIF sources to WebP and/or AVIF **sidecar** files: `photo.jpg` → `photo.jpg.webp`. Original compression is opt-in, with mandatory backups and restore.
 - Serves them with a `<picture>` element so the *browser* picks the format — which is what keeps it correct behind page caches and CDNs.
 - Maps the optimized `srcset` candidates that exist, preserving descriptors exactly, while requiring the smallest and widest or highest-density copies so payload and image quality cannot regress.
 - Bulk-converts an existing library through a resumable, database-backed queue.

@@ -73,6 +73,13 @@
 	}
 
 	function renderStats(stats) {
+        ['original-saved', 'backup-bytes', 'original-resized'].forEach(function (name) {
+            var key = name.replace('-', '_') + (name === 'original-resized' ? '' : '_human');
+            var element = byId('wzio-stat-' + name);
+            if (element && typeof stats[key] !== 'undefined') {
+                element.textContent = stats[key];
+            }
+        });
 		if (typeof stats.total !== 'undefined') {
 			els.total.textContent = stats.total.toLocaleString();
 		}

@@ -331,34 +331,41 @@ class Settings {
 	public static function get_defaults() {
 		return array(
 			// General.
-			'formats'                   => 'webp',
-			'convert_on_upload'         => 1,
-			'convert_sizes'             => '',
-			'min_saving'                => 5,
-			'sidecar_naming'            => 'append',
+			'formats'                     => 'webp',
+			'convert_on_upload'           => 1,
+			'convert_sizes'               => '',
+			'maximum_image_dimension'     => 0,
+			'compress_originals'          => 0,
+			'original_jpeg_quality'       => 82,
+			'compress_png_originals'      => 0,
+			'resize_existing_originals'   => 0,
+			'disable_image_scaling'       => 0,
+			'min_saving'                  => 5,
+			'sidecar_naming'              => 'append',
 
 			// Quality.
-			'quality_webp'              => 82,
-			'quality_avif'              => 50,
-			'effort_webp'               => 6,
-			'effort_avif'               => 4,
-			'strip_metadata'            => 1,
-			'lossless_png'              => 1,
-			'png_lossy_quality'         => 95,
+			'quality_webp'                => 82,
+			'quality_avif'                => 50,
+			'effort_webp'                 => 6,
+			'effort_avif'                 => 4,
+			'strip_metadata'              => 1,
+			'lossless_png'                => 1,
+			'png_lossy_quality'           => 95,
 
 			// Delivery.
-			'enable_delivery'           => 1,
-			'rewrite_content'           => 1,
-			'rewrite_template'          => 1,
-			'rewrite_buffer'            => 0,
+			'enable_delivery'             => 1,
+			'rewrite_content'             => 1,
+			'rewrite_template'            => 1,
+			'rewrite_buffer'              => 0,
 
 			// Advanced.
-			'batch_size'                => 10,
-			'background_queue'          => 1,
-			'lazy_convert'              => 1,
-			'exclude_paths'             => '',
-			'delete_files_on_uninstall' => 0,
-			'delete_data_on_uninstall'  => 0,
+			'batch_size'                  => 10,
+			'background_queue'            => 1,
+			'lazy_convert'                => 1,
+			'exclude_paths'               => '',
+			'delete_files_on_uninstall'   => 0,
+			'delete_data_on_uninstall'    => 0,
+			'delete_backups_on_uninstall' => 0,
 		);
 	}
 
@@ -408,7 +415,7 @@ class Settings {
 	public static function settings_general() {
 		$defaults = self::get_defaults();
 		$settings = array(
-			'formats'           => array(
+			'formats'                 => array(
 				'id'      => 'formats',
 				'name'    => esc_html__( 'Formats to generate', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'AVIF is smaller than WebP but unsupported by a few older browsers. Enable both to serve each browser its smallest option. AVIF costs a few times more CPU than WebP and runs on every image size, so if uploads slow down, turn off Convert new uploads to move the work to the background queue.', 'webberzone-image-optimizer' ),
@@ -416,14 +423,14 @@ class Settings {
 				'default' => $defaults['formats'],
 				'options' => self::get_format_options(),
 			),
-			'convert_on_upload' => array(
+			'convert_on_upload'       => array(
 				'id'      => 'convert_on_upload',
 				'name'    => esc_html__( 'Convert new uploads', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Convert as soon as an image is uploaded or its thumbnails are regenerated. Turn this off to convert through the background queue instead, keeping the work out of the upload request.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['convert_on_upload'],
 			),
-			'convert_sizes'     => array(
+			'convert_sizes'           => array(
 				'id'      => 'convert_sizes',
 				'name'    => esc_html__( 'Image sizes to convert', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Leave every box unchecked to convert all sizes. If you do tick some, include the smallest and the largest: a format is withheld when an edge size is missing.', 'webberzone-image-optimizer' ),
@@ -431,7 +438,23 @@ class Settings {
 				'default' => $defaults['convert_sizes'],
 				'options' => self::get_size_options(),
 			),
-			'min_saving'        => array(
+			'maximum_image_dimension' => array(
+				'id'      => 'maximum_image_dimension',
+				'name'    => esc_html__( 'Maximum image dimension', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Maximum width or height in pixels for new uploads supported by WordPress scaling. The unscaled upload is kept. Use 1920 for most blogs or 2560 for photography. Leave empty or use 0 to keep the WordPress default. Existing images are unchanged.', 'webberzone-image-optimizer' ),
+				'type'    => 'number',
+				'default' => 0,
+				'min'     => 0,
+				'size'    => 'small',
+			),
+			'disable_image_scaling'   => array(
+				'id'      => 'disable_image_scaling',
+				'name'    => esc_html__( 'Disable upload scaling', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Turn off WordPress large-image scaling for new uploads. This takes precedence over Maximum image dimension.', 'webberzone-image-optimizer' ),
+				'type'    => 'checkbox',
+				'default' => 0,
+			),
+			'min_saving'              => array(
 				'id'      => 'min_saving',
 				'name'    => esc_html__( 'Minimum saving (%)', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Discard an optimized copy unless it is at least this much smaller. Small or already-compressed images often grow when re-encoded.', 'webberzone-image-optimizer' ),
@@ -441,7 +464,7 @@ class Settings {
 				'max'     => 90,
 				'size'    => 'small',
 			),
-			'sidecar_naming'    => array(
+			'sidecar_naming'          => array(
 				'id'      => 'sidecar_naming',
 				'name'    => esc_html__( 'Optimized file naming', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Append gives photo.jpg.webp and is the safe default. Replace gives photo.webp, which silently overwrites when photo.jpg and photo.png share a folder.', 'webberzone-image-optimizer' ),
@@ -454,6 +477,42 @@ class Settings {
 			),
 		);
 
+		$settings['compress_originals']    = array(
+			'id'      => 'compress_originals',
+			'name'    => esc_html__( 'Compress original images', 'webberzone-image-optimizer' ),
+			'desc'    => esc_html__( 'Recompress served JPEG files before generating modern copies. Backups are always kept, and Restore originals reverses the changes. The unscaled WordPress original is untouched. Allow space for backups. Avoid enabling this alongside another original-image optimizer.', 'webberzone-image-optimizer' ),
+			'type'    => 'checkbox',
+			'default' => 0,
+		);
+		$settings['original_jpeg_quality'] = array(
+			'id'      => 'original_jpeg_quality',
+			'name'    => esc_html__( 'JPEG quality for originals', 'webberzone-image-optimizer' ),
+			'desc'    => esc_html__( 'JPEGs with a detected quality at or below this value are kept. Changes are encoded from the first backup to avoid repeated quality loss.', 'webberzone-image-optimizer' ),
+			'type'    => 'number',
+			'default' => 82,
+			'min'     => 1,
+			'max'     => 100,
+			'size'    => 'small',
+		);
+		$capabilities                      = Capabilities::get_originals();
+		if ( $capabilities['png'] ) {
+			$settings['compress_png_originals'] = array(
+				'id'      => 'compress_png_originals',
+				'name'    => esc_html__( 'Compress PNG originals', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Use an available local PNG tool. oxipng is lossless; pngquant reduces the palette and may change colors. Backups are kept.', 'webberzone-image-optimizer' ),
+				'type'    => 'checkbox',
+				'default' => 0,
+			);
+		}
+		if ( ( $capabilities['jpeg'] || $capabilities['png'] ) && (int) \wzio_get_option( 'maximum_image_dimension', 0 ) > 0 && ! \wzio_get_option( 'disable_image_scaling', false ) ) {
+			$settings['resize_existing_originals'] = array(
+				'id'      => 'resize_existing_originals',
+				'name'    => esc_html__( 'Resize existing originals', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Apply Maximum image dimension to served main files during optimization. Requires Compress original images and a positive maximum dimension. Backups retain the previous dimensions. Existing thumbnail files and directly embedded thumbnail URLs stay unchanged.', 'webberzone-image-optimizer' ),
+				'type'    => 'checkbox',
+				'default' => 0,
+			);
+		}
 		return apply_filters( self::$prefix . '_settings_general', $settings ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 	}
 
@@ -513,7 +572,7 @@ class Settings {
 			'strip_metadata'    => array(
 				'id'      => 'strip_metadata',
 				'name'    => esc_html__( 'Strip metadata', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Remove EXIF, GPS and embedded thumbnails from the copies. Color profiles are kept and your originals are never modified.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Remove EXIF, GPS and embedded thumbnails from the copies. Color profiles are kept. This also applies to originals when optional original compression is enabled.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['strip_metadata'],
 			),
@@ -601,7 +660,7 @@ class Settings {
 	public static function settings_advanced() {
 		$defaults = self::get_defaults();
 		$settings = array(
-			'batch_size'                => array(
+			'batch_size'                  => array(
 				'id'      => 'batch_size',
 				'name'    => esc_html__( 'Images per batch', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Attachments per bulk step. Lower this if bulk runs time out.', 'webberzone-image-optimizer' ),
@@ -611,40 +670,47 @@ class Settings {
 				'max'     => 200,
 				'size'    => 'small',
 			),
-			'background_queue'          => array(
+			'background_queue'            => array(
 				'id'      => 'background_queue',
 				'name'    => esc_html__( 'Process the queue in the background', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Keep working through the queue on a schedule even when the bulk screen is closed.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['background_queue'],
 			),
-			'lazy_convert'              => array(
+			'lazy_convert'                => array(
 				'id'      => 'lazy_convert',
 				'name'    => esc_html__( 'Queue images on first view', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Queue an unconverted image the first time a page references it, serving the original meanwhile. Nothing is ever encoded during a page render.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['lazy_convert'],
 			),
-			'exclude_paths'             => array(
+			'exclude_paths'               => array(
 				'id'      => 'exclude_paths',
 				'name'    => esc_html__( 'Exclude paths', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'One fragment per line, for example 2019/07 or /logos/. Matching paths inside the uploads folder are left alone.', 'webberzone-image-optimizer' ),
 				'type'    => 'textarea',
 				'default' => $defaults['exclude_paths'],
 			),
-			'delete_files_on_uninstall' => array(
+			'delete_files_on_uninstall'   => array(
 				'id'      => 'delete_files_on_uninstall',
 				'name'    => esc_html__( 'Delete optimized files on uninstall', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Remove every generated WebP and AVIF file when the plugin is deleted. Your originals are never touched.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Remove every generated WebP and AVIF file when the plugin is deleted. Compressed original images are left as they are.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['delete_files_on_uninstall'],
 			),
-			'delete_data_on_uninstall'  => array(
+			'delete_data_on_uninstall'    => array(
 				'id'      => 'delete_data_on_uninstall',
 				'name'    => esc_html__( 'Delete settings and records on uninstall', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Remove the settings, queue table and per-image records when the plugin is deleted.', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Remove the settings, queue table and per-image records when the plugin is deleted. Restore records for original backups are kept while the backups exist.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['delete_data_on_uninstall'],
+			),
+			'delete_backups_on_uninstall' => array(
+				'id'      => 'delete_backups_on_uninstall',
+				'name'    => esc_html__( 'Delete original backups on uninstall', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Permanently delete the backup folder and its restore records when the plugin is deleted. Uninstalling never restores images, so the untouched originals of compressed images are lost for good. Restore any you want back first. Default: off.', 'webberzone-image-optimizer' ),
+				'type'    => 'checkbox',
+				'default' => $defaults['delete_backups_on_uninstall'],
 			),
 		);
 
@@ -706,6 +772,22 @@ class Settings {
 	 * @return array Modified settings array.
 	 */
 	public function change_settings_on_save( $settings ) {
+		foreach ( array( 'compress_originals', 'compress_png_originals', 'resize_existing_originals' ) as $key ) {
+			if ( array_key_exists( $key, $settings ) ) {
+				$settings[ $key ] = empty( $settings[ $key ] ) ? 0 : 1;
+			}
+		}
+		if ( array_key_exists( 'original_jpeg_quality', $settings ) ) {
+			$settings['original_jpeg_quality'] = is_scalar( $settings['original_jpeg_quality'] ) ? max( 1, min( 100, absint( $settings['original_jpeg_quality'] ) ) ) : 82;
+		}
+
+		if ( array_key_exists( 'maximum_image_dimension', $settings ) ) {
+			$settings['maximum_image_dimension'] = is_scalar( $settings['maximum_image_dimension'] ) ? absint( $settings['maximum_image_dimension'] ) : 0;
+		}
+		if ( array_key_exists( 'disable_image_scaling', $settings ) ) {
+			$settings['disable_image_scaling'] = empty( $settings['disable_image_scaling'] ) ? 0 : 1;
+		}
+
 		// A format the server cannot encode would queue work that always fails.
 		if ( ! empty( $settings['formats'] ) ) {
 			$requested = wp_parse_list( $settings['formats'] );
@@ -768,7 +850,7 @@ class Settings {
 				'id'      => 'wzio-settings-general',
 				'title'   => esc_html__( 'General', 'webberzone-image-optimizer' ),
 				'content' =>
-				'<p>' . esc_html__( 'The plugin never modifies or replaces your original images. Each converted copy is written alongside the original with the new extension appended, so photo.jpg gains photo.jpg.webp.', 'webberzone-image-optimizer' ) . '</p>' .
+				'<p>' . esc_html__( 'Originals are changed only when original compression is enabled, and a backup is always kept for restore. Each converted copy is written alongside the original with the new extension appended, so photo.jpg gains photo.jpg.webp.', 'webberzone-image-optimizer' ) . '</p>' .
 				'<p>' . esc_html__( 'Turning the plugin off, or deactivating it, immediately returns your site to serving the original files.', 'webberzone-image-optimizer' ) . '</p>',
 			),
 			array(

@@ -12,6 +12,7 @@ use WebberZone\Image_Optimizer\Converter;
 use WebberZone\Image_Optimizer\Cron_Health;
 use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
+use WebberZone\Image_Optimizer\Original_Backups;
 use WebberZone\Image_Optimizer\Queue;
 use WebberZone\Image_Optimizer\Scanner;
 use WebberZone\Image_Optimizer\Util\Helpers;
@@ -181,13 +182,25 @@ class Bulk_Page {
 		<?php
 		printf(
 		/* translators: %s: comma separated list of formats. */
-			esc_html__( 'Generating: %s. Your original images are never modified — every optimized copy is written alongside the original.', 'webberzone-image-optimizer' ),
+			esc_html__( 'Generating: %s. Modern copies are written alongside the source. Optional original compression keeps a restorable backup.', 'webberzone-image-optimizer' ),
 			esc_html( empty( $formats ) ? esc_html__( 'nothing', 'webberzone-image-optimizer' ) : strtoupper( implode( ', ', $formats ) ) )
 		);
 		?>
 			</p>
 
 			<div class="wzio-cards">
+				<div class="wzio-card">
+					<span class="wzio-card__value" id="wzio-stat-original-saved"><?php echo esc_html( $stats['original_saved_human'] ); ?></span>
+					<span class="wzio-card__label"><?php esc_html_e( 'Original bytes saved', 'webberzone-image-optimizer' ); ?></span>
+				</div>
+				<div class="wzio-card">
+					<span class="wzio-card__value" id="wzio-stat-backup-bytes"><?php echo esc_html( $stats['backup_bytes_human'] ); ?></span>
+					<span class="wzio-card__label"><?php esc_html_e( 'Backups occupy', 'webberzone-image-optimizer' ); ?></span>
+				</div>
+				<div class="wzio-card">
+					<span class="wzio-card__value" id="wzio-stat-original-resized"><?php echo esc_html( number_format_i18n( $stats['original_resized'] ) ); ?></span>
+					<span class="wzio-card__label"><?php esc_html_e( 'Main images resized', 'webberzone-image-optimizer' ); ?></span>
+				</div>
 				<div class="wzio-card">
 					<span class="wzio-card__value" id="wzio-stat-total"><?php echo esc_html( number_format_i18n( $stats['total'] ) ); ?></span>
 					<span class="wzio-card__label"><?php esc_html_e( 'Images in the library', 'webberzone-image-optimizer' ); ?></span>
@@ -307,24 +320,29 @@ class Bulk_Page {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int} Stats.
+	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int, original_saved_human: string, backup_bytes_human: string, original_resized: int} Stats.
 	 */
 	public static function get_stats(): array {
-		$counts = Queue::get_counts();
-		$saved  = (int) ( $counts['bytes_saved'] ?? 0 );
-		$source = (int) ( $counts['bytes_source'] ?? 0 );
+		$counts    = Queue::get_counts();
+		$bytes     = Scanner::get_byte_totals();
+		$saved     = $bytes['saved'];
+		$source    = $bytes['source'];
+		$originals = Original_Backups::library_totals();
 
 		return array(
-			'total'         => Scanner::count_candidates(),
+			'total'                => Scanner::count_candidates(),
 			// Images queued again still carry a record, so they would be counted twice.
-			'optimized'     => max( 0, Scanner::count_optimized() - Queue::count_requeued() ),
-			'remaining'     => Processor::get_remaining(),
-			'done'          => (int) $counts[ Queue::DONE ] + (int) $counts[ Queue::SKIPPED ],
-			'saved'         => $saved,
-			'saved_human'   => Helpers::format_bytes( $saved ),
-			'source'        => $source,
-			'source_human'  => Helpers::format_bytes( $source ),
-			'saved_percent' => $source > 0 ? round( ( $saved / $source ) * 100, 1 ) : 0.0,
+			'optimized'            => max( 0, Scanner::count_optimized() - Queue::count_requeued() ),
+			'remaining'            => Processor::get_remaining(),
+			'done'                 => (int) $counts[ Queue::DONE ] + (int) $counts[ Queue::SKIPPED ],
+			'original_saved_human' => Helpers::format_bytes( $originals['saved'] ),
+			'backup_bytes_human'   => Helpers::format_bytes( $originals['bytes'] ),
+			'original_resized'     => $originals['resized'],
+			'saved'                => $saved,
+			'saved_human'          => Helpers::format_bytes( $saved ),
+			'source'               => $source,
+			'source_human'         => Helpers::format_bytes( $source ),
+			'saved_percent'        => $source > 0 ? round( ( $saved / $source ) * 100, 1 ) : 0.0,
 		);
 	}
 

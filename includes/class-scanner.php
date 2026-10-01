@@ -116,6 +116,87 @@ class Scanner {
 	}
 
 	/**
+	 * Sum the source bytes and bytes saved across every conversion record.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @return array{source: int, saved: int} Byte totals.
+	 */
+	public static function get_byte_totals(): array {
+		global $wpdb;
+
+		$cached = get_transient( 'wzio_byte_totals' );
+
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$complete = self::backfill_byte_totals();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT SUM( CASE WHEN meta_key = %s THEN CAST( meta_value AS UNSIGNED ) ELSE 0 END ) AS source,
+					SUM( CASE WHEN meta_key = %s THEN CAST( meta_value AS UNSIGNED ) ELSE 0 END ) AS saved
+				FROM {$wpdb->postmeta} WHERE meta_key IN ( %s, %s )",
+				Attachment_Meta::SOURCE_META_KEY,
+				Attachment_Meta::SAVED_META_KEY,
+				Attachment_Meta::SOURCE_META_KEY,
+				Attachment_Meta::SAVED_META_KEY
+			)
+		);
+
+		$totals = array(
+			'source' => (int) ( $row->source ?? 0 ),
+			'saved'  => (int) ( $row->saved ?? 0 ),
+		);
+
+		if ( $complete ) {
+			set_transient( 'wzio_byte_totals', $totals, self::OPTIMIZED_TTL );
+		}
+
+		return $totals;
+	}
+
+	/**
+	 * Write byte totals for records stored before they were tracked.
+	 *
+	 * @since 1.1.2
+	 *
+	 * @param int $time_limit Seconds to spend before deferring the rest to a later call.
+	 * @return bool True when no record is left without totals.
+	 */
+	public static function backfill_byte_totals( int $time_limit = 10 ): bool {
+		global $wpdb;
+
+		$started = microtime( true );
+
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$ids = $wpdb->get_col(
+				$wpdb->prepare(
+					"SELECT d.post_id FROM {$wpdb->postmeta} d
+					LEFT JOIN {$wpdb->postmeta} s ON s.post_id = d.post_id AND s.meta_key = %s
+					WHERE d.meta_key = %s AND s.meta_id IS NULL
+					LIMIT 500",
+					Attachment_Meta::SAVED_META_KEY,
+					Attachment_Meta::META_KEY
+				)
+			);
+
+			foreach ( $ids as $id ) {
+				Attachment_Meta::set_byte_totals( (int) $id, Attachment_Meta::get( (int) $id ) );
+			}
+
+			if ( count( $ids ) < 500 ) {
+				return true;
+			}
+		} while ( microtime( true ) - $started < $time_limit );
+
+		return false;
+	}
+
+	/**
 	 * Discard the cached library-wide counts.
 	 *
 	 * @since 1.0.2
@@ -125,6 +206,7 @@ class Scanner {
 	public static function flush_counts(): void {
 		delete_transient( 'wzio_count_candidates' );
 		delete_transient( 'wzio_count_optimized' );
+		delete_transient( 'wzio_byte_totals' );
 	}
 
 	/**

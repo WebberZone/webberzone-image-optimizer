@@ -40,3 +40,9 @@ An image that fails is retried a few times and then listed under **Images that c
 **Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/).
 
 When images are queued but the background worker has stopped running, the screen shows a warning naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause, with the WP-CLI and system cron commands that recover it. The warning only appears after a whole 15-minute window passes with no worker run, and it clears as soon as one runs — see [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/) for how the plugin tells a stalled queue from a quiet site.
+
+## Original-file statistics
+
+The screen also reports **Original bytes saved**, **Backups occupy** and **Main images resized**. Original savings compare the first backup with the current source. Sidecar savings compare the compressed source with its smallest modern copy. Backup storage is a separate disk cost, not bandwidth saved.
+
+Enable original compression and optional resizing in General settings before starting a run. To include attachments already processed, select **Re-optimize images that are already done**. Restored originals remain excluded from automatic recompression until an explicit per-image Optimize action or `wp wzio compress` is run.
