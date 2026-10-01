@@ -197,7 +197,12 @@ class Converter {
 			$existing = $record['files'][ $basename ] ?? array();
 
 			$record['files'][ $basename ] = self::convert_file( $path, $args, $existing );
-			$processed[ $basename ]       = true;
+
+			if ( self::discard_if_deleted( $attachment_id, $path ) ) {
+				return new \WP_Error( 'wzio_deleted', __( 'The attachment was deleted during conversion.', 'webberzone-image-optimizer' ) );
+			}
+
+			$processed[ $basename ] = true;
 
 			if ( $use_progress ) {
 				Attachment_Meta::set_progress( $attachment_id, $record, $context, array_keys( $processed ) );
@@ -228,6 +233,33 @@ class Converter {
 		do_action( 'wzio_attachment_converted', $attachment_id, $summary, $args );
 
 		return $summary;
+	}
+
+	/**
+	 * Remove the sidecars just written for an attachment that was deleted mid-conversion.
+	 *
+	 * @param  int    $attachment_id Attachment ID.
+	 * @param  string $path          Source file just converted.
+	 * @return bool Whether the attachment no longer exists.
+	 */
+	private static function discard_if_deleted( int $attachment_id, string $path ): bool {
+		clean_post_cache( $attachment_id );
+
+		if ( 'attachment' === get_post_type( $attachment_id ) ) {
+			return false;
+		}
+
+		foreach ( Helpers::get_formats() as $format ) {
+			$sidecar = Helpers::sidecar_path( $path, $format );
+
+			if ( file_exists( $sidecar ) ) {
+				Helpers::delete_file( $sidecar );
+			}
+		}
+
+		Resolver::invalidate_path( $path );
+
+		return true;
 	}
 
 	/**
@@ -320,6 +352,11 @@ class Converter {
 			}
 
 			$record['files'][ $basename ] = self::convert_file( $path, $args, $existing );
+
+			if ( self::discard_if_deleted( $attachment_id, $path ) ) {
+				return new \WP_Error( 'wzio_deleted', __( 'The attachment was deleted during conversion.', 'webberzone-image-optimizer' ) );
+			}
+
 			Attachment_Meta::set( $attachment_id, $record );
 			Resolver::invalidate_path( $path );
 
