@@ -40,6 +40,7 @@ Gemfile.lock
 favicon.ico
 /index.md
 build-assets.js
+eslint.config.*
 *.dist
 *.yml
 *.neon
