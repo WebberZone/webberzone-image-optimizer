@@ -15,6 +15,36 @@ use WebberZone\Image_Optimizer\Scanner;
 class OutdatedSettingsTest extends WP_UnitTestCase
 {
     /**
+     * Install the queue table outside the per-test database transaction.
+     */
+    public static function set_up_before_class()
+    {
+        parent::set_up_before_class();
+
+        \WebberZone\Image_Optimizer\Database::install();
+    }
+
+    /**
+     * Remove the queue table after all tests in this class have run.
+     */
+    public static function tear_down_after_class()
+    {
+        \WebberZone\Image_Optimizer\Database::drop_table();
+
+        parent::tear_down_after_class();
+    }
+
+    /**
+     * Leave no queue rows behind.
+     */
+    public function tear_down()
+    {
+        \WebberZone\Image_Optimizer\Queue::clear();
+
+        parent::tear_down();
+    }
+
+    /**
      * Arguments with a given WebP quality.
      *
      * @param int $quality WebP quality.
@@ -243,7 +273,6 @@ class OutdatedSettingsTest extends WP_UnitTestCase
 
     public function test_queue_retains_selective_mode(): void
     {
-        \WebberZone\Image_Optimizer\Database::install();
         $id = self::factory()->attachment->create(array('post_mime_type' => 'image/jpeg'));
         \WebberZone\Image_Optimizer\Queue::add(array($id), true, false, true);
         global $wpdb;
@@ -254,7 +283,6 @@ class OutdatedSettingsTest extends WP_UnitTestCase
     }
     public function test_queue_keeps_pending_full_reencode_over_outdated(): void
     {
-        \WebberZone\Image_Optimizer\Database::install();
         $id = self::factory()->attachment->create(array('post_mime_type' => 'image/jpeg'));
         \WebberZone\Image_Optimizer\Queue::add(array($id), true, true);
         \WebberZone\Image_Optimizer\Queue::add(array($id), true, false, true);
