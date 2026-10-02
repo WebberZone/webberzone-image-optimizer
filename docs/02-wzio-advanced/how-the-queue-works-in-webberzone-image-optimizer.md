@@ -27,7 +27,7 @@ Each row moves through these statuses:
 ## What adds attachments to the queue
 
 - Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` / `wp wzio convert` from the command line.
-- A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab — the original is served immediately and the attachment is queued on `shutdown`, so nothing is ever encoded during the page render itself.
+- A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab. The original is served immediately and the attachment is queued on `shutdown`, so nothing is encoded during the page render.
 
 ## Building the queue
 
@@ -39,7 +39,7 @@ Adding to the queue never creates a duplicate row for an attachment that is alre
 
 ## The library counts
 
-The two library-wide numbers on the Bulk Optimize screen — the count of convertible attachments and the count with a conversion record — each need a full-table query, so both are cached in a transient rather than run after every batch. The convertible count is held for an hour, the optimized count for a minute. The optimized count is deliberately not invalidated per conversion: doing so would drop the cache on exactly the requests a bulk run makes most often.
+The Bulk Optimize screen shows two library-wide counts: convertible attachments, and attachments with a conversion record. Each needs a full-table query, so both are cached in a transient rather than run after every batch. The convertible count is held for an hour, the optimized count for a minute. The optimized count is deliberately not invalidated per conversion: doing so would drop the cache on exactly the requests a bulk run makes most often.
 
 Both are discarded when an attachment is added or deleted, when a scan starts, and when the queue is cleared. `wp wzio status` reads the same cached counts.
 
@@ -60,11 +60,11 @@ Only one worker runs a batch at a time, enforced with a MySQL advisory lock (`GE
 
 When **Process the queue in the background** is enabled (Advanced settings tab), a batch that finishes with work still remaining schedules a WP-Cron event roughly a minute later to continue automatically, even with the Bulk Optimize screen closed. The schedule is removed once the queue is empty, and re-created the next time something is queued.
 
-A row stuck in `processing` for more than 10 minutes — a worker killed by a fatal error or a timeout — is automatically released back to `pending` the next time a batch runs, so it can never stall the queue permanently.
+A row stuck in `processing` for more than 10 minutes, usually because a fatal error or timeout killed its worker, is released back to `pending` the next time a batch runs. It can never stall the queue permanently.
 
 ## When the background worker stops running
 
-WP-Cron is not a real scheduler. It runs at the end of a page load, by sending a loopback request back to your own site, so it advances the queue only when someone visits. If `DISABLE_WP_CRON` is set with nothing else running WordPress cron, or the loopback request is blocked — by HTTP authentication, a firewall, or a host that does not allow a site to request itself — the scheduled event never fires and the queue sits at the same number indefinitely.
+WP-Cron is not a real scheduler. It runs at the end of a page load, by sending a loopback request back to your own site, so it advances the queue only when someone visits. The scheduled event never fires, and the queue sits at the same number, if `DISABLE_WP_CRON` is set with nothing else running WordPress cron. The same happens when the loopback request is blocked by HTTP authentication, a firewall, or a host that does not let a site request itself.
 
 The Bulk Optimize screen watches for this and warns you when it happens. It does not go by the scheduled event's timestamp, which is always overdue on a site that has not had a visitor for a while. Instead it notes each time it sees images waiting, and records each time the worker actually runs. Only when a whole 15-minute window passes with images still waiting and no worker run does it tell you the queue has stopped. That means a low-traffic site is never accused of a broken cron, and the warning needs a second visit to the screen to appear.
 
@@ -74,6 +74,6 @@ The **Start optimizing** button does not depend on cron at all — it runs batch
 
 ## Clearing the queue
 
-**Clear queue** on the Bulk Optimize screen removes pending and in-progress rows. Completed rows are kept so the **Bandwidth saved** totals on the bulk screen survive the reset — the queue can be cleared without losing the record of what was already saved. Images that already have optimized copies stay optimized; clearing the queue only discards rows that have not finished, it does not delete any generated files.
+**Clear queue** on the Bulk Optimize screen removes pending and in-progress rows. Completed rows are kept. The **Bandwidth saved** totals on the bulk screen come from each image's own conversion record rather than the queue, so clearing the queue never changes them. Images that already have optimized copies stay optimized; clearing the queue only discards rows that have not finished, it does not delete any generated files.
 
 Running `wp wzio clean` without attachment IDs empties the entire queue table (all rows) and deletes every generated sidecar file — a full reset. `wp wzio clean 7214` removes the row for a single attachment and its generated files.

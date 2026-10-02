@@ -3,14 +3,14 @@ slug: compressing-and-restoring-original-images
 title: "Compressing and Restoring Original Images"
 products: [image-optimizer]
 sections: ["01-wzio-getting-started"]
-tags: [compression, backups, resizing, webberzone-image-optimizer]
+tags: [backups, compression, resizing, webberzone-image-optimizer]
 status: publish
 order: 7
 ---
 
 [kbtoc]
 
-WebberZone Image Optimizer can optionally compress the served JPEG and PNG files as well as generate modern-format copies. This reduces the files used by social previews, direct links and other requests that do not use the plugin's `<picture>` delivery.
+[WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) can optionally compress the served JPEG and PNG files as well as generate modern-format copies. This reduces the files used by social previews, direct links and other requests that do not use the plugin's `<picture>` delivery.
 
 ## Enable original compression
 

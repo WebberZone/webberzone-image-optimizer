@@ -8,7 +8,9 @@ status: publish
 order: 1
 ---
 
-The **AVIF encoder effort** setting is a 0–6 dial that belongs to the plugin, not to any encoder. Each driver translates it into its own backend's native speed scale. This page records the measurements behind that translation so the numbers do not have to be re-derived.
+[kbtoc]
+
+The **AVIF encoder effort** setting is a 0–6 dial that belongs to [the plugin](https://webberzone.com/plugins/webberzone-image-optimizer/), not to any encoder. Each driver translates it into its own backend's native speed scale. The measurements behind that translation are recorded below, so the numbers do not have to be re-derived.
 
 ## The mapping
 
@@ -56,7 +58,7 @@ Speed 8 was the original candidate on CPU and size alone. A perceptual pass reje
 
 Speed 8 also produces *larger* files than speed 7 — 0.0544 to 0.0565 bytes/px on Imagick, 0.0735 to 0.0751 on GD. It is worse on quality and on size, buying only CPU, so there is no rate-distortion argument for it.
 
-The artefact class is fine isolated highlights on dark ground: night skies, bokeh, sparkle, small light text on dark. The worst case in the corpus was a starfield photograph.
+The artifact class is fine isolated highlights on dark ground: night skies, bokeh, sparkle, small light text on dark. The worst case in the corpus was a starfield photograph.
 
 ## Why transparent sources are capped
 
@@ -70,7 +72,7 @@ Alpha is encoded as a separate plane and compresses far worse at speed. Relative
 
 The cliff is entirely at speed 9, so the cap sits at 8. Both encoders show the same shape independently, which makes it a property of AV1 rather than of one build.
 
-Transparency itself survives at every speed. Comparing decoded alpha against the source pixel by pixel, no pixel became fully opaque or fully clear at any speed; the mean deviation moves from 0.021 to 0.033 out of 255 between speed 2 and speed 7, an artefact of lossy encoding rather than of speed.
+Transparency itself survives at every speed. Comparing decoded alpha against the source pixel by pixel, no pixel became fully opaque or fully clear at any speed. The mean deviation moves from 0.021 to 0.033 out of 255 between speed 2 and speed 7, an artifact of lossy encoding rather than of speed.
 
 ## Why there is no megapixel banding
 
@@ -88,4 +90,4 @@ Some ImageMagick builds discard the quality argument for AVIF entirely. On Image
 
 ## Re-measuring
 
-The mapping is a measurement, not a constant. If you re-derive it on other builds, the numbers to reproduce are CPU per megapixel and bytes per pixel across speeds, a perceptual metric (SSIMULACRA2 rather than PSNR — PSNR barely separates these encodes), and alpha behaviour on transparent sources, over a corpus that separates photographs, UI screenshots and transparent graphics. Note that PNG sources take the lossy AVIF path by default, since **Lossless for PNG sources** applies to WebP only.
+The mapping is a measurement, not a constant. To re-derive it on other builds, measure CPU per megapixel and bytes per pixel across speeds, a perceptual metric, and alpha behavior on transparent sources. Use SSIMULACRA2 rather than PSNR, which barely separates these encodes, and a corpus that separates photographs, UI screenshots and transparent graphics. PNG sources take the lossy AVIF path by default, because **Lossless for PNG sources** applies to WebP only.

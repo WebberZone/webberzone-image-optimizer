@@ -14,7 +14,7 @@ order: 3
 
 ## `wp wzio status`
 
-Shows which drivers and formats this server can encode, the currently configured formats, and how much of the library is converted. It also reports original encoder availability, original bytes saved, backup disk use and the number of resized main files.
+Shows which drivers and formats this server can encode, the currently configured formats, and how much of the library is converted. It also reports original encoder availability, original bytes saved, backup disk use and the number of resized main files, plus the disk space used by optimized copies with a per-format breakdown.
 
 ```bash
 wp wzio status
@@ -35,7 +35,7 @@ wp wzio convert --formats=webp,avif --force
 - `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
 - `--dry-run` — report what would be converted without writing anything.
 
-When a copy had to drop below the configured quality to come out smaller than the original, the command says so at the end — "N optimized copies needed a lower quality than configured to come out smaller than the original." See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
+If any copy needed a lower quality than configured to come out smaller than the original, the command says so at the end: "N optimized copies needed a lower quality than configured to come out smaller than the original." See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
 
 ## `wp wzio compress`
 
@@ -88,7 +88,7 @@ wp wzio run --batch=25 --max-batches=10
 - `--batch=<size>` — attachments per batch. Defaults to the **Images per batch** setting on the Advanced tab.
 - `--max-batches=<count>` — stop after this many batches. Defaults to running until the queue is empty.
 
-Each batch reports how many were converted, skipped and failed, and how many remain. Only one worker may hold the queue lock at a time, so if a background batch is already running, the command exits with "Another worker holds the queue lock" rather than processing the same rows twice — wait a moment and run it again.
+Each batch reports how many were converted, skipped and failed, and how many remain. Only one worker can hold the queue lock at a time. If a background batch is already running, the command exits with "Another worker holds the queue lock" rather than processing the same rows twice. Wait a moment and run it again.
 
 ## `wp wzio clean`
 
@@ -102,4 +102,4 @@ wp wzio clean --yes
 - `<id>...` — attachment IDs to clean. Omit to clean every attachment that has a conversion record.
 - `--yes` — skip the confirmation prompt.
 
-With IDs, only those attachments' generated files are deleted and their queue rows removed. Without IDs, every generated file on the site is deleted and the entire queue table is emptied, including the completed rows — a full reset, which also discards the **Bandwidth saved** totals on the Bulk Optimize screen.
+With IDs, only those attachments' generated files are deleted and their queue rows removed. Without IDs, every generated file on the site is deleted and the entire queue table is emptied, including the completed rows — a full reset. The records of the deleted copies are removed with the files, so the **Bandwidth saved** and **Optimized copies occupy** totals on the Bulk Optimize screen no longer count them. Original-compression records and backups are kept.
