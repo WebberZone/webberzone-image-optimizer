@@ -4,7 +4,7 @@ title: "Compressing and Restoring Original Images"
 products: [image-optimizer]
 sections: ["01-wzio-getting-started"]
 tags: [compression, backups, resizing, webberzone-image-optimizer]
-status: draft
+status: publish
 order: 7
 ---
 

@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, performance, convert
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.1.2
+Stable tag: 1.2.0
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -111,98 +111,22 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.2.0 =
 
-Release date: Unreleased
+Release date: 3 October 2026
 
 **Added**
 
-* Compress original images: an opt-in setting that recompresses served JPEG files (and PNG files when pngquant or oxipng is available) in place. Every file is backed up first, the backup is never overwritten, and Restore originals brings back the file and its dimensions from the Media Library, the Edit Media Save box and `wp wzio restore-originals`. Also available as `wp wzio compress`.
-* Maximum image dimension setting, which filters `big_image_size_threshold` for new uploads. WordPress keeps the unscaled upload, and scaling can be disabled entirely.
-* Resize existing originals: shrinks the served main file of existing images to the maximum dimension before compression, with the previous dimensions and sub-sizes stored for restore. Use `wp wzio compress --resize`.
-* Bulk Optimize and `wp wzio status` report original bytes saved, backup disk usage and the number of images resized separately from WebP and AVIF savings.
-* Bulk Optimize and `wp wzio status` report the disk space occupied by optimized copies, broken down by format, so the cost of enabling AVIF is visible. The totals are stored as numeric meta and cached like the other library-wide figures.
-* Each optimized copy records a fingerprint of the settings that produced it. **Regenerate only images made with older settings** on Bulk Optimize, and `--outdated` on `wp wzio convert` and `wp wzio queue`, re-encode just the images affected by a quality, effort or lossless change. Copies written before this release carry no fingerprint and are left alone.
-* Warning when another image optimizer is active, since compressing the same originals twice degrades quality.
-
-**Changed**
-
-* Originals are modified only when Compress original images is enabled, always with a verified backup and a restore path. The unscaled WordPress original is never touched.
-* Uninstalling keeps the backups by default. Enable Delete original backups on uninstall to remove them.
+* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and re-encoding from those backups to avoid repeated quality loss. Respects image-size selections, exclusions and metadata settings, and leaves the unscaled WordPress original untouched. Also available through `wp wzio compress`.
+* Restore originals actions in the Media Library, its bulk actions and the Edit Media Save box, plus `wp wzio restore-originals`, to recover backed-up files and dimensions. Backups and restore records are kept on uninstall unless Delete original backups on uninstall is enabled.
+* Maximum image dimension setting for new uploads and Disable upload scaling option, with the unscaled upload retained when scaling is enabled.
+* Resize existing originals option and `wp wzio compress --resize` to shrink served main files to the maximum dimension, with dimensions retained for restoration. Existing thumbnails remain available, while oversized candidates are omitted from WordPress `srcset`.
+* Original compression results and resized dimensions in Media Library summaries and Details, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
+* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue` to re-encode copies affected by changed encoding settings. Copies made before settings tracking are left alone.
 
 **Fixed**
 
-* Per-attachment lock files in the backup folder are now removed when the operation finishes instead of accumulating.
-
-= 1.1.2 =
-
-Release date: 28 September 2026
-
-**Added**
-
-* Redesigned Optimized column in the Media Library: converted sizes per format, total savings and a Details link that opens a per-size table showing original size, WebP and AVIF sizes, and why any size was skipped.
-* Retry action in the Media Library and the Edit Media Save box for images with skipped or failed copies. It clears those results and converts the image again.
-* Retry skipped and failed images checkbox on the Bulk Optimize screen, which does the same for every affected image in one run.
-
-**Changed**
-
-* The Image optimization section in the Edit Media Save box now sits below the file details and uses the same summary and Details table.
-* Images with no optimized copy now show Failed, Queued or Original kept in the Optimized column instead of Not yet.
-
-**Fixed**
-
-* Images processed while no encoder was available were marked Not supported permanently, so neither Optimize nor the bulk scan converted them once an encoder became available. They are now retried, and affected images are queued again automatically.
-* Re-optimize images that are already done on the Bulk Optimize screen, and `wp wzio queue --force`, queued finished images again but the queue then kept their existing copies and recorded skips, so nothing was re-encoded. Queued images are now re-encoded as intended.
-* On the Bulk Optimize screen, images queued again were counted as both Already optimized and Waiting in the queue.
-* The Pause button showed on the Bulk Optimize screen even when nothing was running.
-
-= 1.1.1 =
-
-Release date: 28 September 2026
-
-**Added**
-
-* PNG lossy fallback quality setting. A PNG whose lossless WebP copy misses the minimum saving is tried once more as lossy WebP at this quality, default 95. PNGs skipped earlier are queued again automatically.
-
-**Fixed**
-
-* The Already optimized count on the Bulk Optimize screen could stay at its old value after the background queue finished, while Bandwidth saved had already updated.
-* Saving settings caused a fatal error when the stored settings option held something other than an array.
-* The hook registry used `spl_object_hash()`, which is deprecated in PHP 8.6.
-
-= 1.1.0 =
-
-Release date: 12 September 2026
-Release post: https://webberzone.com/announcements/image-optimizer-v1-1/
-
-**Added**
-
-* Media Library filter for optimized, not-yet-optimized, skipped and failed images. Thanks to [muneeb-ashraf](https://github.com/muneeb-ashraf).
-* One lower-quality retry for a lossy copy that misses the minimum saving, preserving more optimized candidates before discarding a stubborn size. The step is a share of the configured quality, floored at 40, and filterable with `wzio_conversion_retry_step`. The retry is skipped where the server's encoder ignores the quality setting, because it would produce an identical file at twice the cost.
-* A Bulk Optimize warning when images are queued but the background worker has stopped running, naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause and giving the WP-CLI and system cron commands that recover it.
-* A note in the Media Library column, on the attachment screen and in `wp wzio convert` when a copy needed a lower quality than the one configured.
-* A note on the Formats setting that AVIF costs a few times more CPU than WebP and runs on every image size, pointing at Convert new uploads as the way to move that work into the background queue.
-
-**Changed**
-
-* Optimized `<picture>` sources now omit missing intermediate `srcset` candidates while requiring the smallest and widest or highest-density candidates. Complete format sets are listed before partial sets.
-* AVIF encoder effort now maps onto each encoder's own speed scale rather than one shared invented scale, with the default sitting at the measured point where files stop getting meaningfully smaller. This cuts AVIF conversion time by roughly thirty times on ImageMagick servers for a few per cent of file size.
-* A source that can carry transparency is never encoded at the fastest AVIF speed, where its file can grow by two fifths for no gain.
-* Lossless encoding of PNG sources now applies to WebP only. A lossless AVIF is almost always larger than the PNG it came from, so it was discarded anyway.
-* The capability probe encodes at the cheapest effort. It only answers whether a format works, so it no longer runs the slowest encode the plugin is capable of.
-
-**Security**
-
-* Hardened settings textarea sanitization for users without the `unfiltered_html` capability.
-
-**Fixed**
-
-* The AVIF encoder effort setting had no effect on servers that use GD, which never received it and fell back to its own default.
-* The AVIF quality setting was ignored for PNG sources on servers that use GD. The encoder was handed its own default quality instead, which was neither the lossless encode the setting implied nor the quality configured on the Quality tab.
-* Very large images were automatically pushed towards a faster encoder setting, which could make them substantially larger instead of merely quicker.
-* Images were wrapped in a second `<picture>` element when content and template rewriting both ran.
-* An image whose conversion stopped the background worker was claimed again indefinitely, because the abandoned attempt was never counted against its retry budget.
-* A single attachment could run far past the batch time budget. The worker now stops between files and resumes after the last file it attempted.
-* The queue table was reported missing for the rest of the request in which it was created, so a new site silently queued nothing.
-* `trim()`, `ltrim()` and `rtrim()` relied on the default character list, which changes in PHP 8.6.
+* Bandwidth savings on Bulk Optimize and `wp wzio status` omitted images converted outside the queue and could be lost when queue records were cleared.
+* Image conversion could fail in background or command-line requests when `wp_tempnam()` was unavailable.
+* Optimized copies could remain on disk when an image was deleted during conversion.
 
 = Earlier versions =
 
@@ -210,8 +134,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.1.2 =
-A clearer Optimized column with a per-size Details table, a Retry action, and a fix for images stuck as Not supported after an encoder became available.
-
-= 1.1.1 =
-PNGs that lossless WebP could not shrink now get a lossy WebP copy at a quality you control, and earlier skips are retried automatically. Also fixes a stale Already optimized count and a fatal error when saving corrupted settings.
+= 1.2.0 =
+Reduce original image sizes with optional compression and resizing, backed by verified backups and restoration. Review disk usage and regenerate only copies affected by changed encoding settings. Original compression remains off by default.
