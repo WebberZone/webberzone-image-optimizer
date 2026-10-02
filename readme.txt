@@ -119,6 +119,8 @@ Release date: Unreleased
 * Maximum image dimension setting, which filters `big_image_size_threshold` for new uploads. WordPress keeps the unscaled upload, and scaling can be disabled entirely.
 * Resize existing originals: shrinks the served main file of existing images to the maximum dimension before compression, with the previous dimensions and sub-sizes stored for restore. Use `wp wzio compress --resize`.
 * Bulk Optimize and `wp wzio status` report original bytes saved, backup disk usage and the number of images resized separately from WebP and AVIF savings.
+* Bulk Optimize and `wp wzio status` report the disk space occupied by optimized copies, broken down by format, so the cost of enabling AVIF is visible. The totals are stored as numeric meta and cached like the other library-wide figures.
+* Each optimized copy records a fingerprint of the settings that produced it. **Regenerate only images made with older settings** on Bulk Optimize, and `--outdated` on `wp wzio convert` and `wp wzio queue`, re-encode just the images affected by a quality, effort or lossless change. Copies written before this release carry no fingerprint and are left alone.
 * Warning when another image optimizer is active, since compressing the same originals twice degrades quality.
 
 **Changed**

@@ -22,6 +22,7 @@ if ( ! defined( 'WPINC' ) ) {
 class Converter {
 
 
+
 	/**
 	 * Lowest quality a retry may drop to, whatever the step works out at.
 	 *
@@ -59,6 +60,7 @@ class Converter {
 			array(
 				'formats'     => $formats,
 				'force'       => false,
+				'outdated'    => false,
 				'strip'       => (bool) \wzio_get_option( 'strip_metadata', true ),
 				'effort_webp' => (int) \wzio_get_option( 'effort_webp', 6 ),
 				'effort_avif' => (int) \wzio_get_option( 'effort_avif', 4 ),
@@ -81,6 +83,33 @@ class Converter {
 		 * @param array<string, mixed> $overrides Overrides supplied by the caller.
 		 */
 		return (array) apply_filters( 'wzio_conversion_args', $args, $overrides );
+	}
+
+	/**
+	 * Fingerprint the settings that decide how a source of this type is encoded.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param  string               $format            Target format slug.
+	 * @param  array<string, mixed> $args              Conversion arguments.
+	 * @param  string               $mime              Source MIME type.
+	 * @param  int|null             $effective_quality Effective quality of the stored copy.
+	 * @param  bool                 $reduced           Whether the lower-quality retry produced it.
+	 * @return string Short fingerprint.
+	 */
+	public static function fingerprint( string $format, array $args, string $mime, ?int $effective_quality = null, bool $reduced = false ): string {
+		$lossless   = ! empty( $args['lossless'] ) && 'image/png' === $mime && 'webp' === $format;
+		$configured = max( 1, min( 100, (int) ( $args['quality'][ $format ] ?? 82 ) ) );
+		$parts      = array(
+			$format,
+			'avif' === $format ? (int) ( $args['effort_avif'] ?? 4 ) : (int) ( $args['effort_webp'] ?? 6 ),
+			! empty( $args['strip'] ) ? 1 : 0,
+			$lossless ? 'l' . max( 0, min( 100, (int) ( $args['png_lossy'] ?? 0 ) ) ) : 'q' . $configured,
+			$effective_quality ?? ( $lossless ? 0 : $configured ),
+			$reduced ? 1 : 0,
+		);
+
+		return substr( md5( implode( '|', $parts ) ), 0, 8 );
 	}
 
 	/**
@@ -373,14 +402,16 @@ class Converter {
 			return new \WP_Error(
 				'wzio_original_failed',
 				sprintf(
-					/* translators: %s: error message and file name */
+				/* translators: %s: error message and file name */
 					__( 'Original compression failed: %s', 'webberzone-image-optimizer' ),
 					(string) reset( $failed ) . ' (' . (string) key( $failed ) . ')'
 				)
 			);
 		}
 
-		/** This action is documented in includes/class-converter.php */
+		/**
+	* This action is documented in includes/class-converter.php
+*/
 		do_action( 'wzio_attachment_converted', $attachment_id, self::summarise( $record, $files, $args ), $args );
 
 		return array(
@@ -519,6 +550,7 @@ class Converter {
 			'effort_avif'        => (int) ( $args['effort_avif'] ?? 4 ),
 			'sidecar_naming'     => (string) \wzio_get_option( 'sidecar_naming', 'append' ),
 			'force'              => ! empty( $args['force'] ),
+			'outdated'           => ! empty( $args['outdated'] ),
 			'originals'          => Original_Optimizer::settings(),
 			'compress_originals' => (bool) \wzio_get_option( 'compress_originals', false ),
 		);
@@ -572,11 +604,12 @@ class Converter {
 	 * @return array<string, mixed> File record.
 	 */
 	public static function convert_file( string $path, array $args, array $existing = array() ): array {
-		$record = array( 'size' => 0 );
+		$record         = $existing;
+		$record['size'] = 0;
 		if ( isset( $existing['original'] ) ) {
 			$record['original'] = $existing['original'];
 		}
-		if ( ! empty( $args['attachment_id'] ) && \wzio_get_option( 'compress_originals', false ) && ! get_post_meta( (int) $args['attachment_id'], '_wzio_originals_restored', true ) && is_readable( $path ) ) {
+		if ( empty( $args['outdated'] ) && ! empty( $args['attachment_id'] ) && \wzio_get_option( 'compress_originals', false ) && ! get_post_meta( (int) $args['attachment_id'], '_wzio_originals_restored', true ) && is_readable( $path ) ) {
 			$before_hash = Helpers::file_hash( $path );
 			$original    = Original_Optimizer::process_file( (int) $args['attachment_id'], $path );
 			$after_hash  = hash_file( 'sha256', $path );
@@ -593,7 +626,7 @@ class Converter {
 			if ( $after_hash !== $before_hash ) {
 				$args['force'] = true;
 				foreach ( Helpers::get_formats() as $format ) {
-					unset( $existing[ $format ] );
+					unset( $existing[ $format ], $record[ $format ] );
 				}
 			}
 		}
@@ -638,6 +671,21 @@ class Converter {
 			$stored_quality = isset( $existing[ $format ]['bytes'] ) ? ( $existing[ $format ]['quality'] ?? null ) : null;
 			$known_quality  = is_numeric( $stored_quality ) ? max( 1, min( 100, (int) $stored_quality ) ) : null;
 			$known_reduced  = isset( $existing[ $format ]['bytes'] ) && ! empty( $existing[ $format ]['reduced'] );
+			$known_fp       = isset( $existing[ $format ]['bytes'] ) && is_string( $existing[ $format ]['fp'] ?? null ) ? $existing[ $format ]['fp'] : null;
+			$force_format   = ! empty( $args['force'] );
+
+			if ( ! $force_format && ! empty( $args['outdated'] ) && Attachment_Meta::is_converted( $existing, $format ) ) {
+				if ( ! Attachment_Meta::is_outdated( array( 'files' => array( wp_basename( $path ) => $existing ) ), array_merge( $args, array( 'formats' => array( $format ) ) ), $mime ) ) {
+					$record[ $format ] = $existing[ $format ];
+					continue;
+				}
+				$force_format = true;
+			}
+
+			// A kept copy survived an encode under the current settings, so it is current now.
+			if ( $force_format && isset( $existing[ $format ]['bytes'] ) ) {
+				$known_fp = self::fingerprint( $format, $args, $mime, $known_quality, $known_reduced );
+			}
 
 			if ( self::is_alien_file( $destination, $width, $height ) ) {
 				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
@@ -646,20 +694,20 @@ class Converter {
 
 			// Any up-to-date copy is kept, whoever wrote it. Re-encoding a file that
 			// already serves costs a migrating site hours and can only make it worse.
-			if ( empty( $args['force'] )
+			if ( ! $force_format
 				&& file_exists( $destination )
 				&& filemtime( $destination ) >= filemtime( $path )
 			) {
 				$bytes = (int) filesize( $destination );
 
 				if ( $bytes > 0 && $bytes < $max_bytes ) {
-					$record[ $format ] = Attachment_Meta::converted_entry( $bytes, $known_quality, $known_reduced );
+					$record[ $format ] = Attachment_Meta::converted_entry( $bytes, $known_quality, $known_reduced, $known_fp );
 					continue;
 				}
 			}
 
 			// A previous run decided this file is not worth converting.
-			if ( empty( $args['force'] )
+			if ( ! $force_format
 				&& isset( $existing[ $format ]['skip'] )
 				&& ! self::skip_predates_retry( $existing[ $format ], $lossless, $png_lossy )
 				&& ! self::is_stale_skip( $existing[ $format ], $format )
@@ -710,7 +758,7 @@ class Converter {
 
 			$quality = $lossless ? null : $driver_args['quality'];
 			$reduced = false;
-			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, false, $known_reduced );
+			$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, false, $known_reduced, self::fingerprint( $format, $args, $mime, $quality, $reduced ), $known_fp );
 
 			// Palette PNGs leave lossless WebP almost nothing to remove. The configured
 			// fallback is the floor, so the lossy retry below never follows it.
@@ -729,7 +777,7 @@ class Converter {
 
 				$quality = $png_lossy;
 				$reduced = true;
-				$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced );
+				$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced, self::fingerprint( $format, $args, $mime, $quality, $reduced ), $known_fp );
 			}
 
 			// Check both signals: built-in drivers reject an oversized encode, while
@@ -753,7 +801,7 @@ class Converter {
 
 					$quality = $retry_quality;
 					$reduced = true;
-					$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced );
+					$entry   = self::resolve_sidecar( $path, $destination, $max_bytes, ! is_wp_error( $result ), $quality, $known_quality, $reduced, $known_reduced, self::fingerprint( $format, $args, $mime, $quality, $reduced ), $known_fp );
 				}
 			}
 
@@ -877,14 +925,16 @@ class Converter {
 	 *
 	 * @since 1.0.1
 	 *
-	 * @param  string   $path          Absolute path to the source image.
-	 * @param  string   $destination   Sidecar path.
-	 * @param  int      $max_bytes     Size the sidecar has to stay below.
-	 * @param  bool     $written       Whether this run wrote the sidecar.
-	 * @param  int|null $quality       Effective lossy quality attempted, when applicable.
-	 * @param  int|null $known_quality Quality recorded for an inherited sidecar, when known.
-	 * @param  bool     $reduced       Whether this run used the lower-quality retry.
-	 * @param  bool     $known_reduced Whether an inherited sidecar used the retry.
+	 * @param  string      $path              Absolute path to the source image.
+	 * @param  string      $destination       Sidecar path.
+	 * @param  int         $max_bytes         Size the sidecar has to stay below.
+	 * @param  bool        $written           Whether this run wrote the sidecar.
+	 * @param  int|null    $quality           Effective lossy quality attempted, when applicable.
+	 * @param  int|null    $known_quality     Quality recorded for an inherited sidecar, when known.
+	 * @param  bool        $reduced           Whether this run used the lower-quality retry.
+	 * @param  bool        $known_reduced     Whether an inherited sidecar used the retry.
+	 * @param  string|null $fingerprint       Settings fingerprint of the attempted encode.
+	 * @param  string|null $known_fingerprint Fingerprint of a surviving inherited copy.
 	 * @return array<string, mixed> Format record.
 	 */
 	private static function resolve_sidecar(
@@ -895,7 +945,9 @@ class Converter {
 		?int $quality = null,
 		?int $known_quality = null,
 		bool $reduced = false,
-		bool $known_reduced = false
+		bool $known_reduced = false,
+		?string $fingerprint = null,
+		?string $known_fingerprint = null
 	): array {
 		clearstatcache( true, $destination );
 
@@ -906,7 +958,7 @@ class Converter {
 			$fresh = $written || filemtime( $destination ) >= filemtime( $path );
 
 			if ( $bytes > 0 && $bytes < $max_bytes && $fresh ) {
-				return Attachment_Meta::converted_entry( $bytes, $written ? $quality : $known_quality, $written ? $reduced : $known_reduced );
+				return Attachment_Meta::converted_entry( $bytes, $written ? $quality : $known_quality, $written ? $reduced : $known_reduced, $written ? $fingerprint : $known_fingerprint );
 			}
 
 			Helpers::delete_file( $destination );

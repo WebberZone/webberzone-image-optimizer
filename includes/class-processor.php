@@ -218,7 +218,9 @@ class Processor {
 	private static function process_row( $row, array $overrides = array() ): array {
 		$attachment_id = (int) $row->attachment_id;
 
-		if ( ! empty( $row->reencode ) ) {
+		if ( 2 === (int) ( $row->reencode ?? 0 ) ) {
+			$overrides['outdated'] = true;
+		} elseif ( ! empty( $row->reencode ) ) {
 			$overrides['force'] = true;
 		}
 

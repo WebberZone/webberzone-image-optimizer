@@ -80,6 +80,12 @@
                 element.textContent = stats[key];
             }
         });
+		if (els.copies && typeof stats.copies_human !== 'undefined') {
+			els.copies.textContent = stats.copies_human;
+		}
+		if (els.copiesBreakdown && typeof stats.copies_breakdown !== 'undefined') {
+			els.copiesBreakdown.textContent = stats.copies_breakdown;
+		}
 		if (typeof stats.total !== 'undefined') {
 			els.total.textContent = stats.total.toLocaleString();
 		}
@@ -111,6 +117,7 @@
 		els.reset.disabled = state;
 		els.force.disabled = state;
 		els.retry.disabled = state;
+		els.outdated.disabled = state;
 	}
 
 	function step() {
@@ -154,6 +161,7 @@
 		post('wzio_bulk_scan', {
 			force: els.force.checked ? '1' : '0',
 			retry: els.retry.checked && 0 === afterId ? '1' : '0',
+			outdated: els.outdated.checked ? '1' : '0',
 			after_id: afterId,
 		})
 			.then(function (stats) {
@@ -215,6 +223,9 @@
 			reset: byId('wzio-reset'),
 			force: byId('wzio-force'),
 			retry: byId('wzio-retry'),
+			outdated: byId('wzio-outdated'),
+			copies: byId('wzio-stat-copies'),
+			copiesBreakdown: byId('wzio-stat-copies-breakdown'),
 			progress: byId('wzio-progress'),
 			fill: byId('wzio-progress-fill'),
 			text: byId('wzio-progress-text'),
@@ -228,6 +239,16 @@
 		if (!els.start) {
 			return;
 		}
+
+		[els.force, els.outdated, els.retry].forEach(function (mode) {
+			mode.addEventListener('change', function () {
+				if (mode.checked) {
+					[els.force, els.outdated, els.retry].forEach(function (other) {
+						if (other !== mode) other.checked = false;
+					});
+				}
+			});
+		});
 
 		els.start.addEventListener('click', start);
 		els.pause.addEventListener('click', pause);

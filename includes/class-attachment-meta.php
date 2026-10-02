@@ -61,7 +61,15 @@ class Attachment_Meta {
 	 * @since 1.0.0
 	 * @var int
 	 */
-	const SCHEMA = 2;
+	const SCHEMA = 3;
+
+	/**
+	 * Post meta key prefix holding the optimized copy bytes of one format.
+	 *
+	 * @since 1.2.0
+	 * @var string
+	 */
+	const FORMAT_META_PREFIX = '_wzio_bytes_';
 
 	/**
 	 * Get the conversion record for an attachment.
@@ -102,7 +110,7 @@ class Attachment_Meta {
 	private static function get_record( int $attachment_id, string $meta_key ): array {
 		$data = get_post_meta( $attachment_id, $meta_key, true );
 
-		if ( ! is_array( $data ) || ! in_array( ( $data['v'] ?? 0 ), array( 1, self::SCHEMA ), true ) ) {
+		if ( ! is_array( $data ) || ! in_array( ( $data['v'] ?? 0 ), array( 1, 2, self::SCHEMA ), true ) ) {
 			return self::empty_record();
 		}
 
@@ -166,6 +174,10 @@ class Attachment_Meta {
 
 		update_post_meta( $attachment_id, self::SOURCE_META_KEY, $totals['source'] );
 		update_post_meta( $attachment_id, self::SAVED_META_KEY, $totals['saved'] );
+
+		foreach ( Helpers::get_formats() as $format ) {
+			update_post_meta( $attachment_id, self::FORMAT_META_PREFIX . $format, $totals['formats'][ $format ] ?? 0 );
+		}
 	}
 
 	/**
@@ -212,6 +224,9 @@ class Attachment_Meta {
 		delete_post_meta( $attachment_id, self::META_KEY );
 		delete_post_meta( $attachment_id, self::SOURCE_META_KEY );
 		delete_post_meta( $attachment_id, self::SAVED_META_KEY );
+		foreach ( Helpers::get_formats() as $format ) {
+			delete_post_meta( $attachment_id, self::FORMAT_META_PREFIX . $format );
+		}
 		self::delete_progress( $attachment_id );
 	}
 
@@ -306,14 +321,20 @@ class Attachment_Meta {
 	 *
 	 * @since 1.0.0
 	 * @since 1.1.0 Added the optional quality value.
+	 * @since 1.2.0 Added the optional settings fingerprint.
 	 *
-	 * @param int      $bytes   Sidecar size in bytes.
-	 * @param int|null $quality Effective lossy quality, when known.
-	 * @param bool     $reduced Whether the copy needed the lower-quality retry.
-	 * @return array{bytes: int, quality?: int, reduced?: bool} Entry.
+	 * @param int         $bytes       Sidecar size in bytes.
+	 * @param int|null    $quality     Effective lossy quality, when known.
+	 * @param bool        $reduced     Whether the copy needed the lower-quality retry.
+	 * @param string|null $fingerprint Fingerprint of the settings that produced the copy, when known.
+	 * @return array{bytes: int, quality?: int, reduced?: bool, fp?: string} Entry.
 	 */
-	public static function converted_entry( int $bytes, ?int $quality = null, bool $reduced = false ): array {
+	public static function converted_entry( int $bytes, ?int $quality = null, bool $reduced = false, ?string $fingerprint = null ): array {
 		$entry = array( 'bytes' => $bytes );
+
+		if ( null !== $fingerprint && '' !== $fingerprint ) {
+			$entry['fp'] = $fingerprint;
+		}
 
 		if ( null !== $quality ) {
 			$entry['quality'] = max( 1, min( 100, $quality ) );
@@ -423,6 +444,40 @@ class Attachment_Meta {
 
 		return $totals;
 	}
+
+	/**
+	 * Whether any optimized copy was made with settings other than the current ones.
+	 *
+	 * A copy with no fingerprint predates tracking and is never reported outdated.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param array{files: array<string, array<string, mixed>>} $record Record.
+	 * @param array<string, mixed>                              $args   Current conversion arguments.
+	 * @param string                                            $mime   Source MIME type.
+	 * @return bool True when at least one copy is outdated.
+	 */
+	public static function is_outdated( array $record, array $args, string $mime ): bool {
+		foreach ( $record['files'] as $file => $file_record ) {
+			$file_mime = wp_check_filetype( (string) $file )['type'];
+			$file_mime = $file_mime ? $file_mime : $mime;
+
+			foreach ( (array) $args['formats'] as $format ) {
+				$stored = $file_record[ $format ]['fp'] ?? '';
+
+				if ( '' === $stored || ! self::is_converted( $file_record, (string) $format ) ) {
+					continue;
+				}
+
+				if ( Converter::fingerprint( (string) $format, $args, $file_mime, isset( $file_record[ $format ]['quality'] ) ? (int) $file_record[ $format ]['quality'] : null, ! empty( $file_record[ $format ]['reduced'] ) ) !== $stored ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Drop disposable sidecar results while retaining original recovery summaries.
 	 *

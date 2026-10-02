@@ -139,7 +139,7 @@ function wzio_uninstall_site() {
 	delete_transient( 'wzio_byte_totals' );
 
 	// The _wzio_originals records are kept unless the backups were deleted, so a reinstall can still restore them.
-	foreach ( array( '_wzio_data', '_wzio_progress', '_wzio_source_bytes', '_wzio_saved_bytes', '_wzio_original_saved', '_wzio_original_bytes', '_wzio_original_resized', '_wzio_original_compressed' ) as $meta_key ) {
+	foreach ( array( '_wzio_data', '_wzio_progress', '_wzio_source_bytes', '_wzio_saved_bytes', '_wzio_bytes_webp', '_wzio_bytes_avif', '_wzio_original_saved', '_wzio_original_bytes', '_wzio_original_resized', '_wzio_original_compressed' ) as $meta_key ) {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 		$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => $meta_key ) );
 	}

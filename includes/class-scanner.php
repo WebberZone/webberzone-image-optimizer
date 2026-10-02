@@ -120,35 +120,54 @@ class Scanner {
 	 *
 	 * @since 1.1.2
 	 *
-	 * @return array{source: int, saved: int} Byte totals.
+	 * @return array{source: int, saved: int, formats: array<string, int>, copies: int} Byte totals.
 	 */
 	public static function get_byte_totals(): array {
 		global $wpdb;
 
 		$cached = get_transient( 'wzio_byte_totals' );
 
-		if ( is_array( $cached ) ) {
+		if ( is_array( $cached ) && isset( $cached['copies'] ) ) {
 			return $cached;
 		}
 
-		$complete = self::backfill_byte_totals();
+		// Stats polls run every step of a bulk run, so the upgrade backfill gets a small slice of each.
+		$complete = self::backfill_byte_totals( 2 );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$row = $wpdb->get_row(
+		$keys = array( Attachment_Meta::SOURCE_META_KEY, Attachment_Meta::SAVED_META_KEY );
+
+		foreach ( Helpers::get_formats() as $format ) {
+			$keys[] = Attachment_Meta::FORMAT_META_PREFIX . $format;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $keys ), '%s' ) );
+
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$rows = (array) $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT SUM( CASE WHEN meta_key = %s THEN CAST( meta_value AS UNSIGNED ) ELSE 0 END ) AS source,
-					SUM( CASE WHEN meta_key = %s THEN CAST( meta_value AS UNSIGNED ) ELSE 0 END ) AS saved
-				FROM {$wpdb->postmeta} WHERE meta_key IN ( %s, %s )",
-				Attachment_Meta::SOURCE_META_KEY,
-				Attachment_Meta::SAVED_META_KEY,
-				Attachment_Meta::SOURCE_META_KEY,
-				Attachment_Meta::SAVED_META_KEY
+				"SELECT meta_key, SUM( CAST( meta_value AS UNSIGNED ) ) AS total FROM {$wpdb->postmeta} WHERE meta_key IN ( {$placeholders} ) GROUP BY meta_key",
+				$keys
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+
+		$sums = array();
+
+		foreach ( $rows as $row ) {
+			$sums[ $row->meta_key ] = (int) $row->total;
+		}
+
+		$formats = array();
+
+		foreach ( Helpers::get_formats() as $format ) {
+			$formats[ $format ] = $sums[ Attachment_Meta::FORMAT_META_PREFIX . $format ] ?? 0;
+		}
 
 		$totals = array(
-			'source' => (int) ( $row->source ?? 0 ),
-			'saved'  => (int) ( $row->saved ?? 0 ),
+			'source'  => $sums[ Attachment_Meta::SOURCE_META_KEY ] ?? 0,
+			'saved'   => $sums[ Attachment_Meta::SAVED_META_KEY ] ?? 0,
+			'formats' => $formats,
+			'copies'  => array_sum( $formats ),
 		);
 
 		if ( $complete ) {
@@ -179,12 +198,16 @@ class Scanner {
 					LEFT JOIN {$wpdb->postmeta} s ON s.post_id = d.post_id AND s.meta_key = %s
 					WHERE d.meta_key = %s AND s.meta_id IS NULL
 					LIMIT 500",
-					Attachment_Meta::SAVED_META_KEY,
+					Attachment_Meta::FORMAT_META_PREFIX . Helpers::get_formats()[0],
 					Attachment_Meta::META_KEY
 				)
 			);
 
 			foreach ( $ids as $id ) {
+				if ( microtime( true ) - $started >= $time_limit ) {
+					return false;
+				}
+
 				Attachment_Meta::set_byte_totals( (int) $id, Attachment_Meta::get( (int) $id ) );
 			}
 
@@ -381,15 +404,71 @@ class Scanner {
 	}
 
 	/**
+	 * Get a page of attachment IDs holding copies made with older settings.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param int   $limit    Maximum IDs to return.
+	 * @param int   $after_id Only return IDs greater than this.
+	 * @param array $overrides Conversion argument overrides.
+	 * @return array{ids: array<int, int>, last: int, exhausted: bool} Matching IDs, the last ID examined and whether the library ran out.
+	 */
+	public static function get_outdated_ids( int $limit = 500, int $after_id = 0, array $overrides = array() ): array {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT m.post_id, p.post_mime_type FROM {$wpdb->postmeta} m
+				 INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id
+				 WHERE m.meta_key = %s AND m.post_id > %d AND p.post_type = 'attachment' AND p.post_status <> 'trash'
+				 ORDER BY m.post_id ASC
+				 LIMIT %d",
+				Attachment_Meta::META_KEY,
+				$after_id,
+				$limit
+			)
+		);
+
+		if ( empty( $rows ) ) {
+			return array(
+				'ids'       => array(),
+				'last'      => $after_id,
+				'exhausted' => true,
+			);
+		}
+
+		update_meta_cache( 'post', wp_list_pluck( $rows, 'post_id' ) );
+
+		$args = Converter::get_args( $overrides );
+		$ids  = array();
+
+		foreach ( $rows as $row ) {
+			$id = (int) $row->post_id;
+
+			if ( Attachment_Meta::is_outdated( Attachment_Meta::get( $id ), $args, (string) $row->post_mime_type ) ) {
+				$ids[] = $id;
+			}
+		}
+
+		return array(
+			'ids'       => $ids,
+			'last'      => (int) end( $rows )->post_id,
+			'exhausted' => count( $rows ) < $limit,
+		);
+	}
+
+	/**
 	 * Fill the queue with every attachment that still needs work.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param bool $force Whether to include attachments that already have a record.
+	 * @param bool $force    Whether to include attachments that already have a record.
+	 * @param bool $outdated Whether to queue only attachments made with older settings.
 	 * @return int Number of attachments queued.
 	 */
-	public static function enqueue_all( bool $force = false ): int {
-		$pass = self::enqueue_batch( 0, $force, INF );
+	public static function enqueue_all( bool $force = false, bool $outdated = false ): int {
+		$pass = self::enqueue_batch( 0, $force, INF, $outdated );
 
 		return $pass['queued'];
 	}
@@ -402,12 +481,33 @@ class Scanner {
 	 * @param int        $after_id Cursor; only attachments above this ID are considered.
 	 * @param bool       $force    Whether to include attachments that already have a record.
 	 * @param float|null $deadline Wall-clock deadline, or null for the default budget.
+	 * @param bool       $outdated Whether to queue only attachments made with older settings.
 	 * @return array{queued: int, after_id: int, done: bool} Pass result.
 	 */
-	public static function enqueue_batch( int $after_id = 0, bool $force = false, ?float $deadline = null ): array {
+	public static function enqueue_batch( int $after_id = 0, bool $force = false, ?float $deadline = null, bool $outdated = false ): array {
+		$outdated = $outdated && ! $force;
 		$deadline = null === $deadline ? microtime( true ) + self::MAX_SCAN_SECONDS : $deadline;
 		$queued   = 0;
 		$found    = 0;
+
+		if ( $outdated ) {
+			do {
+				$page = self::get_outdated_ids( self::CHUNK, $after_id );
+
+				if ( ! empty( $page['ids'] ) ) {
+					Queue::add( $page['ids'], true, false, true );
+					$queued += count( $page['ids'] );
+				}
+
+				$after_id = $page['last'];
+			} while ( ! $page['exhausted'] && microtime( true ) < $deadline );
+
+			return array(
+				'queued'   => $queued,
+				'after_id' => $after_id,
+				'done'     => $page['exhausted'],
+			);
+		}
 
 		do {
 			$ids   = self::get_candidate_ids( self::CHUNK, $after_id, ! $force );

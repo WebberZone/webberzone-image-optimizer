@@ -77,9 +77,10 @@ class Queue {
 	 *
 	 * @param  bool            $requeue        Whether to requeue rows that already finished.
 	 * @param  bool            $reencode       Whether the next pass should re-encode copies that are already up to date.
+	 * @param  bool            $outdated       Whether to re-encode only copies with changed settings.
 	 * @return int Number of rows written.
 	 */
-	public static function add( array $attachment_ids, bool $requeue = false, bool $reencode = false ): int {
+	public static function add( array $attachment_ids, bool $requeue = false, bool $reencode = false, bool $outdated = false ): int {
 		global $wpdb;
 
 		$attachment_ids = array_values( array_unique( array_filter( array_map( 'intval', $attachment_ids ) ) ) );
@@ -88,24 +89,26 @@ class Queue {
 			return 0;
 		}
 
+		$mode  = $reencode ? 1 : ( $outdated ? 2 : 0 );
 		$table = Database::get_table();
 		$now   = current_time( 'mysql' );
 		$rows  = array();
 
 		foreach ( $attachment_ids as $id ) {
-			$rows[] = $reencode
-				? $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s, 1)', $id, self::PENDING, '', $now, $now )
+			$rows[] = $mode
+				? $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s, %d)', $id, self::PENDING, '', $now, $now, $mode )
 				: $wpdb->prepare( '(%d, %s, 0, 0, %s, %s, %s)', $id, self::PENDING, '', $now, $now );
 		}
 
 		$values = implode( ',', $rows );
 
 		// Only name the column when it is needed, so a queue write before the schema upgrade still succeeds.
-		$columns = $reencode ? ', reencode' : '';
+		$columns = $mode ? ', reencode' : '';
 		$sql     = "INSERT INTO `{$table}` (attachment_id, status, attempts, saved, error, created, updated{$columns}) VALUES {$values} ";
 
 		if ( $requeue ) {
-			$sql .= 'ON DUPLICATE KEY UPDATE status = VALUES(status), attempts = 0, error = VALUES(error), updated = VALUES(updated)' . ( $reencode ? ', reencode = 1' : '' );
+			// A pending full re-encode outranks an outdated-only one; this must run before status is overwritten.
+			$sql .= 'ON DUPLICATE KEY UPDATE ' . ( $mode ? "reencode = IF( reencode = 1 AND status = 'pending', 1, VALUES(reencode) ), " : '' ) . 'status = VALUES(status), attempts = 0, error = VALUES(error), updated = VALUES(updated)';
 		} else {
 			// Touching `id` is the standard no-op that keeps a duplicate from erroring.
 			$sql .= 'ON DUPLICATE KEY UPDATE id = id';

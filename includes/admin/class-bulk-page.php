@@ -214,6 +214,11 @@ class Bulk_Page {
 					<span class="wzio-card__label"><?php esc_html_e( 'Waiting in the queue', 'webberzone-image-optimizer' ); ?></span>
 				</div>
 				<div class="wzio-card">
+					<span class="wzio-card__value" id="wzio-stat-copies"><?php echo esc_html( $stats['copies_human'] ); ?></span>
+					<span class="wzio-card__label"><?php esc_html_e( 'Optimized copies occupy', 'webberzone-image-optimizer' ); ?></span>
+					<span class="wzio-card__label" id="wzio-stat-copies-breakdown"><?php echo esc_html( $stats['copies_breakdown'] ); ?></span>
+				</div>
+				<div class="wzio-card">
 					<span class="wzio-card__value" id="wzio-stat-saved"><?php echo esc_html( $stats['saved_human'] ); ?></span>
 					<span class="wzio-card__label" id="wzio-stat-saved-label">
 			<?php
@@ -244,6 +249,10 @@ class Bulk_Page {
 				<label class="wzio-force">
 					<input type="checkbox" id="wzio-force" />
 		<?php esc_html_e( 'Re-optimize images that are already done', 'webberzone-image-optimizer' ); ?>
+				</label>
+				<label class="wzio-force">
+					<input type="checkbox" id="wzio-outdated" />
+					<?php esc_html_e( 'Regenerate only images made with older settings', 'webberzone-image-optimizer' ); ?>
 				</label>
 				<label class="wzio-force">
 					<input type="checkbox" id="wzio-retry" />
@@ -320,7 +329,7 @@ class Bulk_Page {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int, original_saved_human: string, backup_bytes_human: string, original_resized: int} Stats.
+	 * @return array{total: int, optimized: int, remaining: int, saved: int, saved_human: string, source: int, source_human: string, saved_percent: float, done: int, original_saved_human: string, backup_bytes_human: string, original_resized: int, copies_human: string, copies_breakdown: string} Stats.
 	 */
 	public static function get_stats(): array {
 		$counts    = Queue::get_counts();
@@ -338,12 +347,34 @@ class Bulk_Page {
 			'original_saved_human' => Helpers::format_bytes( $originals['saved'] ),
 			'backup_bytes_human'   => Helpers::format_bytes( $originals['bytes'] ),
 			'original_resized'     => $originals['resized'],
+			'copies_human'         => Helpers::format_bytes( $bytes['copies'] ),
+			'copies_breakdown'     => self::format_breakdown( $bytes['formats'] ),
 			'saved'                => $saved,
 			'saved_human'          => Helpers::format_bytes( $saved ),
 			'source'               => $source,
 			'source_human'         => Helpers::format_bytes( $source ),
 			'saved_percent'        => $source > 0 ? round( ( $saved / $source ) * 100, 1 ) : 0.0,
 		);
+	}
+
+	/**
+	 * Describe the bytes held by each format.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param  array<string, int> $formats Format slug to bytes.
+	 * @return string Breakdown such as "WebP 4 MB, AVIF 2 MB".
+	 */
+	public static function format_breakdown( array $formats ): string {
+		$parts = array();
+
+		foreach ( $formats as $format => $bytes ) {
+			if ( $bytes > 0 ) {
+				$parts[] = strtoupper( $format ) . ' ' . Helpers::format_bytes( $bytes );
+			}
+		}
+
+		return implode( ', ', $parts );
 	}
 
 	/**
@@ -379,6 +410,8 @@ class Bulk_Page {
      // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$retry = isset( $_POST['retry'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['retry'] ) );
      // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$outdated = isset( $_POST['outdated'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['outdated'] ) );
+     // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$after_id = isset( $_POST['after_id'] ) ? absint( wp_unslash( $_POST['after_id'] ) ) : 0;
 
 		if ( 0 === $after_id ) {
@@ -389,7 +422,7 @@ class Bulk_Page {
 			}
 		}
 
-		$pass = Scanner::enqueue_batch( $after_id, $force );
+		$pass = Scanner::enqueue_batch( $after_id, $force, null, $outdated );
 
 		wp_send_json_success( array_merge( self::get_stats(), $pass ) );
 	}

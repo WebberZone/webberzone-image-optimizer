@@ -30,6 +30,7 @@ wp wzio convert --formats=webp,avif --force
 ```
 
 - `<id>...` — attachment IDs to convert. Omit to convert everything not yet handled.
+- `--outdated` — re-encode only attachments whose copies were made with different quality, effort or lossless settings. Copies written before settings were tracked are left alone.
 - `--force` — re-encode even when an up-to-date optimized copy already exists. Without it, it keeps and records an existing copy that is newer than its source and meets the minimum saving, including one written by another plugin.
 - `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
 - `--dry-run` — report what would be converted without writing anything.
@@ -70,6 +71,7 @@ Adds every unconverted attachment to the background queue, the same queue the Bu
 wp wzio queue
 ```
 
+- `--outdated` — queue only attachments whose copies were made with older settings.
 - `--force` — re-queue attachments that already have a conversion record, and re-encode their copies when the queue processes them, the same as **Re-optimize images that are already done** on the Bulk Optimize screen.
 
 The scan walks the library in pages of 500 attachments with no time limit, unlike the Bulk Optimize screen, which has to build the queue across several time-bounded passes to stay inside the PHP request limit. Queuing also schedules the background worker, so the queue starts draining on its own if **Process the queue in the background** is enabled. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/).

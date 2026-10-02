@@ -82,7 +82,14 @@ class CLI {
 				$counts[ Queue::SKIPPED ]
 			)
 		);
-		\WP_CLI::log( sprintf( 'Saved so far: %s', Helpers::format_bytes( Scanner::get_byte_totals()['saved'] ) ) );
+		$totals = Scanner::get_byte_totals();
+
+		\WP_CLI::log( sprintf( 'Saved so far: %s', Helpers::format_bytes( $totals['saved'] ) ) );
+		\WP_CLI::log( sprintf( 'Optimized copies occupy: %s', Helpers::format_bytes( $totals['copies'] ) ) );
+
+		foreach ( $totals['formats'] as $format => $bytes ) {
+			\WP_CLI::log( sprintf( '  %s: %s', strtoupper( $format ), Helpers::format_bytes( $bytes ) ) );
+		}
 	}
 
 	/**
@@ -95,6 +102,9 @@ class CLI {
 	 *
 	 * [--force]
 	 * : Re-encode even when an up-to-date optimized copy already exists.
+	 *
+	 * [--outdated]
+	 * : Re-encode only attachments whose copies were made with older settings. Copies from before settings were tracked are left alone.
 	 *
 	 * [--formats=<formats>]
 	 * : Comma separated list of formats to generate, overriding the settings.
@@ -114,11 +124,15 @@ class CLI {
 	 * @return void
 	 */
 	public function convert( $args, $assoc_args ) {
-		$force   = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'force', false );
-		$dry_run = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
-		$formats = \WP_CLI\Utils\get_flag_value( $assoc_args, 'formats', '' );
+		$force    = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'force', false );
+		$dry_run  = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'dry-run', false );
+		$outdated = ! $force && (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'outdated', false );
+		$formats  = \WP_CLI\Utils\get_flag_value( $assoc_args, 'formats', '' );
 
-		$overrides = array( 'force' => $force );
+		$overrides = array(
+			'force'    => $force,
+			'outdated' => $outdated,
+		);
 
 		if ( '' !== $formats ) {
 			$overrides['formats'] = array_values(
@@ -128,7 +142,15 @@ class CLI {
 
 		$ids = array_map( 'intval', $args );
 
-		if ( empty( $ids ) ) {
+		if ( empty( $ids ) && $outdated ) {
+			$after_id = 0;
+
+			do {
+				$page     = Scanner::get_outdated_ids( 500, $after_id, $overrides );
+				$ids      = array_merge( $ids, $page['ids'] );
+				$after_id = $page['last'];
+			} while ( ! $page['exhausted'] );
+		} elseif ( empty( $ids ) ) {
 			$ids      = array();
 			$after_id = 0;
 			$found    = 0;
@@ -144,6 +166,18 @@ class CLI {
 				$ids      = array_merge( $ids, $page );
 				$after_id = (int) end( $page );
 			} while ( 500 === $found );
+		}
+
+		if ( $outdated && ! empty( $args ) ) {
+			$conversion_args = Converter::get_args( $overrides );
+			$ids             = array_values(
+				array_filter(
+					$ids,
+					static function ( $id ) use ( $conversion_args ) {
+						return Attachment_Meta::is_outdated( Attachment_Meta::get( $id ), $conversion_args, (string) get_post_mime_type( $id ) );
+					}
+				)
+			);
 		}
 
 		if ( empty( $ids ) ) {
@@ -196,6 +230,8 @@ class CLI {
 			);
 		}
 
+		Scanner::flush_counts();
+
 		\WP_CLI::success(
 			sprintf(
 				'Processed %d attachment(s), %d failed, saved %s.',
@@ -214,6 +250,9 @@ class CLI {
 	 * [--force]
 	 * : Requeue attachments that already have a conversion record.
 	 *
+	 * [--outdated]
+	 * : Requeue only attachments whose copies were made with older settings.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp wzio queue
@@ -228,7 +267,7 @@ class CLI {
 		unset( $args );
 
 		$force  = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'force', false );
-		$queued = Scanner::enqueue_all( $force );
+		$queued = Scanner::enqueue_all( $force, (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'outdated', false ) );
 
 		Processor::maybe_schedule();
 
@@ -400,6 +439,7 @@ class CLI {
 			remove_filter( 'wzio_get_option_compress_originals', '__return_true' );
 			remove_filter( 'wzio_get_option_resize_existing_originals', $resize_filter );
 		}
+		Scanner::flush_counts();
 		if ( $failed ) {
 			\WP_CLI::error( sprintf( '%d attachment(s) failed; backups were retained.', $failed ) );
 		}
@@ -445,6 +485,7 @@ class CLI {
 				\WP_CLI::warning( sprintf( '#%d: %s', $id, $result->get_error_message() ) );
 			}
 		}
+		Scanner::flush_counts();
 		if ( $failed ) {
 			\WP_CLI::error( sprintf( '%d attachment(s) could not be restored; recovery data was retained.', $failed ) );
 		}
