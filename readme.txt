@@ -111,16 +111,18 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.2.0 =
 
-Release date: 3 October 2026
+Release date: 7 October 2026
+Release post: https://webberzone.com/announcements/image-optimizer-v1-2/
 
 **Added**
 
-* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and re-encoding from those backups to avoid repeated quality loss. Respects image-size selections, exclusions and metadata settings, and leaves the unscaled WordPress original untouched. Also available through `wp wzio compress`.
-* Restore originals actions in the Media Library, its bulk actions and the Edit Media Save box, plus `wp wzio restore-originals`, to recover backed-up files and dimensions. Backups and restore records are kept on uninstall unless Delete original backups on uninstall is enabled.
-* Maximum image dimension setting for new uploads and Disable upload scaling option, with the unscaled upload retained when scaling is enabled.
-* Resize existing originals option and `wp wzio compress --resize` to shrink served main files to the maximum dimension, with dimensions retained for restoration. Existing thumbnails remain available, while oversized candidates are omitted from WordPress `srcset`.
-* Original compression results and resized dimensions in Media Library summaries and Details, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
-* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue` to re-encode copies affected by changed encoding settings. Copies made before settings tracking are left alone.
+* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and `wp wzio compress` support.
+* Restore originals actions in the Media Library and Edit Media screen, bulk restoration and `wp wzio restore-originals` to recover files and dimensions; backups and restore records are retained on uninstall by default.
+* Compression from verified backups when settings change, plus backup integration with WordPress's GD and Imagick image editors to avoid regenerating thumbnails from compressed main files.
+* Maximum image dimension and Disable upload scaling settings for new uploads.
+* Resize existing originals option and `wp wzio compress --resize` to shrink served main files with restorable dimensions; existing thumbnail files are retained, with oversized candidates omitted from WordPress-generated `srcset`.
+* Original compression results and resized dimensions in the Media Library, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
+* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue`; copies made before settings tracking are left alone.
 
 **Fixed**
 
