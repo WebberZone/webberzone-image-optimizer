@@ -18,8 +18,11 @@ The screen works through a database-backed queue one batch at a time rather than
 
 ## The screen
 
-Five cards summarize your library:
+Eight cards summarize your library:
 
+- **Original bytes saved** — bytes saved by original compression, compared with the backups.
+- **Backups occupy** — disk space used by original backups.
+- **Main images resized** — number of main files resized by original optimization.
 - **Images in the library** — total convertible attachments.
 - **Already optimized** — attachments with at least one generated file.
 - **Waiting in the queue** — attachments still pending.
@@ -34,9 +37,11 @@ Three checkboxes change what the next run covers. Only one can be selected at a 
 
 - **Re-optimize images that are already done** re-encodes every image, even ones with an up-to-date copy.
 - **Retry skipped and failed images** clears every recorded skip and failure, then queues those images again. A skip is, for example, a copy that came out larger than the original, or a format no encoder was available for. Existing copies are kept.
-- **Regenerate only images made with older settings** queues only images whose copies were made with different quality, effort or lossless settings, so you don't need to re-encode the whole library after changing a setting. Copies made before version 1.2.0 have no settings record and are left alone; use **Re-optimize images that are already done** for those.
+- **Regenerate only images made with older settings** queues only images whose copies were made with different recorded quality, effort, metadata stripping or PNG lossless/fallback settings, so you don't need to re-encode the whole library after changing a setting. Copies made before version 1.2.0 have no settings record and are left alone; use **Re-optimize images that are already done** for those.
 
-A normal run never re-encodes an image that already has a usable copy, whether this plugin wrote it or another optimizer did. Existing copies are kept and recorded, and only the missing formats and sizes are encoded. That is why a library moving over from another plugin optimizes much faster than a fresh one. See [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
+Selective regeneration re-encodes affected copies within the selected attachments. It does not compress originals or detect every plugin setting change.
+
+With original compression disabled, a normal run keeps usable copies, including those written by another optimizer. If original compression changes a source, its modern copies are rebuilt. Existing copies are kept and recorded, and only the missing formats and sizes are encoded. That is why a library moving over from another plugin optimizes much faster than a fresh one. See [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
 
 ## Failures
 
@@ -50,6 +55,6 @@ When images are queued but the background worker has stopped running, the screen
 
 ## Original-file statistics
 
-The screen also reports **Original bytes saved**, **Backups occupy** and **Main images resized**. Original savings compare the first backup with the current source. Sidecar savings compare the compressed source with its smallest modern copy. Backup storage is a separate disk cost, not bandwidth saved.
+Original savings compare the first backup with the current source. Sidecar savings compare the compressed source with its smallest modern copy. Backup storage is a separate disk cost, not bandwidth saved.
 
 Enable original compression and optional resizing in General settings before starting a run. To include attachments already processed, select **Re-optimize images that are already done**. Restored originals remain excluded from automatic recompression until an explicit per-image Optimize action or `wp wzio compress` is run.

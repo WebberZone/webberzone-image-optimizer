@@ -22,6 +22,49 @@ Each file is backed up before its first change. The pipeline then resizes the ma
 
 Changing settings does not start a library-wide job. Use **Bulk Optimize → Re-optimize images that are already done** or `wp wzio compress` to process existing attachments.
 
+## Set up PNG original compression
+
+PNG original compression runs automatically when an eligible attachment is processed, once both **Compress original images** and **Compress PNG originals** are enabled. Both settings default to off. JPEG original compression uses Imagick or GD and does not require a PNG executable. Generating WebP or AVIF copies of PNG sources also does not require oxipng or pngquant.
+
+### Ask your host to enable it
+
+On managed or shared hosting, send your host this request:
+
+> Please install oxipng for local PNG compression in WebberZone Image Optimizer. The plugin looks for an executable named `oxipng` in `/usr/bin`, `/usr/local/bin` or `/opt/homebrew/bin`. It must be executable by the PHP process serving WordPress. PHP must provide `proc_open`, `proc_get_status` and `proc_terminate`, and permit the executable to run. Please verify this in the website's PHP runtime as well as any separate cron or WP-CLI runtime. The plugin needs writable temporary storage and permission to create backups and replace selected files in the uploads directory.
+
+The plugin prefers oxipng, which compresses without changing pixels. If your host supplies only pngquant, it reduces the palette and may change colors. PNGs with an embedded ICC profile are left unchanged when pngquant is the selected tool. Animated PNG originals are not modified.
+
+If your host does not permit process execution, PNG original compression is unavailable. You can still generate modern-format copies using working GD or Imagick encoders and compress JPEG originals where supported.
+
+### If you administer the server
+
+Install oxipng using the installation method supported by your server's operating system. Place the executable in one of the three directories above, with the exact filename `oxipng`, and ensure the WordPress PHP user can execute it. Installing the tool only on your own computer does not enable it on a hosted site.
+
+The plugin checks those fixed paths rather than searching the shell's `PATH`. A tool that works in an SSH session may therefore remain unavailable to WordPress. Confirm that the web PHP runtime can launch it and that hosting restrictions do not block access to the executable or uploads directory. The plugin does not download or install server tools.
+
+### Enable and verify compression
+
+1. Reload **Media → Image Optimizer → General** after the host has installed the tool. **Compress PNG originals** appears only after the plugin successfully compresses its test PNG.
+2. Enable **Compress original images** and **Compress PNG originals**, then save the settings.
+3. Run **Optimize** on a PNG attachment and open **Details**. The **Compressed** column shows before/after sizes or why the original was kept.
+4. To process previously optimized images across the library, use **Re-optimize images that are already done** on Bulk Optimize. Saving settings does not start that job.
+
+An available tool does not guarantee that every PNG becomes smaller. A replacement must meet **Minimum saving (%)**, which defaults to `5`. Unsupported or ineligible originals stay unchanged.
+
+### If the PNG setting is still missing
+
+Ask your host to check the executable's exact path, PHP-user permissions and process functions in the web runtime. The availability check performs a real encode, so finding a file on disk is not enough. Check writable temporary storage and whether the tool exits successfully before retrying.
+
+The plugin caches its original-encoder probe. A change in the detected executable path triggers another probe. If the host repairs a tool at the same path and the setting remains hidden, an administrator with WP-CLI access can clear only that cached report:
+
+```bash
+wp option delete wzio_original_capabilities
+```
+
+Then reload the General settings tab to run the probe again. On multisite, target the affected site with WP-CLI's `--url` argument.
+
+You can also run `wp wzio status` and inspect **Original encoders** for `"png":true`. A successful command-line check does not prove the web PHP runtime has the same permissions or configuration.
+
 ## Resize existing main files
 
 Set a positive **Maximum image dimension** and enable **Resize existing originals**. Both dimensions fit within that cap, with the aspect ratio preserved. This step only affects the main attached file. Smaller files are not enlarged. PNGs require **Compress PNG originals** and a working PNG tool.

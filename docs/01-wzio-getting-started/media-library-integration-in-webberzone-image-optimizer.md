@@ -42,19 +42,19 @@ Only image attachments ever appear under these options — video, audio and docu
 Hover an image row to reveal:
 
 **Optimize**
-Converts whatever this attachment is still missing, without waiting for a bulk run — a size with no optimized copy yet, or one whose copy is older than its source. A copy that is already up to date is kept as it is, and a format recorded as skipped stays skipped. To re-encode an attachment that is already done, after changing the quality settings for example, use **Re-optimize images that are already done** on [the Bulk Optimize screen](https://webberzone.com/support/knowledgebase/bulk-optimize-in-webberzone-image-optimizer/) or run `wp wzio convert --force`.
+Converts whatever this attachment is still missing, without waiting for a bulk run — a size with no optimized copy yet, or one whose copy is older than its source. A usable copy is normally kept. When original compression is enabled, this action also processes eligible originals and rebuilds copies if the source changes. It can compress a previously restored attachment again. Recorded sidecar skips are normally kept; skips eligible for the plugin's compatibility retries may be attempted again. To re-encode an attachment that is already done, after changing the quality settings for example, use **Re-optimize images that are already done** on [the Bulk Optimize screen](https://webberzone.com/support/knowledgebase/bulk-optimize-in-webberzone-image-optimizer/) or run `wp wzio convert --force`.
 
 **Retry**
 Shown when any size of the attachment was skipped or failed. Clears those results and converts the image again, so a copy that came out larger than the original, a format that had no encoder at the time, or a failed size gets another attempt. Existing copies are kept. To do this for every affected image at once, use **Retry skipped and failed images** on the Bulk Optimize screen.
 
 **Delete optimized copies**
-Deletes the generated WebP/AVIF files for this attachment and reverts it to serving the original. Only shown once an attachment has at least one generated file. The original image is never affected either way.
+Deletes the generated WebP/AVIF files for this attachment and reverts it to serving the original. Only shown once an attachment has at least one generated file. This action does not restore compressed originals or delete their backups. Use **Restore originals** to recover the backed-up source files.
 
-All three actions require the `edit_post` capability for that attachment and show a confirmation notice ("Optimized copies regenerated" / "Optimized copies deleted") after completing.
+These actions require the `edit_post` capability for that attachment. Successful optimization reports "Image optimization completed." Deleting copies reports that the optimized copies were deleted. Original restoration reports "Original files and dimensions restored. Modern copies will be rebuilt without recompressing originals."
 
 ## The attachment edit screen
 
-Opening a single attachment (**Media → Library** → click an image) shows the same summary at the bottom of the Save box, below the file details, including the **Details** link. The **Optimize**, **Retry** and **Delete optimized copies** links are there too, so you can convert or restore one image without going back to the list view.
+Opening a single attachment (**Media → Library** → click an image) shows the same summary at the bottom of the Save box, below the file details, including the **Details** link. The **Optimize**, **Retry** and **Delete optimized copies** links are there too, so you can optimize an image or delete its modern copies without going back to the list view. **Restore originals** also appears while the attachment has backups.
 
 ## Original compression and restore
 

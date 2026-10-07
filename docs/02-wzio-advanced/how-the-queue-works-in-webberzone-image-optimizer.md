@@ -14,7 +14,7 @@ order: 2
 
 ## One row per attachment
 
-The queue holds one row per attachment, not per file — the converter always processes an attachment's scaled original and every sub-size together, so a per-file queue would only add rows without adding any real resolution.
+The queue holds one row per attachment. The converter processes its served main file and selected sub-sizes. A batch can pause between files when its time budget is reached, then resume the attachment in a later batch.
 
 Each row moves through these statuses:
 
@@ -26,7 +26,9 @@ Each row moves through these statuses:
 
 ## What adds attachments to the queue
 
-- Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` / `wp wzio convert` from the command line.
+- Running a scan from the **Bulk Optimize** screen, or `wp wzio queue` from the command line.
+- Uploads and thumbnail regeneration when **Convert new uploads** is off.
+- Successful original restoration, which queues modern-copy regeneration without immediately recompressing originals.
 - A front-end view of an image that has not been converted yet, when **Queue images on first view** is enabled on the Advanced settings tab. The original is served immediately and the attachment is queued on `shutdown`, so nothing is encoded during the page render.
 
 ## Building the queue
@@ -48,7 +50,7 @@ Both are discarded when an attachment is added or deleted, when a scan starts, a
 `Processor::run_batch()` is the single routine behind the Bulk Optimize screen, the background cron worker and `wp wzio run` — all three share one definition of a unit of work.
 
 1. Claims up to **Images per batch** pending rows (Advanced settings tab), oldest first, stopping early if the batch has already run for 20 seconds so the rest stay pending for the next one.
-2. Converts each claimed attachment.
+2. Converts each claimed attachment. If the time budget is reached between files, returns the attachment to `pending` without counting a failed attempt. Recorded progress lets the next batch resume.
 3. Records the outcome: `done` with bytes saved, `skipped` when nothing was convertible, or `failed` with the error message.
 4. A `failed` attachment is put back to `pending` and retried, up to 3 attempts total, before it is left as `failed` for good and listed on the Bulk Optimize screen.
 
@@ -60,7 +62,7 @@ Only one worker runs a batch at a time, enforced with a MySQL advisory lock (`GE
 
 When **Process the queue in the background** is enabled (Advanced settings tab), a batch that finishes with work still remaining schedules a WP-Cron event roughly a minute later to continue automatically, even with the Bulk Optimize screen closed. The schedule is removed once the queue is empty, and re-created the next time something is queued.
 
-A row stuck in `processing` for more than 10 minutes, usually because a fatal error or timeout killed its worker, is released back to `pending` the next time a batch runs. It can never stall the queue permanently.
+A row stuck in `processing` for more than 10 minutes, usually because a fatal error or timeout killed its worker, counts as a failed attempt the next time a batch runs. It returns to `pending` while retries remain, or becomes `failed` once the 3-attempt limit is reached.
 
 ## When the background worker stops running
 

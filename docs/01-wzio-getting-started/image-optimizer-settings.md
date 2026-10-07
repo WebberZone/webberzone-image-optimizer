@@ -36,7 +36,7 @@ Recompress served JPEG files before generating WebP/AVIF copies. This is off by 
 Target quality from `1` to `100`. When Imagick can detect a JPEG's existing quality, files already at or below the target are kept unless resizing is requested. GD cannot detect that quality; repeat runs use the recorded settings and first backup to avoid accumulated recompression. Default: `82`.
 
 **Compress PNG originals**
-Available only when a working local PNG tool is found. The plugin prefers lossless `oxipng`, with palette-reducing `pngquant` as a fallback when oxipng is not installed. Animated PNGs are not modified. Default: off.
+Appears only after a successful compression probe using a local PNG tool. Requires **Compress original images**, an executable in a supported path and PHP process execution. The plugin prefers lossless `oxipng`; it selects palette-reducing `pngquant` only when no executable oxipng is found. It does not switch to pngquant when an installed oxipng fails. Animated PNGs are not modified. PNGs with an ICC profile are kept when pngquant is selected. Default: off. See [PNG server setup and troubleshooting](https://webberzone.com/support/knowledgebase/compressing-and-restoring-original-images/#set-up-png-original-compression).
 
 **Resize existing originals**
 Resize the served main file to **Maximum image dimension** while optimizing. Requires **Compress original images**, a positive maximum dimension and upload scaling enabled. PNG resizing also requires PNG original compression. Files within the cap are not resized. Existing thumbnail files and metadata remain available for embedded URLs; wider thumbnails are excluded from generated responsive candidates while the main image is resized. Default: off.

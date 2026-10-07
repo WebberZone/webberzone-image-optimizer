@@ -12,7 +12,7 @@ order: 5
 
 [WebberZone Image Optimizer](https://webberzone.com/plugins/webberzone-image-optimizer/) is one of several free WordPress plugins that convert images to WebP and AVIF locally, without uploading anything to a third-party service. The comparison here covers three plugins that take the same no-account, on-server approach: **Modern Image Formats** (the WordPress Performance Team's `webp-uploads`), **WebP Express**, and **Converter for Media** (`webp-converter-for-media`). Cloud-based optimizers such as ShortPixel, Imagify, and Smush Pro are not covered — uploading images to an external service is a different model with different trade-offs. If you are moving from one of those, see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/) for how to carry over the files they generated.
 
-Every claim below was checked by Claude directly against each plugin's own source rather than its marketing copy: WebberZone Image Optimizer's own `includes/` directory, the WordPress Performance Team's [`performance`](https://github.com/WordPress/performance) repository, the [`rosell-dk/webp-express`](https://github.com/rosell-dk/webp-express) GitHub repository, and the `webp-converter-for-media` trunk from the WordPress.org plugin SVN. They reflect each plugin's code as of 2026-08-11 — check each project's changelog if you're reading this later, since settings and defaults do change between releases.
+The comparison was checked against each plugin's source: WebberZone Image Optimizer's own `includes/` directory, the WordPress Performance Team's [`performance`](https://github.com/WordPress/performance) repository, the [`rosell-dk/webp-express`](https://github.com/rosell-dk/webp-express) GitHub repository, and the `webp-converter-for-media` trunk from the WordPress.org plugin SVN. The other plugins' behavior reflects their code as of 2026-08-11; WebberZone Image Optimizer details include version 1.2.0. Check each project's changelog for later changes.
 
 ## Quality and encoder control
 
@@ -84,7 +84,7 @@ WebP Express and Converter for Media both ship their own bulk-conversion screens
 
 ## Command-line tooling
 
-WebberZone Image Optimizer registers five commands under `wp wzio`: `status`, `convert`, `queue`, `run`, and `clean` — documented in [WebberZone Image Optimizer WP-CLI](https://webberzone.com/support/knowledgebase/webberzone-image-optimizer-wp-cli/).
+WebberZone Image Optimizer registers seven commands under `wp wzio`: `status`, `convert`, `queue`, `run`, `clean`, `compress` and `restore-originals` — documented in [WebberZone Image Optimizer WP-CLI](https://webberzone.com/support/knowledgebase/webberzone-image-optimizer-wp-cli/).
 
 WebP Express registers `wp webp-express convert`, with flags for `--reconvert`, `--only-png`, `--only-jpeg`, `--quality`, `--near-lossless`, `--alpha-quality`, `--encoding`, and `--converter` — comparable in depth to WZIO's CLI, if organized as a single command with many flags rather than several purpose-built subcommands.
 
@@ -109,7 +109,7 @@ WebP Express and Converter for Media both default to server-level rewriting: `.h
 | Encoder effort control | Yes, both formats | No | Partial (cwebp only) | No |
 | Lossless PNG | Yes (WebP) | No | Near-lossless only | No |
 | Bulk-converts existing library | Yes, resumable queue | No (core regenerate only) | Yes | Yes |
-| Native WP-CLI | Yes (5 commands) | No | Yes | Yes |
+| Native WP-CLI | Yes (7 commands) | No | Yes | Yes |
 | `<picture>` delivery by default | Yes | No (experimental, opt-in) | No | No |
 
 WebP Express is the closest competitor on quality-control depth, with genuinely sophisticated per-source-type logic, but it never generates AVIF. Converter for Media matches WZIO on bulk conversion and CLI support but locks AVIF behind a paywall and offers only coarse quality presets. Modern Image Formats, despite being the WordPress Performance Team's own plugin, has the shallowest feature set of the four on every axis in this comparison except being bundled with an authoritative source — it has no quality control, no bulk conversion, and no CLI.

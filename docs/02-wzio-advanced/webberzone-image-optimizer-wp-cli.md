@@ -20,6 +20,8 @@ Shows which drivers and formats this server can encode, the currently configured
 wp wzio status
 ```
 
+The **Original encoders** line reports `jpeg` and `png` availability. PNG originals require a successful local-tool probe; WebP/AVIF support is checked separately. WP-CLI and web requests may use different PHP configurations. See [PNG server setup and troubleshooting](https://webberzone.com/support/knowledgebase/compressing-and-restoring-original-images/#set-up-png-original-compression).
+
 ## `wp wzio convert`
 
 Converts one or more attachments immediately.
@@ -30,7 +32,7 @@ wp wzio convert --formats=webp,avif --force
 ```
 
 - `<id>...` — attachment IDs to convert. Omit to convert everything not yet handled.
-- `--outdated` — re-encode only attachments whose copies were made with different quality, effort or lossless settings. Copies written before settings were tracked are left alone.
+- `--outdated` — select attachments whose copies have different recorded quality, effort, metadata stripping or PNG lossless/fallback settings, then re-encode affected copies. Copies without a settings record are left alone. This mode does not compress originals or detect every setting change. `--force` takes precedence when both flags are supplied.
 - `--force` — re-encode even when an up-to-date optimized copy already exists. Without it, it keeps and records an existing copy that is newer than its source and meets the minimum saving, including one written by another plugin.
 - `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
 - `--dry-run` — report what would be converted without writing anything.
@@ -39,7 +41,7 @@ If any copy needed a lower quality than configured to come out smaller than the 
 
 ## `wp wzio compress`
 
-Compress served JPEG/PNG originals with mandatory backups, then rebuild affected sidecars. PNGs follow the **Compress PNG originals** setting.
+Compress served JPEG/PNG originals with mandatory backups, then rebuild affected sidecars. This command explicitly enables original compression for the run even when **Compress original images** is off, and can process previously restored attachments again. PNGs still require **Compress PNG originals** and a working local tool. JPEG quality, selected image sizes, exclusions and metadata settings continue to apply.
 
 ```bash
 wp wzio compress --ids=123,456 --dry-run
@@ -71,7 +73,7 @@ Adds every unconverted attachment to the background queue, the same queue the Bu
 wp wzio queue
 ```
 
-- `--outdated` — queue only attachments whose copies were made with older settings.
+- `--outdated` — queue attachments with copies affected by the tracked encoding settings described under `wp wzio convert`. The worker re-encodes affected copies without compressing originals. `--force` takes precedence when both flags are supplied.
 - `--force` — re-queue attachments that already have a conversion record, and re-encode their copies when the queue processes them, the same as **Re-optimize images that are already done** on the Bulk Optimize screen.
 
 The scan walks the library in pages of 500 attachments with no time limit, unlike the Bulk Optimize screen, which has to build the queue across several time-bounded passes to stay inside the PHP request limit. Queuing also schedules the background worker, so the queue starts draining on its own if **Process the queue in the background** is enabled. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/).
