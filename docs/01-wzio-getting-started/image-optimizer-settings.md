@@ -29,6 +29,8 @@ Set the maximum width or height, in pixels, for new uploads supported by WordPre
 **Disable upload scaling**
 Turn off WordPress large-image scaling for new uploads. This takes precedence over **Maximum image dimension**. A later site filter can override either setting. Default: off.
 
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/02-upload-dimensions.webp" alt="Maximum image dimension set to 0 and Disable upload scaling switched off."><figcaption>The default value of 0 preserves WordPress scaling. Disable upload scaling takes precedence when enabled.</figcaption></figure>
+
 **Compress original images**
 Recompress served JPEG files before generating WebP/AVIF copies. This is off by default. Each changed file has a verified backup, and **Restore originals** reverses the changes. The unscaled upload kept by WordPress is untouched. Use original compression in only one optimizer at a time. Default: off.
 
@@ -37,6 +39,8 @@ Target quality from `1` to `100`. When Imagick can detect a JPEG's existing qual
 
 **Compress PNG originals**
 Appears only after a successful compression probe using a local PNG tool. Requires **Compress original images**, an executable in a supported path and PHP process execution. The plugin prefers lossless `oxipng`; it selects palette-reducing `pngquant` only when no executable oxipng is found. It does not switch to pngquant when an installed oxipng fails. Animated PNGs are not modified. PNGs with an ICC profile are kept when pngquant is selected. Default: off. See [PNG server setup and troubleshooting](https://webberzone.com/support/knowledgebase/compressing-and-restoring-original-images/#set-up-png-original-compression).
+
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/01-original-compression.webp" alt="Original compression settings with JPEG quality set to 82 and both compression options off."><figcaption>Original compression is opt-in. JPEG quality defaults to 82, and PNG compression has its own switch. Compress PNG originals appears only when the server passes the PNG compression probe.</figcaption></figure>
 
 **Resize existing originals**
 Resize the served main file to **Maximum image dimension** while optimizing. Requires **Compress original images**, a positive maximum dimension and upload scaling enabled. PNG resizing also requires PNG original compression. Files within the cap are not resized. Existing thumbnail files and metadata remain available for embedded URLs; wider thumbnails are excluded from generated responsive candidates while the main image is resized. Default: off.
@@ -122,3 +126,5 @@ Remove the settings, the queue table and the per-image conversion records when t
 
 **Delete original backups on uninstall**
 Permanently delete the original-image backup folder and its restore records when the plugin is deleted. Uninstalling never restores images, so the untouched originals of compressed images are lost for good; restore any you want back first. Default: off.
+
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/05-backup-retention.webp" alt="Delete original backups on uninstall is switched off."><figcaption>Backups are retained on uninstall by default. Turning on this setting permanently removes them when the plugin is deleted.</figcaption></figure>

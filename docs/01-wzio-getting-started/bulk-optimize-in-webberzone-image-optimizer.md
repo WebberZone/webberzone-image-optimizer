@@ -29,6 +29,8 @@ Eight cards summarize your library:
 - **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
 - **Optimized copies occupy** — disk space used by the generated copies, broken down by format (for example, "WebP 4 MB, AVIF 2 MB").
 
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/03-savings-and-storage.webp" alt="Bulk Optimize statistics separating original savings, backup storage and optimized-copy disk usage."><figcaption>Example from the test library. Original compression is off, so original savings, backup usage and resized-image counts are zero; the other figures describe this library only.</figcaption></figure>
+
 **Images in the library** and **Already optimized** are counted across the whole library, so both are cached rather than recounted after every batch — the library total for an hour, the optimized total for a minute. **Bandwidth saved** and **Optimized copies occupy** are totaled from each image's own conversion record, so they include images converted on upload, from the Media Library or with WP-CLI, not only those processed by the queue. They are also cached for a minute. Uploading or deleting an image clears these caches immediately, as does starting a scan or clearing the queue. **Waiting in the queue** is read from the queue itself and is always current. If **Already optimized** looks a minute behind during a long run, that is the cache, not a stalled queue.
 
 **Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress. Completed rows and existing copies are kept, and **Bandwidth saved** is unaffected.
@@ -38,6 +40,8 @@ Three checkboxes change what the next run covers. Only one can be selected at a 
 - **Re-optimize images that are already done** re-encodes every image, even ones with an up-to-date copy.
 - **Retry skipped and failed images** clears every recorded skip and failure, then queues those images again. A skip is, for example, a copy that came out larger than the original, or a format no encoder was available for. Existing copies are kept.
 - **Regenerate only images made with older settings** queues only images whose copies were made with different recorded quality, effort, metadata stripping or PNG lossless/fallback settings, so you don't need to re-encode the whole library after changing a setting. Copies made before version 1.2.0 have no settings record and are left alone; use **Re-optimize images that are already done** for those.
+
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/04-selective-regeneration.webp" alt="Regenerate only images made with older settings is unchecked on Bulk Optimize."><figcaption>Choose selective regeneration after changing tracked encoding settings. Copies without a settings record are left alone.</figcaption></figure>
 
 Selective regeneration re-encodes affected copies within the selected attachments. It does not compress originals or detect every plugin setting change.
 

@@ -16,6 +16,8 @@ order: 7
 
 In **Media → Image Optimizer → General**, enable **Compress original images** and choose **JPEG quality for originals**. JPEG encoding uses Imagick when it works, with GD as a fallback. PNG compression requires a verified local `oxipng` or `pngquant` executable and PHP process execution. The plugin checks `/usr/bin`, `/usr/local/bin` and `/opt/homebrew/bin`; it does not download tools. Unsupported originals stay unchanged. PNGs with an embedded ICC profile require oxipng; they are kept unchanged when only pngquant is available, to avoid applying the wrong profile after palette conversion.
 
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/01-original-compression.webp" alt="Original compression settings with JPEG quality set to 82 and both compression options off."><figcaption>Original compression is opt-in. JPEG quality defaults to 82, and PNG compression has its own switch. Compress PNG originals appears only when the server passes the PNG compression probe.</figcaption></figure>
+
 Original compression uses the same selected image sizes and exclusions as sidecar conversion. WordPress's unserved `original_image` file is never compressed. The served `-scaled` file is eligible.
 
 Each file is backed up before its first change. The pipeline then resizes the main file if requested, compresses it and generates sidecars from the resulting source. A replacement must meet **Minimum saving (%)** before it can replace the served file. Repeated runs with the same settings keep the result; changed settings encode from the first backup.
@@ -100,6 +102,8 @@ wp wzio restore-originals --all
 Restore verifies backup hashes, replaces the files and restores dimensions and file sizes. The backup is removed only after restoration is recorded. Failed restores retain recovery information for another attempt. The attachment is queued for sidecar regeneration, with automatic original compression suppressed so restoration is not immediately undone. An explicit per-image **Optimize** action or `wp wzio compress` can enable processing of that attachment again.
 
 **Delete optimized copies** and `wp wzio clean` delete sidecars only. They preserve original backups. Neither deactivating nor uninstalling the plugin restores originals: compressed images stay compressed, so you can uninstall after a bulk run and keep the savings. To get the untouched originals back, restore them before uninstalling. By default uninstall keeps the backup folder and its restore records, so a reinstall can still restore them. Enable **Delete original backups on uninstall** to permanently remove the backups; the originals of compressed images are then lost for good.
+
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/05-backup-retention.webp" alt="Delete original backups on uninstall is switched off."><figcaption>Backups are retained on uninstall by default. Turning on this setting permanently removes them when the plugin is deleted.</figcaption></figure>
 
 ## Regeneration, other optimizers and caching
 
