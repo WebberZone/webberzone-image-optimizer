@@ -55,6 +55,10 @@ class Rewriter {
 		}
 
 		if ( \wzio_get_option( 'rewrite_content', true ) ) {
+			// wp_content_img_tag sees only the <img>, so mark images already inside a <picture> before core's pass at 12.
+			foreach ( array( 'the_content', 'the_excerpt', 'widget_text_content', 'widget_block_content' ) as $hook ) {
+				Hook_Registry::add_filter( $hook, array( $this, 'skip_images_in_picture' ), 11 );
+			}
 			Hook_Registry::add_filter( 'wp_content_img_tag', array( $this, 'filter_content_img_tag' ), 20, 3 );
 		}
 
@@ -122,6 +126,40 @@ class Rewriter {
 		unset( $context );
 
 		return $this->wrap( (string) $filtered_image, (int) $attachment_id );
+	}
+
+	/**
+	 * Mark images inside existing `<picture>` elements so they are not wrapped again.
+	 *
+	 * @since 1.2.1
+	 *
+	 * @param string $content Content markup.
+	 * @return string Markup.
+	 */
+	public function skip_images_in_picture( $content ) {
+		$content = (string) $content;
+
+		if ( false === stripos( $content, '<picture' ) ) {
+			return $content;
+		}
+
+		$replaced = preg_replace_callback(
+			'#<picture\b.*?</picture>#is',
+			static function ( array $matches ): string {
+				$tags = new \WP_HTML_Tag_Processor( $matches[0] );
+
+				while ( $tags->next_tag( array( 'tag_name' => 'IMG' ) ) ) {
+					if ( null === $tags->get_attribute( 'data-wzio-skip' ) ) {
+						$tags->set_attribute( 'data-wzio-skip', '1' );
+					}
+				}
+
+				return $tags->get_updated_html();
+			},
+			$content
+		);
+
+		return null === $replaced ? $content : $replaced;
 	}
 
 	/**

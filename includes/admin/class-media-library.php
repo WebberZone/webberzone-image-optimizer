@@ -143,7 +143,8 @@ class Media_Library {
 				}
 			}
 			$encoders = Capabilities::get_originals();
-			if ( ! $encoders['jpeg'] || ! $encoders['png'] ) {
+			$want_png = (bool) \wzio_get_option( 'compress_png_originals', false );
+			if ( ! $encoders['jpeg'] || ( $want_png && ! $encoders['png'] ) ) {
 				printf( '<div class="notice notice-info"><p>%s</p></div>', esc_html( sprintf( __( 'Original compression availability: JPEG %1$s; PNG %2$s. Unsupported originals are left unchanged.', 'webberzone-image-optimizer' ), $encoders['jpeg'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ), $encoders['png'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ) ) ) );
 			}
 			if ( ! $encoders['png'] && Original_Tools::blocked_by_open_basedir() ) {

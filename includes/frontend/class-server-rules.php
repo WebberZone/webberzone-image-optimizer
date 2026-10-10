@@ -167,26 +167,28 @@ class Server_Rules {
 	 * @return string Rules block.
 	 */
 	public static function get_nginx_rules(): string {
-		$formats = Helpers::get_formats();
-		$lines   = array(
+		$formats    = Helpers::get_formats();
+		$candidates = array();
+		$lines      = array(
 			'# WebberZone Image Optimizer.',
-			'# Add the map to the http block, then add the location block to the relevant server block.',
+			'# Add the maps to the http block, then add the location block to the relevant server block.',
 			'# http context',
-			'map $http_accept $wzio_suffix {',
-			'	default "";',
 		);
 
-		// nginx uses the first matching entry, so list the preferred format first.
+		// One map per format so try_files can fall through to the next accepted format when a copy is missing.
 		foreach ( $formats as $format ) {
-			$lines[] = '	"~*' . Helpers::get_mime_type( $format ) . '" ".' . $format . '";';
+			$lines[]      = 'map $http_accept $wzio_' . $format . ' {';
+			$lines[]      = '	default ".wzio-none";';
+			$lines[]      = '	"~*' . Helpers::get_mime_type( $format ) . '" ".' . $format . '";';
+			$lines[]      = '}';
+			$candidates[] = '$wzio_base$wzio_' . $format;
 		}
 
-		$lines[] = '}';
 		$lines[] = '';
 		$lines[] = '# server context';
 		$lines[] = 'location ~* ^(?<wzio_base>/.+\.(?:jpe?g|png|gif))$ {';
 		$lines[] = '	add_header Vary Accept;';
-		$lines[] = '	try_files $wzio_base$wzio_suffix $wzio_base =404;';
+		$lines[] = '	try_files ' . implode( ' ', $candidates ) . ' $wzio_base =404;';
 		$lines[] = '}';
 
 		return implode( "\n", $lines );
@@ -215,7 +217,7 @@ class Server_Rules {
 		. self::get_htaccess_controls();
 
 		$nginx = '<p><strong>' . esc_html__( 'nginx — add the map to the http block, the location to the relevant server block, then reload', 'webberzone-image-optimizer' ) . '</strong></p>'
-		. '<textarea rows="10" class="large-text code" readonly onclick="this.select();">' . esc_textarea( self::get_nginx_rules() ) . '</textarea>'
+		. '<textarea rows="16" class="large-text code" readonly onclick="this.select();">' . esc_textarea( self::get_nginx_rules() ) . '</textarea>'
 		. '<p class="description">' . esc_html__( 'nginx cannot reload itself from PHP, so this block has to be added and reloaded by hand.', 'webberzone-image-optimizer' ) . '</p>';
 
 		return $intro . $apache . $nginx;

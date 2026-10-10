@@ -477,14 +477,14 @@ class Settings {
 			),
 		);
 
-		$settings['compress_originals']    = array(
+		$settings['compress_originals']     = array(
 			'id'      => 'compress_originals',
 			'name'    => esc_html__( 'Compress original images', 'webberzone-image-optimizer' ),
 			'desc'    => esc_html__( 'Recompress served JPEG files before generating modern copies. Backups are always kept, and Restore originals reverses the changes. The unscaled WordPress original is untouched. Allow space for backups. Avoid enabling this alongside another original-image optimizer.', 'webberzone-image-optimizer' ),
 			'type'    => 'checkbox',
 			'default' => 0,
 		);
-		$settings['original_jpeg_quality'] = array(
+		$settings['original_jpeg_quality']  = array(
 			'id'      => 'original_jpeg_quality',
 			'name'    => esc_html__( 'JPEG quality for originals', 'webberzone-image-optimizer' ),
 			'desc'    => esc_html__( 'JPEGs with a detected quality at or below this value are kept. Changes are encoded from the first backup to avoid repeated quality loss.', 'webberzone-image-optimizer' ),
@@ -494,16 +494,17 @@ class Settings {
 			'max'     => 100,
 			'size'    => 'small',
 		);
-		$capabilities                      = Capabilities::get_originals();
-		if ( $capabilities['png'] ) {
-			$settings['compress_png_originals'] = array(
-				'id'      => 'compress_png_originals',
-				'name'    => esc_html__( 'Compress PNG originals', 'webberzone-image-optimizer' ),
-				'desc'    => esc_html__( 'Use an available local PNG tool. oxipng is lossless; pngquant reduces the palette and may change colors. Backups are kept.', 'webberzone-image-optimizer' ),
-				'type'    => 'checkbox',
-				'default' => 0,
-			);
-		}
+		$capabilities                       = Capabilities::get_originals();
+		$settings['compress_png_originals'] = array(
+			'id'       => 'compress_png_originals',
+			'name'     => esc_html__( 'Compress PNG originals', 'webberzone-image-optimizer' ),
+			'desc'     => $capabilities['png']
+				? esc_html__( 'Use an available local PNG tool. oxipng is lossless; pngquant reduces the palette and may change colors. Backups are kept.', 'webberzone-image-optimizer' )
+				: esc_html__( 'Unavailable: install oxipng (lossless, recommended) or pngquant on the server. PHP must be allowed to run it; see the wzio_png_tool_paths filter for custom locations.', 'webberzone-image-optimizer' ),
+			'type'     => 'checkbox',
+			'default'  => 0,
+			'disabled' => ! $capabilities['png'],
+		);
 		if ( ( $capabilities['jpeg'] || $capabilities['png'] ) && (int) \wzio_get_option( 'maximum_image_dimension', 0 ) > 0 && ! \wzio_get_option( 'disable_image_scaling', false ) ) {
 			$settings['resize_existing_originals'] = array(
 				'id'      => 'resize_existing_originals',

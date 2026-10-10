@@ -117,9 +117,16 @@ Release date: 10 October 2026
 
 * `wzio_png_tool_paths` filter to set the paths checked for oxipng or pngquant.
 
+**Changed**
+
+* Compress PNG originals is always listed in settings, disabled with installation guidance when no PNG tool is found.
+* The original compression availability notice no longer reports PNG as unavailable unless Compress PNG originals is enabled.
+
 **Fixed**
 
 * PNG tool detection emitted PHP warnings and reported PNG compression unavailable when `open_basedir` excluded the tool's folder. Blocked folders are now skipped silently and the Media Library notice names `open_basedir` as the cause.
+* Images already inside a `<picture>` element in post content were wrapped in a second, nested `<picture>`.
+* The generated nginx rules served the original instead of WebP when the browser accepted AVIF but only a WebP copy existed. Regenerate and reinstall the nginx block to apply the fix.
 
 = Earlier versions =
 
@@ -128,4 +135,4 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 == Upgrade Notice ==
 
 = 1.2.1 =
-Fixes PHP warnings and missing PNG compression on servers whose open_basedir excludes the PNG tool's folder.
+Fixes nested picture elements, the nginx WebP fallback, and missing PNG compression on servers whose open_basedir excludes the PNG tool's folder.

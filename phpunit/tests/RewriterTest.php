@@ -430,4 +430,40 @@ class RewriterTest extends WP_UnitTestCase {
 
 		$this->assertSame( $page, $this->rewriter->filter_buffer( $page ) );
 	}
+
+	/**
+	 * An image already inside a picture is marked and never wrapped again.
+	 */
+	public function test_image_inside_existing_picture_is_not_nested() {
+		$this->touch_upload( '2026/02/nested.jpg' );
+		$this->touch_upload( '2026/02/nested.jpg.webp' );
+
+		$url     = Helpers::get_upload_baseurl() . '/2026/02/nested.jpg';
+		$content = '<picture><source srcset="' . $url . '.webp" type="image/webp" /><img src="' . $url . '" alt="" /></picture><img src="' . $url . '" alt="" />';
+
+		$marked = $this->rewriter->skip_images_in_picture( $content );
+
+		preg_match_all( '#<img\b[^>]*>#i', $marked, $images );
+
+		$this->assertStringContainsString( 'data-wzio-skip', $images[0][0] );
+		$this->assertStringNotContainsString( 'data-wzio-skip', $images[0][1] );
+		$this->assertSame( $images[0][0], $this->rewriter->filter_content_img_tag( $images[0][0], 'the_content', 0 ) );
+		$this->assertStringStartsWith( '<picture>', $this->rewriter->filter_content_img_tag( $images[0][1], 'the_content', 0 ) );
+	}
+
+	/**
+	 * The nginx rules fall through to the next accepted format when a copy is missing.
+	 */
+	public function test_nginx_rules_fall_through_formats() {
+		$rules = \WebberZone\Image_Optimizer\Frontend\Server_Rules::get_nginx_rules();
+		$tries = array();
+
+		foreach ( Helpers::get_formats() as $format ) {
+			$this->assertStringContainsString( 'map $http_accept $wzio_' . $format . ' {', $rules );
+			$tries[] = '$wzio_base$wzio_' . $format;
+		}
+
+		$this->assertStringContainsString( 'try_files ' . implode( ' ', $tries ) . ' $wzio_base =404;', $rules );
+		$this->assertStringNotContainsString( 'default "";', $rules );
+	}
 }
