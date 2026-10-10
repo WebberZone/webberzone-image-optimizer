@@ -115,18 +115,34 @@ Release date: 10 October 2026
 
 **Added**
 
-* `wzio_png_tool_paths` filter to set the paths checked for oxipng or pngquant.
-
-**Changed**
-
-* Compress PNG originals is always listed in settings, disabled with installation guidance when no PNG tool is found.
-* The original compression availability notice no longer reports PNG as unavailable unless Compress PNG originals is enabled.
+* `wzio_png_tool_paths` filter for custom oxipng or pngquant locations.
 
 **Fixed**
 
-* PNG tool detection emitted PHP warnings and reported PNG compression unavailable when `open_basedir` excluded the tool's folder. Blocked folders are now skipped silently and the Media Library notice names `open_basedir` as the cause.
-* Images already inside a `<picture>` element in post content were wrapped in a second, nested `<picture>`.
-* The generated nginx rules served the original instead of WebP when the browser accepted AVIF but only a WebP copy existed. Regenerate and reinstall the nginx block to apply the fix.
+* PNG compression was unavailable, with PHP warnings, when `open_basedir` excluded the tool's folder.
+* Images already inside a `<picture>` element were wrapped in a second one.
+* The nginx rules served the original instead of WebP when AVIF was accepted but missing.
+
+= 1.2.0 =
+
+Release date: 7 October 2026
+Release post: https://webberzone.com/announcements/image-optimizer-v1-2/
+
+**Added**
+
+* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and `wp wzio compress` support.
+* Restore originals actions in the Media Library and Edit Media screen, bulk restoration and `wp wzio restore-originals` to recover files and dimensions; backups and restore records are retained on uninstall by default.
+* Compression from verified backups when settings change, plus backup integration with WordPress's GD and Imagick image editors to avoid regenerating thumbnails from compressed main files.
+* Maximum image dimension and Disable upload scaling settings for new uploads.
+* Resize existing originals option and `wp wzio compress --resize` to shrink served main files with restorable dimensions; existing thumbnail files are retained, with oversized candidates omitted from WordPress-generated `srcset`.
+* Original compression results and resized dimensions in the Media Library, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
+* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue`; copies made before settings tracking are left alone.
+
+**Fixed**
+
+* Bandwidth savings on Bulk Optimize and `wp wzio status` omitted images converted outside the queue and could be lost when queue records were cleared.
+* Image conversion could fail in background or command-line requests when `wp_tempnam()` was unavailable.
+* Optimized copies could remain on disk when an image was deleted during conversion.
 
 = Earlier versions =
 
@@ -135,4 +151,4 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 == Upgrade Notice ==
 
 = 1.2.1 =
-Fixes nested picture elements, the nginx WebP fallback, and missing PNG compression on servers whose open_basedir excludes the PNG tool's folder.
+Fixes PNG compression on servers using open_basedir, nested picture elements and the nginx WebP fallback.

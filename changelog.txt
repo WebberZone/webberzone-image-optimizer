@@ -1,24 +1,3 @@
-= 1.2.0 =
-
-Release date: 7 October 2026
-Release post: https://webberzone.com/announcements/image-optimizer-v1-2/
-
-**Added**
-
-* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and `wp wzio compress` support.
-* Restore originals actions in the Media Library and Edit Media screen, bulk restoration and `wp wzio restore-originals` to recover files and dimensions; backups and restore records are retained on uninstall by default.
-* Compression from verified backups when settings change, plus backup integration with WordPress's GD and Imagick image editors to avoid regenerating thumbnails from compressed main files.
-* Maximum image dimension and Disable upload scaling settings for new uploads.
-* Resize existing originals option and `wp wzio compress --resize` to shrink served main files with restorable dimensions; existing thumbnail files are retained, with oversized candidates omitted from WordPress-generated `srcset`.
-* Original compression results and resized dimensions in the Media Library, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
-* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue`; copies made before settings tracking are left alone.
-
-**Fixed**
-
-* Bandwidth savings on Bulk Optimize and `wp wzio status` omitted images converted outside the queue and could be lost when queue records were cleared.
-* Image conversion could fail in background or command-line requests when `wp_tempnam()` was unavailable.
-* Optimized copies could remain on disk when an image was deleted during conversion.
-
 = 1.1.2 =
 
 Release date: 28 September 2026
