@@ -51,7 +51,7 @@ class Original_Tools {
 		 *
 		 * Each file must be named oxipng or pngquant.
 		 *
-		 * @since 1.2.0
+		 * @since 1.2.1
 		 *
 		 * @param array $paths Candidate binary paths as strings.
 		 */
