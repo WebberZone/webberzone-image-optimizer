@@ -122,6 +122,7 @@ Release date: 10 October 2026
 * PNG compression was unavailable, with PHP warnings, when `open_basedir` excluded the tool's folder.
 * Images already inside a `<picture>` element were wrapped in a second one.
 * The nginx rules served the original instead of WebP when AVIF was accepted but missing.
+* Whole-page rewriting wrapped images inside HTML comments and scripts.
 
 = 1.2.0 =
 

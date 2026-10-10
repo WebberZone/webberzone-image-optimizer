@@ -143,23 +143,18 @@ class Rewriter {
 			return $content;
 		}
 
-		$replaced = preg_replace_callback(
-			'#<picture\b.*?</picture>#is',
-			static function ( array $matches ): string {
-				$tags = new \WP_HTML_Tag_Processor( $matches[0] );
+		$tags  = new \WP_HTML_Tag_Processor( $content );
+		$depth = 0;
 
-				while ( $tags->next_tag( array( 'tag_name' => 'IMG' ) ) ) {
-					if ( null === $tags->get_attribute( 'data-wzio-skip' ) ) {
-						$tags->set_attribute( 'data-wzio-skip', '1' );
-					}
-				}
+		while ( $tags->next_tag( array( 'tag_closers' => 'visit' ) ) ) {
+			if ( 'PICTURE' === $tags->get_tag() ) {
+				$depth = max( 0, $depth + ( $tags->is_tag_closer() ? -1 : 1 ) );
+			} elseif ( $depth > 0 && 'IMG' === $tags->get_tag() && null === $tags->get_attribute( 'data-wzio-skip' ) ) {
+				$tags->set_attribute( 'data-wzio-skip', '1' );
+			}
+		}
 
-				return $tags->get_updated_html();
-			},
-			$content
-		);
-
-		return null === $replaced ? $content : $replaced;
+		return $tags->get_updated_html();
 	}
 
 	/**
@@ -188,37 +183,27 @@ class Rewriter {
 			return $html;
 		}
 
-		$segments = preg_split(
-			'#(<picture\b.*?</picture>)#is',
-			$html,
-			-1,
-			PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
-		);
+		$tags  = new Tag_Span_Processor( $html );
+		$depth = 0;
+		$spans = array();
 
-		if ( ! is_array( $segments ) ) {
-			return $html;
-		}
-
-		$out = '';
-
-		foreach ( $segments as $segment ) {
-			if ( 0 === stripos( ltrim( $segment, " \t\n\r\0\x0B" ), '<picture' ) ) {
-				$out .= $segment;
-				continue;
+		// The HTML API skips comments, scripts and other raw text that a regex would match.
+		while ( $tags->next_tag( array( 'tag_closers' => 'visit' ) ) ) {
+			if ( 'PICTURE' === $tags->get_tag() ) {
+				$depth = max( 0, $depth + ( $tags->is_tag_closer() ? -1 : 1 ) );
+			} elseif ( 0 === $depth && 'IMG' === $tags->get_tag() ) {
+				$span = $tags->get_tag_span();
+				if ( null !== $span ) {
+					$spans[] = $span;
+				}
 			}
-
-			$replaced = preg_replace_callback(
-				'#<img\b[^>]*>#i',
-				function ( array $matches ): string {
-					return $this->wrap( $matches[0], 0 );
-				},
-				$segment
-			);
-
-			$out .= null === $replaced ? $segment : $replaced;
 		}
 
-		return $out;
+		foreach ( array_reverse( $spans ) as $span ) {
+			$html = substr_replace( $html, $this->wrap( substr( $html, $span[0], $span[1] ), 0 ), $span[0], $span[1] );
+		}
+
+		return $html;
 	}
 
 	/**

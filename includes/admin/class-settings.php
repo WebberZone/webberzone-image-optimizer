@@ -114,6 +114,11 @@ class Settings {
 
 		$minimize = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
+		// Core's .button display rule beats the hidden attribute.
+		wp_register_style( 'wzio-htaccess', false, array(), WZIO_VERSION );
+		wp_enqueue_style( 'wzio-htaccess' );
+		wp_add_inline_style( 'wzio-htaccess', '.wzio-htaccess-controls [hidden]{display:none}' );
+
 		wp_enqueue_script(
 			'wzio-htaccess',
 			WZIO_PLUGIN_URL . 'includes/admin/js/htaccess' . $minimize . '.js',

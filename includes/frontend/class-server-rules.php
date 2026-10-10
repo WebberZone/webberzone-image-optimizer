@@ -139,7 +139,20 @@ class Server_Rules {
 	public static function install_apache_rules(): bool {
 		require_once ABSPATH . 'wp-admin/includes/misc.php';
 
-		return (bool) insert_with_markers( self::htaccess_path(), self::MARKER, self::get_apache_rule_lines() );
+		$path = self::htaccess_path();
+
+		// insert_with_markers() appends new blocks; seed empty markers above WordPress so later rules cannot claim image requests first.
+		if ( ! self::is_apache_rules_installed() && is_writable( $path ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
+			$contents = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$position = strpos( $contents, '# BEGIN WordPress' );
+
+			if ( false !== $position && false === strpos( $contents, '# BEGIN ' . self::MARKER ) ) {
+				$seeded = substr( $contents, 0, $position ) . '# BEGIN ' . self::MARKER . "\n# END " . self::MARKER . "\n\n" . substr( $contents, $position );
+				file_put_contents( $path, $seeded, LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+			}
+		}
+
+		return (bool) insert_with_markers( $path, self::MARKER, self::get_apache_rule_lines() );
 	}
 
 	/**

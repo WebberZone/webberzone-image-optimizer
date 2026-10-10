@@ -466,4 +466,22 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'try_files ' . implode( ' ', $tries ) . ' $wzio_base =404;', $rules );
 		$this->assertStringNotContainsString( 'default "";', $rules );
 	}
+
+	/**
+	 * Buffered rewriting ignores images in comments, scripts and existing pictures.
+	 */
+	public function test_buffered_output_skips_raw_text_and_pictures() {
+		$this->touch_upload( '2026/02/raw.jpg' );
+		$this->touch_upload( '2026/02/raw.jpg.webp' );
+
+		$url  = Helpers::get_upload_baseurl() . '/2026/02/raw.jpg';
+		$img  = '<img src="' . $url . '" alt="">';
+		$page = '<!-- ' . $img . ' --><script>var t = \'' . $img . '\';</script><picture>' . $img . '</picture><p>' . $img . '</p>';
+
+		$out = $this->rewriter->filter_buffer( $page );
+
+		$this->assertSame( 2, substr_count( $out, '<picture>' ) );
+		$this->assertStringContainsString( '<!-- ' . $img . ' -->', $out );
+		$this->assertStringContainsString( "var t = '" . $img . "';", $out );
+	}
 }
