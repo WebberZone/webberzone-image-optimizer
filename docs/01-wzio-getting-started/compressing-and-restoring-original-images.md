@@ -16,7 +16,7 @@ order: 7
 
 In **Media → Image Optimizer → General**, enable **Compress original images** and choose **JPEG quality for originals**. JPEG encoding uses Imagick when it works, with GD as a fallback. PNG compression requires a verified local `oxipng` or `pngquant` executable and PHP process execution. The plugin checks `/usr/bin`, `/usr/local/bin` and `/opt/homebrew/bin`; it does not download tools. Unsupported originals stay unchanged. PNGs with an embedded ICC profile require oxipng; they are kept unchanged when only pngquant is available, to avoid applying the wrong profile after palette conversion.
 
-<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/01-original-compression.webp" alt="Original compression settings with JPEG quality set to 82 and both compression options off."><figcaption>Original compression is opt-in. JPEG quality defaults to 82, and PNG compression has its own switch. Compress PNG originals appears only when the server passes the PNG compression probe.</figcaption></figure>
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/01-original-compression.webp" alt="Original compression settings with JPEG quality set to 82 and both compression options off."><figcaption>Original compression is opt-in. JPEG quality defaults to 82, and PNG compression has its own switch. Compress PNG originals stays disabled until the server passes the PNG compression probe.</figcaption></figure>
 
 Original compression uses the same selected image sizes and exclusions as sidecar conversion. WordPress's unserved `original_image` file is never compressed. The served `-scaled` file is eligible.
 
@@ -44,20 +44,35 @@ Install oxipng using the installation method supported by your server's operatin
 
 The plugin checks those fixed paths rather than searching the shell's `PATH`. A tool that works in an SSH session may therefore remain unavailable to WordPress. Confirm that the web PHP runtime can launch it and that hosting restrictions do not block access to the executable or uploads directory. The plugin does not download or install server tools.
 
+#### Servers that restrict PHP with open_basedir
+
+If PHP's `open_basedir` setting excludes the folder holding the tool, as many managed stacks do, the plugin cannot see it and the Media Library shows a notice naming `open_basedir`. Either add the executable's path to `open_basedir`, or copy the binary (not a symlink, which PHP resolves to its real location) into an allowed folder that the PHP user cannot write to, and point the plugin at it with the `wzio_png_tool_paths` filter, for example from a must-use plugin:
+
+```php
+add_filter(
+	'wzio_png_tool_paths',
+	function ( $paths ) {
+		return array_merge( array( '/var/www/bin/oxipng' ), (array) $paths );
+	}
+);
+```
+
+The file must be named `oxipng` or `pngquant`. Paths are checked in order and the first executable one is used.
+
 ### Enable and verify compression
 
-1. Reload **Media → Image Optimizer → General** after the host has installed the tool. **Compress PNG originals** appears only after the plugin successfully compresses its test PNG.
+1. Reload **Media → Image Optimizer → General** after the host has installed the tool. **Compress PNG originals** becomes available only after the plugin successfully compresses its test PNG. Until then it is shown disabled, with installation guidance.
 2. Enable **Compress original images** and **Compress PNG originals**, then save the settings.
 3. Run **Optimize** on a PNG attachment and open **Details**. The **Compressed** column shows before/after sizes or why the original was kept.
 4. To process previously optimized images across the library, use **Re-optimize images that are already done** on Bulk Optimize. Saving settings does not start that job.
 
 An available tool does not guarantee that every PNG becomes smaller. A replacement must meet **Minimum saving (%)**, which defaults to `5`. Unsupported or ineligible originals stay unchanged.
 
-### If the PNG setting is still missing
+### If the PNG setting stays disabled
 
 Ask your host to check the executable's exact path, PHP-user permissions and process functions in the web runtime. The availability check performs a real encode, so finding a file on disk is not enough. Check writable temporary storage and whether the tool exits successfully before retrying.
 
-The plugin caches its original-encoder probe. A change in the detected executable path triggers another probe. If the host repairs a tool at the same path and the setting remains hidden, an administrator with WP-CLI access can clear only that cached report:
+The plugin caches its original-encoder probe. A change in the detected executable path triggers another probe. If the host repairs a tool at the same path and the setting remains disabled, an administrator with WP-CLI access can clear only that cached report:
 
 ```bash
 wp option delete wzio_original_capabilities

@@ -21,6 +21,8 @@ order: 3
 - **Original kept: no copy came out smaller** — every size was processed, but no WebP or AVIF copy beat the original, so the original is served.
 - **N sizes converted to WebP / AVIF** with **Total savings Y%** — one line per format, then the percentage saved across the attachment.
 
+<figure><img src="https://webberzone.com/wp-content/uploads/2026/10/wzio-media-library-optimized-column.png" alt="Media Library list view with the Optimized column showing WebP sizes converted and total savings, and the Optimize row action under one image."><figcaption>The Optimized column in list view. Hover a row to reveal Optimize and Delete optimized copies.</figcaption></figure>
+
 The **Details** link opens a table with one row per image size: its dimensions, the original file size, and the size and saving of each WebP or AVIF copy. A size that was not converted shows why, such as *Larger than original*, *Not supported* or *Size not selected in settings*. The table ends with the combined totals, the total saving and when the image was last optimized.
 
 When any optimized copy had to be encoded below the configured quality to come out smaller than the original, the column adds a note — "N copies needed a lower quality to come out smaller than the original" — so a lower-quality result is never silent. See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
