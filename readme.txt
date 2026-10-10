@@ -129,6 +129,7 @@ Release post: https://webberzone.com/announcements/image-optimizer-v1-2/
 * Bandwidth savings on Bulk Optimize and `wp wzio status` omitted images converted outside the queue and could be lost when queue records were cleared.
 * Image conversion could fail in background or command-line requests when `wp_tempnam()` was unavailable.
 * Optimized copies could remain on disk when an image was deleted during conversion.
+* PNG tool detection emitted PHP warnings and reported PNG compression unavailable when `open_basedir` excluded the tool's folder. Blocked folders are now skipped silently, the Media Library notice names `open_basedir` as the cause, and the new `wzio_png_tool_paths` filter points to a binary in an allowed folder.
 
 = Earlier versions =
 

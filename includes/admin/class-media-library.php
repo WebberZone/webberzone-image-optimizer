@@ -12,6 +12,7 @@ use WebberZone\Image_Optimizer\Original_Backups;
 use WebberZone\Image_Optimizer\Original_Optimizer;
 use WebberZone\Image_Optimizer\Converter;
 use WebberZone\Image_Optimizer\Capabilities;
+use WebberZone\Image_Optimizer\Original_Tools;
 use WebberZone\Image_Optimizer\Database;
 use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
@@ -144,6 +145,19 @@ class Media_Library {
 			$encoders = Capabilities::get_originals();
 			if ( ! $encoders['jpeg'] || ! $encoders['png'] ) {
 				printf( '<div class="notice notice-info"><p>%s</p></div>', esc_html( sprintf( __( 'Original compression availability: JPEG %1$s; PNG %2$s. Unsupported originals are left unchanged.', 'webberzone-image-optimizer' ), $encoders['jpeg'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ), $encoders['png'] ? __( 'available', 'webberzone-image-optimizer' ) : __( 'unavailable', 'webberzone-image-optimizer' ) ) ) );
+			}
+			if ( ! $encoders['png'] && Original_Tools::blocked_by_open_basedir() ) {
+				printf(
+					'<div class="notice notice-warning"><p>%s</p></div>',
+					esc_html(
+						sprintf(
+							/* translators: 1: open_basedir, 2: wzio_png_tool_paths filter name. */
+							__( 'PHP\'s %1$s setting blocks the folders where oxipng or pngquant are looked for. Copy the binary (not a symlink) into an allowed folder and point to it with the %2$s filter, or add its folder to %1$s.', 'webberzone-image-optimizer' ),
+							'open_basedir',
+							'wzio_png_tool_paths'
+						)
+					)
+				);
 			}
 		}
 
