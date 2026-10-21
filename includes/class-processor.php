@@ -404,7 +404,7 @@ class Processor {
 
 		// Keep the cause, not the stack trace or file path.
 		$message = strtok( (string) ( $error['message'] ?? '' ), "\n" );
-		$message = trim( (string) preg_replace( '/^(.*) in .+(?: on line \d+|:\d+)$/', '$1', (string) $message ) );
+		$message = trim( (string) preg_replace( '/^(.*) in .+(?: on line \d+|:\d+)$/', '$1', (string) $message ), " \t\n\r\0\x0B" );
 
 		Queue::complete(
 			$row_id,
