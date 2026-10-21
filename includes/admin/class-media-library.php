@@ -111,6 +111,8 @@ class Media_Library {
 					'optimizing' => esc_html__( 'Optimizing', 'webberzone-image-optimizer' ),
 					'error'      => esc_html__( 'That image could not be optimized. Check the Bulk Optimize screen for the reason.', 'webberzone-image-optimizer' ),
 					'timeout'    => esc_html__( 'Connection interrupted. Progress so far was saved — click Optimize again to continue.', 'webberzone-image-optimizer' ),
+					/* translators: %s: HTTP status code. */
+					'fatal'      => esc_html__( 'The server returned an error page instead of a result (HTTP %s), usually because PHP ran out of memory or time on this image.', 'webberzone-image-optimizer' ),
 				),
 			)
 		);
@@ -1069,7 +1071,15 @@ class Media_Library {
 			}
 		}
 
-		$step = Converter::convert_next_file( $attachment_id, $explicit ? array( 'originals_explicit' => true ) : array() );
+		Processor::watch_fatal_errors( Queue::get_id( $attachment_id ) );
+
+		try {
+			$step = Converter::convert_next_file( $attachment_id, $explicit ? array( 'originals_explicit' => true ) : array() );
+		} catch ( \Throwable $e ) {
+			$step = new \WP_Error( 'wzio_exception', $e->getMessage() );
+		}
+
+		Processor::unwatch_fatal_errors();
 
 		if ( is_wp_error( $step ) ) {
 			Queue::complete( Queue::get_id( $attachment_id ), Queue::FAILED, 0, $step->get_error_message() );

@@ -21,9 +21,18 @@
 			body: body.toString(),
 		})
 			.then(function (response) {
-				return response.json();
+				return response.text();
 			})
-			.then(function (payload) {
+			.then(function (text) {
+				var payload;
+
+				// A PHP fatal error or a server limit returns an HTML page, not JSON.
+				try {
+					payload = JSON.parse(text);
+				} catch (e) {
+					payload = null;
+				}
+
 				if (!payload || !payload.success) {
 					throw new Error((payload && payload.data && payload.data.message) || strings.error);
 				}

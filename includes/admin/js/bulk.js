@@ -15,6 +15,9 @@
 
 	var running = false;
 	var startedWith = 0;
+	var failures = 0;
+
+	var MAX_RETRIES = 5;
 
 	var els = {};
 
@@ -37,16 +40,49 @@
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: body.toString(),
 		})
-			.then(function (response) {
-				return response.json();
+			.catch(function () {
+				throw transientError(strings.network);
 			})
-			.then(function (payload) {
-				if (!payload || !payload.success) {
-					throw new Error((payload && payload.data && payload.data.message) || strings.error);
-				}
+			.then(function (response) {
+				return response.text().then(function (text) {
+					var payload;
 
-				return payload.data;
+					// A PHP fatal error or a server or proxy limit returns an HTML page,
+					// not JSON. The queue survives it, so it is worth retrying.
+					try {
+						payload = JSON.parse(text);
+					} catch (e) {
+						throw transientError(strings.badResponse.replace('%s', String(response.status)));
+					}
+
+					if (!payload || !payload.success) {
+						throw new Error((payload && payload.data && payload.data.message) || strings.error);
+					}
+
+					return payload.data;
+				});
 			});
+	}
+
+	function transientError(message) {
+		var error = new Error(message);
+		error.transient = true;
+		return error;
+	}
+
+	// Retry a failed request after a growing pause, or stop once the retries run out.
+	function retry(error, again) {
+		failures++;
+
+		if (!error.transient || failures > MAX_RETRIES) {
+			failures = 0;
+			setRunning(false);
+			status(error.message || strings.error);
+			return;
+		}
+
+		status(error.message + ' ' + strings.retrying.replace('%1$d', failures).replace('%2$d', MAX_RETRIES));
+		window.setTimeout(again, failures * 5000);
 	}
 
 	function setProgress(stats) {
@@ -127,6 +163,7 @@
 
 		post('wzio_bulk_step', {})
 			.then(function (stats) {
+				failures = 0;
 				renderStats(stats);
 
 				// Another worker (the background cron, or a second tab) holds the
@@ -148,8 +185,7 @@
 				status(strings.done + ' ' + (stats.saved_human || '0 B') + ' ' + strings.saved + '.');
 			})
 			.catch(function (error) {
-				setRunning(false);
-				status(error.message || strings.error);
+				retry(error, step);
 			});
 	}
 
@@ -165,6 +201,7 @@
 			after_id: afterId,
 		})
 			.then(function (stats) {
+				failures = 0;
 				renderStats(stats);
 
 				if (!stats.done) {
@@ -184,12 +221,14 @@
 				step();
 			})
 			.catch(function (error) {
-				setRunning(false);
-				status(error.message || strings.error);
+				retry(error, function () {
+					scan(afterId);
+				});
 			});
 	}
 
 	function start() {
+		failures = 0;
 		setRunning(true);
 		status(strings.scanning);
 		scan(0);
