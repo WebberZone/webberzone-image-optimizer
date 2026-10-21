@@ -130,6 +130,21 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.2.2-beta1 =
+
+Release date: 21 October 2026
+
+**Changed**
+
+* Bulk Optimize now retries a request up to five times when the server returns an error page or cannot be reached, instead of stopping.
+
+**Fixed**
+
+* Bulk Optimize stopped with an "is not valid JSON" error when PHP ran out of memory or time, or a server or proxy returned an error page.
+* An image that crashed PHP during conversion stayed claimed for 10 minutes with no reason recorded. The PHP error now appears in the failures table.
+* The Media Library Optimize link reported PHP errors as an interrupted connection.
+* The .htaccess Install and Remove buttons showed a JSON parse error when the server returned an error page.
+
 = 1.2.1 =
 
 Release date: 10 October 2026
@@ -172,5 +187,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.2.1 =
-Fixes PNG compression on servers using open_basedir, nested picture elements and the nginx WebP fallback.
+= 1.2.2-beta1 =
+Keeps Bulk Optimize running through server errors and records the PHP error behind any image that fails. Recommended if Bulk Optimize stopped with a JSON error.
