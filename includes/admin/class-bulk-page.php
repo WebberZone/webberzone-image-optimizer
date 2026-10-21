@@ -119,18 +119,23 @@ class Bulk_Page {
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'wzio_bulk' ),
 				'strings' => array(
-					'scanning'  => esc_html__( 'Building the queue…', 'webberzone-image-optimizer' ),
-					'running'   => esc_html__( 'Optimizing…', 'webberzone-image-optimizer' ),
-					'paused'    => esc_html__( 'Paused. Nothing is lost — press Start to carry on.', 'webberzone-image-optimizer' ),
-					'done'      => esc_html__( 'All done.', 'webberzone-image-optimizer' ),
-					'nothing'   => esc_html__( 'Every image is already optimized.', 'webberzone-image-optimizer' ),
-					'error'     => esc_html__( 'Something went wrong. The queue is intact; try again.', 'webberzone-image-optimizer' ),
-					'busy'      => esc_html__( 'Another process is working through the queue. Waiting…', 'webberzone-image-optimizer' ),
-					'confirm'   => esc_html__( 'Clear the queue? Images already optimized stay optimized.', 'webberzone-image-optimizer' ),
-					'remaining' => esc_html__( 'remaining', 'webberzone-image-optimizer' ),
-					'saved'     => esc_html__( 'saved', 'webberzone-image-optimizer' ),
+					'scanning'    => esc_html__( 'Building the queue…', 'webberzone-image-optimizer' ),
+					'running'     => esc_html__( 'Optimizing…', 'webberzone-image-optimizer' ),
+					'paused'      => esc_html__( 'Paused. Nothing is lost — press Start to carry on.', 'webberzone-image-optimizer' ),
+					'done'        => esc_html__( 'All done.', 'webberzone-image-optimizer' ),
+					'nothing'     => esc_html__( 'Every image is already optimized.', 'webberzone-image-optimizer' ),
+					'error'       => esc_html__( 'Something went wrong. The queue is intact; try again.', 'webberzone-image-optimizer' ),
+					/* translators: %s: HTTP status code. */
+					'badResponse' => esc_html__( 'The server returned an error page instead of a result (HTTP %s), usually because PHP ran out of memory or time on a large image. The queue is intact.', 'webberzone-image-optimizer' ),
+					'network'     => esc_html__( 'The server could not be reached. The queue is intact.', 'webberzone-image-optimizer' ),
+					/* translators: 1: retry number, 2: maximum retries. */
+					'retrying'    => esc_html__( 'Retrying (%1$d of %2$d)…', 'webberzone-image-optimizer' ),
+					'busy'        => esc_html__( 'Another process is working through the queue. Waiting…', 'webberzone-image-optimizer' ),
+					'confirm'     => esc_html__( 'Clear the queue? Images already optimized stay optimized.', 'webberzone-image-optimizer' ),
+					'remaining'   => esc_html__( 'remaining', 'webberzone-image-optimizer' ),
+					'saved'       => esc_html__( 'saved', 'webberzone-image-optimizer' ),
 					/* translators: 1: original total size, 2: percentage saved. */
-					'savedOf'   => esc_html__( 'Bandwidth saved of %1$s originally (%2$s%)', 'webberzone-image-optimizer' ),
+					'savedOf'     => esc_html__( 'Bandwidth saved of %1$s originally (%2$s%)', 'webberzone-image-optimizer' ),
 				),
 			)
 		);

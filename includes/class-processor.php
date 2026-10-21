@@ -45,6 +45,30 @@ class Processor {
 	const MAX_BATCH_SECONDS = 20;
 
 	/**
+	 * PHP error types that end the request.
+	 *
+	 * @since 1.2.2
+	 * @var int
+	 */
+	const FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
+
+	/**
+	 * Queue row being converted, so a fatal error can be recorded against it.
+	 *
+	 * @since 1.2.2
+	 * @var int
+	 */
+	private static $current_row = 0;
+
+	/**
+	 * Whether the fatal error handlers are registered for this request.
+	 *
+	 * @since 1.2.2
+	 * @var bool
+	 */
+	private static $fatal_handlers = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -235,7 +259,16 @@ class Processor {
 			);
 		}
 
-		$summary = Converter::convert_attachment( $attachment_id, $overrides );
+		self::watch_fatal_errors( (int) $row->id );
+
+		try {
+			$summary = Converter::convert_attachment( $attachment_id, $overrides );
+		} catch ( \Throwable $e ) {
+			// A driver exception would otherwise end the request as a fatal error.
+			$summary = new \WP_Error( 'wzio_exception', $e->getMessage() );
+		}
+
+		self::$current_row = 0;
 
 		if ( is_wp_error( $summary ) ) {
 			Queue::complete( (int) $row->id, Queue::FAILED, 0, $summary->get_error_message() );
@@ -288,6 +321,89 @@ class Processor {
 			'saved'  => (int) $summary['saved'],
 			'error'  => $error,
 		);
+	}
+
+	/**
+	 * Record a fatal error against the row being converted.
+	 *
+	 * A memory or time limit kills the request mid-image. Without this the row
+	 * stays claimed until it goes stale, and the admin never learns why.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param  int $row_id Queue row ID.
+	 * @return void
+	 */
+	private static function watch_fatal_errors( int $row_id ): void {
+		self::$current_row = $row_id;
+
+		if ( self::$fatal_handlers ) {
+			return;
+		}
+
+		self::$fatal_handlers = true;
+
+		// WordPress's own handler exits, so later shutdown functions never run. Its
+		// filter fires first; the shutdown function covers WP_DISABLE_FATAL_ERROR_HANDLER.
+		add_filter( 'wp_should_handle_php_error', array( __CLASS__, 'filter_fatal_error' ), 10, 2 );
+		register_shutdown_function( array( __CLASS__, 'on_shutdown' ) );
+	}
+
+	/**
+	 * Record the fatal error WordPress is about to handle.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param  bool                 $should_handle Whether WordPress handles the error.
+	 * @param  array<string, mixed> $error         Error from error_get_last().
+	 * @return bool Unchanged decision.
+	 */
+	public static function filter_fatal_error( $should_handle, $error ) {
+		self::fail_current_row( is_array( $error ) ? $error : null );
+
+		return $should_handle;
+	}
+
+	/**
+	 * Record a fatal error when WordPress's handler is disabled.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @return void
+	 */
+	public static function on_shutdown(): void {
+		self::fail_current_row( error_get_last() );
+	}
+
+	/**
+	 * Mark the row being converted as failed with the fatal error's message.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param  array<string, mixed>|null $error Error from error_get_last().
+	 * @return bool True when a row was marked.
+	 */
+	public static function fail_current_row( ?array $error ): bool {
+		if ( 0 === self::$current_row || empty( $error['type'] ) || ! ( (int) $error['type'] & self::FATAL_ERRORS ) ) {
+			return false;
+		}
+
+		$row_id            = self::$current_row;
+		self::$current_row = 0;
+
+		// Keep the cause, not the stack trace or file path.
+		$message = strtok( (string) ( $error['message'] ?? '' ), "\n" );
+		$message = trim( (string) preg_replace( '/^(.*) in .+(?: on line \d+|:\d+)$/', '$1', (string) $message ) );
+
+		Queue::complete(
+			$row_id,
+			Queue::FAILED,
+			0,
+			/* translators: %s: PHP error message. */
+			sprintf( __( 'PHP stopped while converting this image: %s', 'webberzone-image-optimizer' ), $message )
+		);
+
+		return true;
 	}
 
 	/**

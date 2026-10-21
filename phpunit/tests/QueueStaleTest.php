@@ -6,6 +6,7 @@
  */
 
 use WebberZone\Image_Optimizer\Database;
+use WebberZone\Image_Optimizer\Processor;
 use WebberZone\Image_Optimizer\Queue;
 
 /**
@@ -149,5 +150,71 @@ class QueueStaleTest extends WP_UnitTestCase
 
         $this->assertSame(Queue::PENDING, $row->status);
         $this->assertSame(0, (int) $row->attempts);
+    }
+
+    /**
+     * Point the processor at a claimed row, as it does while converting.
+     *
+     * @param  int $id Queue row ID.
+     * @return void
+     */
+    private function set_current_row( $id )
+    {
+        $property = new ReflectionProperty(Processor::class, 'current_row');
+        $property->setAccessible(true);
+        $property->setValue(null, $id);
+    }
+
+    /**
+     * A fatal error mid-conversion fails the row at once, with its cause.
+     */
+    public function test_a_fatal_error_fails_the_current_row_with_its_message()
+    {
+        Queue::add(array( 4 ), true);
+        $rows = Queue::claim(1);
+        $id   = (int) $rows[0]->id;
+
+        $this->set_current_row($id);
+
+        $this->assertTrue(
+            Processor::fail_current_row(
+                array(
+                    'type'    => E_ERROR,
+                    'message' => 'Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /var/www/wp-includes/x.php on line 12',
+                )
+            )
+        );
+
+        $row = $this->get_row($id);
+
+        // The first failure goes back in line until the retry budget runs out.
+        $this->assertSame(Queue::PENDING, $row->status);
+        $this->assertSame(1, (int) $row->attempts);
+        $this->assertStringContainsString('Allowed memory size', $row->error);
+        $this->assertStringNotContainsString('/var/www', $row->error);
+
+        $this->assertFalse(
+            Processor::fail_current_row(array( 'type' => E_ERROR, 'message' => 'Again' )),
+            'The row is recorded only once.'
+        );
+    }
+
+    /**
+     * Warnings and errors outside a conversion leave the queue alone.
+     */
+    public function test_a_non_fatal_error_or_idle_processor_is_ignored()
+    {
+        Queue::add(array( 5 ), true);
+        $rows = Queue::claim(1);
+        $id   = (int) $rows[0]->id;
+
+        $this->set_current_row($id);
+        $this->assertFalse(Processor::fail_current_row(array( 'type' => E_WARNING, 'message' => 'Warning' )));
+        $this->assertFalse(Processor::fail_current_row(null));
+
+        $this->set_current_row(0);
+        $this->assertFalse(Processor::fail_current_row(array( 'type' => E_ERROR, 'message' => 'Fatal' )));
+
+        $this->assertSame(Queue::PROCESSING, $this->get_row($id)->status);
     }
 }
