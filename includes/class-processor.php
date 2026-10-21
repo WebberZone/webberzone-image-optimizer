@@ -365,8 +365,8 @@ class Processor {
 	 *
 	 * @since 1.2.2
 	 *
-	 * @param  bool                 $should_handle Whether WordPress handles the error.
-	 * @param  array<string, mixed> $error         Error from error_get_last().
+	 * @param  bool  $should_handle Whether WordPress handles the error.
+	 * @param  mixed $error         Error from error_get_last(), as passed by a filter.
 	 * @return bool Unchanged decision.
 	 */
 	public static function filter_fatal_error( $should_handle, $error ) {
