@@ -26,23 +26,25 @@
 			body: body.toString(),
 		})
 			.then(function (response) {
-				return response.text();
-			})
-			.then(function (text) {
-				var payload;
+				return response.text().then(function (text) {
+					var payload;
 
-				try {
-					payload = JSON.parse(text);
-				} catch (e) {
-					// Connection dropped before the server could reply.
-					throw new Error(strings.timeout);
-				}
+					try {
+						payload = JSON.parse(text);
+					} catch (e) {
+						// An empty body means the connection dropped; anything else is an
+						// error page from a PHP fatal error or a server limit.
+						throw new Error(
+							'' === text.trim() ? strings.timeout : strings.fatal.replace('%s', String(response.status))
+						);
+					}
 
-				if (!payload || !payload.success) {
-					throw new Error((payload && payload.data && payload.data.message) || strings.error);
-				}
+					if (!payload || !payload.success) {
+						throw new Error((payload && payload.data && payload.data.message) || strings.error);
+					}
 
-				return payload.data;
+					return payload.data;
+				});
 			});
 	}
 
