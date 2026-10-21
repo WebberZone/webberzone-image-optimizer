@@ -47,7 +47,7 @@ class Processor {
 	/**
 	 * PHP error types that end the request.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 * @var int
 	 */
 	const FATAL_ERRORS = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR;
@@ -55,7 +55,7 @@ class Processor {
 	/**
 	 * Queue row being converted, so a fatal error can be recorded against it.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 * @var int
 	 */
 	private static $current_row = 0;
@@ -63,7 +63,7 @@ class Processor {
 	/**
 	 * Whether the fatal error handlers are registered for this request.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 * @var bool
 	 */
 	private static $fatal_handlers = false;
@@ -329,7 +329,7 @@ class Processor {
 	 * A memory or time limit kills the request mid-image. Without this the row
 	 * stays claimed until it goes stale, and the admin never learns why.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 *
 	 * @param  int $row_id Queue row ID.
 	 * @return void
@@ -352,7 +352,7 @@ class Processor {
 	/**
 	 * Stop recording fatal errors once the conversion has returned.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 *
 	 * @return void
 	 */
@@ -363,7 +363,7 @@ class Processor {
 	/**
 	 * Record the fatal error WordPress is about to handle.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 *
 	 * @param  bool                 $should_handle Whether WordPress handles the error.
 	 * @param  array<string, mixed> $error         Error from error_get_last().
@@ -378,7 +378,7 @@ class Processor {
 	/**
 	 * Record a fatal error when WordPress's handler is disabled.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 *
 	 * @return void
 	 */
@@ -389,7 +389,7 @@ class Processor {
 	/**
 	 * Mark the row being converted as failed with the fatal error's message.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.2
 	 *
 	 * @param  array<string, mixed>|null $error Error from error_get_last().
 	 * @return bool True when a row was marked.
