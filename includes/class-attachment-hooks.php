@@ -28,6 +28,9 @@ class Attachment_Hooks {
 	public function __construct() {
 		Hook_Registry::add_filter( 'wp_calculate_image_srcset', array( Original_Optimizer::class, 'filter_srcset' ), 10, 5 );
 		Hook_Registry::add_filter( 'wp_image_editors', array( Original_Optimizer::class, 'image_editors' ) );
+		// WP-CLI, REST and direct option writes bypass the disabled checkbox on the settings screen.
+		Hook_Registry::add_filter( 'pre_update_option_wzio_settings', array( Original_Optimizer::class, 'guard_png_setting' ) );
+		Hook_Registry::add_filter( 'wzio_get_option_compress_png_originals', array( Original_Optimizer::class, 'filter_png_setting' ) );
 		Hook_Registry::add_filter( 'big_image_size_threshold', array( $this, 'maximum_image_dimension' ), 10, 4 );
 		// Runs after uploads and any operation that regenerates attachment files.
 		Hook_Registry::add_filter( 'wp_update_attachment_metadata', array( $this, 'on_metadata_updated' ), 9999, 2 );
