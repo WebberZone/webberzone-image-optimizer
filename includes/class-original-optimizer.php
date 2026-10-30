@@ -59,6 +59,36 @@ class Original_Optimizer {
 	}
 
 	/**
+	 * Keep PNG compression off in stored settings while no PNG tool is available.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param mixed $value New settings.
+	 * @return mixed Settings to store.
+	 */
+	public static function guard_png_setting( $value ) {
+		if ( is_array( $value ) && ! empty( $value['compress_png_originals'] ) && ! Capabilities::get_originals()['png'] ) {
+			$value['compress_png_originals'] = 0;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Read PNG compression as off while no PNG tool is available.
+	 *
+	 * Covers a value stored before the tool was removed or before the guard on writes existed.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @param mixed $value Stored value.
+	 * @return mixed Effective value.
+	 */
+	public static function filter_png_setting( $value ) {
+		return ! empty( $value ) && ! Capabilities::get_originals()['png'] ? 0 : $value;
+	}
+
+	/**
 	 * Get effective settings for fingerprinting and processing.
 	 *
 	 * @return array Settings.

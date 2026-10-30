@@ -510,6 +510,10 @@ class Settings {
 			'default'  => 0,
 			'disabled' => ! $capabilities['png'],
 		);
+		if ( ! $capabilities['png'] ) {
+			// Show the effective state rather than a stored value the plugin ignores.
+			$settings['compress_png_originals']['value'] = 0;
+		}
 		if ( ( $capabilities['jpeg'] || $capabilities['png'] ) && (int) \wzio_get_option( 'maximum_image_dimension', 0 ) > 0 && ! \wzio_get_option( 'disable_image_scaling', false ) ) {
 			$settings['resize_existing_originals'] = array(
 				'id'      => 'resize_existing_originals',

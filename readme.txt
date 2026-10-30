@@ -144,6 +144,7 @@ Release date: 21 October 2026
 * An image that crashed PHP during conversion stayed claimed for 10 minutes with no reason recorded. The PHP error now appears in the failures table.
 * The Media Library Optimize link reported PHP errors as an interrupted connection.
 * The .htaccess Install and Remove buttons showed a JSON parse error when the server returned an error page.
+* Compress PNG originals could be turned on with WP-CLI or a direct option update when no PNG tool was installed, although the settings screen blocked it.
 
 = 1.2.1 =
 
