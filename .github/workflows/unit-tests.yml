@@ -7,7 +7,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ankane/setup-mysql has no MySQL 8.0 packages for the newer ubuntu-latest image.
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
