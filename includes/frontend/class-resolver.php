@@ -74,8 +74,14 @@ class Resolver {
 		$url_path = substr( $url, 0, strcspn( $url, '?#' ) );
 		$url_tail = substr( $url, strlen( $url_path ) );
 
+		$sidecar = Helpers::sidecar_path( $path, $format );
+
+		if ( '' === $sidecar ) {
+			return '';
+		}
+
 		// Key by sidecar path to isolate naming strategies.
-		$key = $format . ':' . Helpers::sidecar_path( $path, $format );
+		$key = $format . ':' . $sidecar;
 
 		if ( isset( self::$memo[ $key ] ) ) {
 			return self::$memo[ $key ] ? Helpers::apply_sidecar_naming( $url_path, $format ) . $url_tail : '';
@@ -87,7 +93,7 @@ class Resolver {
 		if ( false !== $cached ) {
 			$exists = ( 'y' === $cached );
 		} else {
-			$exists = file_exists( Helpers::sidecar_path( $path, $format ) );
+			$exists = file_exists( $sidecar );
 
 			wp_cache_set(
 				$cache_key,
