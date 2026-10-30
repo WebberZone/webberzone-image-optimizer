@@ -63,6 +63,14 @@ class Main {
 	public $rewriter = null;
 
 	/**
+	 * Abilities API integration instance.
+	 *
+	 * @since 1.3.0
+	 * @var Abilities|null
+	 */
+	public $abilities = null;
+
+	/**
 	 * Get the plugin instance.
 	 *
 	 * @since 1.0.0
@@ -102,6 +110,7 @@ class Main {
 		$this->attachment_hooks = new Attachment_Hooks();
 		$this->processor        = new Processor();
 		$this->rewriter         = new Frontend\Rewriter();
+		$this->abilities        = new Abilities();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'wzio', CLI\CLI::class );

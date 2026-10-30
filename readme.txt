@@ -130,9 +130,13 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
-= 1.2.2-beta1 =
+= 1.3.0-beta1 =
 
-Release date: 21 October 2026
+Release date: 30 October 2026
+
+**Added**
+
+* Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
 
 **Changed**
 
@@ -187,5 +191,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.2.2-beta1 =
-Keeps Bulk Optimize running through server errors and records the PHP error behind any image that fails. Recommended if Bulk Optimize stopped with a JSON error.
+= 1.3.0-beta1 =
+Lets AI assistants run Bulk Optimize and change settings on WordPress 6.9+. Keeps Bulk Optimize running through server errors and records the PHP error behind any image that fails.
