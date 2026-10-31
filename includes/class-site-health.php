@@ -119,7 +119,7 @@ class Site_Health {
 				'wzio_queue_table',
 				'critical',
 				__( 'The Image Optimizer queue table is missing', 'webberzone-image-optimizer' ),
-				__( 'Bulk Optimize and background conversion cannot run without it. Deactivate and reactivate the plugin to create it.', 'webberzone-image-optimizer' )
+				__( 'Bulk Optimize and background conversion cannot run without it. The plugin tries to create it on every admin page load, so the database user probably lacks permission to create tables. Ask your host to grant CREATE on this database.', 'webberzone-image-optimizer' )
 			);
 		}
 
