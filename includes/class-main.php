@@ -71,6 +71,14 @@ class Main {
 	public $abilities = null;
 
 	/**
+	 * Site Health integration instance.
+	 *
+	 * @since 1.3.0
+	 * @var Site_Health|null
+	 */
+	public $site_health = null;
+
+	/**
 	 * Get the plugin instance.
 	 *
 	 * @since 1.0.0
@@ -111,6 +119,7 @@ class Main {
 		$this->processor        = new Processor();
 		$this->rewriter         = new Frontend\Rewriter();
 		$this->abilities        = new Abilities();
+		$this->site_health      = new Site_Health();
 
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'wzio', CLI\CLI::class );

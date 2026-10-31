@@ -138,6 +138,7 @@ Release date: 30 October 2026
 
 * Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
 * WebP uploads as a source for AVIF copies.
+* Site Health tests for missing encoders, a missing queue table and a stalled background queue, and an Image Optimizer section in Site Health Info.
 
 **Changed**
 
