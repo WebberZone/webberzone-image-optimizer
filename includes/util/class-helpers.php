@@ -21,10 +21,13 @@ class Helpers {
 	/**
 	 * Source MIME types the plugin is able to convert.
 	 *
+	 * A WebP source only ever gets an AVIF copy.
+	 *
 	 * @since 1.0.0
+	 * @since 1.3.0 Added image/webp.
 	 * @var array<int, string>
 	 */
-	const SOURCE_MIME_TYPES = array( 'image/jpeg', 'image/png', 'image/gif' );
+	const SOURCE_MIME_TYPES = array( 'image/jpeg', 'image/png', 'image/gif', 'image/webp' );
 
 	/**
 	 * Target formats keyed by format slug.
@@ -195,10 +198,13 @@ class Helpers {
 	 * @param string $file   Absolute path or filename of the source image.
 	 * @param string $format Target format slug.
 	 * @param string $naming Naming strategy to force. Empty uses the setting.
-	 * @return string Sidecar path or filename.
+	 * @return string Sidecar path or filename, or an empty string when it would be the source itself.
 	 */
 	public static function sidecar_path( string $file, string $format, string $naming = '' ): string {
-		return self::apply_sidecar_naming( $file, $format, $naming );
+		$sidecar = self::apply_sidecar_naming( $file, $format, $naming );
+
+		// Replace naming maps photo.webp to itself for WebP; never treat the source as its own copy.
+		return strtolower( $sidecar ) === strtolower( $file ) ? '' : $sidecar;
 	}
 
 	/**
@@ -305,6 +311,24 @@ class Helpers {
 		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 
 		return $count > 1;
+	}
+
+	/**
+	 * Determine whether a WebP file is animated.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string $file Absolute path to the file.
+	 * @return bool True when the extended header sets the animation flag.
+	 */
+	public static function is_animated_webp( string $file ): bool {
+		if ( ! is_readable( $file ) ) {
+			return false;
+		}
+
+		$header = (string) file_get_contents( $file, false, null, 0, 21 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		return 21 === strlen( $header ) && 'VP8X' === substr( $header, 12, 4 ) && ( ord( $header[20] ) & 0x02 );
 	}
 
 	/**

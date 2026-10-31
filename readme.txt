@@ -13,7 +13,7 @@ Free WebP and AVIF converter. Compress and optimize images on your own server an
 
 == Description ==
 
-WebberZone Image Optimizer is a free WebP converter and AVIF converter for WordPress. It converts the JPEG, PNG and GIF images already in your media library to WebP and AVIF, optimizes new uploads automatically, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, so pages load faster and score better on PageSpeed Insights and Core Web Vitals.
+WebberZone Image Optimizer is a free WebP converter and AVIF converter for WordPress. It converts the JPEG, PNG, GIF and WebP images already in your media library to WebP and AVIF, optimizes new uploads automatically, and serves each visitor the smallest file their browser can read. Images are typically 40–60% smaller with no visible difference, so pages load faster and score better on PageSpeed Insights and Core Web Vitals.
 
 Everything happens on your own server. Your images are never uploaded anywhere. The plugin makes no outbound network requests of any kind — there is no external service, no API key, no monthly image quota, no account to create and nothing that can stop working because a company shut down or changed its pricing. AVIF is not a paid upgrade: every feature is free.
 
@@ -46,7 +46,7 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 
 = Features =
 
-* Convert JPEG, PNG and GIF to WebP and AVIF, together or separately (AVIF where the server supports it)
+* Convert JPEG, PNG and GIF to WebP and AVIF, together or separately (AVIF where the server supports it), and WebP uploads to AVIF
 * Bulk conversion of an existing media library, resumable and interruptible
 * Automatic conversion of new uploads
 * Optional JPEG and PNG compression of the originals, with backups and Restore originals
@@ -137,6 +137,7 @@ Release date: 30 October 2026
 **Added**
 
 * Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
+* WebP uploads as a source for AVIF copies.
 
 **Changed**
 

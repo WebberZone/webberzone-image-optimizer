@@ -651,7 +651,8 @@ class Converter {
 		$width  = is_array( $dims ) ? (int) $dims[0] : 0;
 		$height = is_array( $dims ) ? (int) $dims[1] : 0;
 
-		$animated = ( 'image/gif' === $mime ) && Helpers::is_animated_gif( $path );
+		$animated = ( 'image/gif' === $mime && Helpers::is_animated_gif( $path ) )
+			|| ( 'image/webp' === $mime && Helpers::is_animated_webp( $path ) );
 
 		$max_bytes = (int) ( $source_bytes * ( 100 - (int) ( $args['min_saving'] ?? 5 ) ) / 100 );
 
@@ -659,7 +660,19 @@ class Converter {
 		$png_lossy       = max( 0, min( 100, (int) ( $args['png_lossy'] ?? 0 ) ) );
 
 		foreach ( $args['formats'] as $format ) {
+			// A WebP source gets an AVIF copy only.
+			if ( Helpers::get_mime_type( $format ) === $mime ) {
+				$record[ $format ] = Attachment_Meta::skipped_entry( 'source' );
+				continue;
+			}
+
 			$destination = Helpers::sidecar_path( $path, $format );
+
+			// A misnamed source, such as a JPEG saved as photo.webp, would be overwritten by its own copy.
+			if ( '' === $destination ) {
+				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
+				continue;
+			}
 
 			// Lossless AVIF outgrows the source PNG for most graphics, so the
 			// promise holds for WebP only. Lowering quality cannot change a

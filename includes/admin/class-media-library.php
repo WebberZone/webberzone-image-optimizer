@@ -670,6 +670,7 @@ class Media_Library {
 			'animated'    => __( 'Animated, skipped', 'webberzone-image-optimizer' ),
 			'unsupported' => __( 'Not supported', 'webberzone-image-optimizer' ),
 			'occupied'    => __( 'Name already in use', 'webberzone-image-optimizer' ),
+			'source'      => __( 'Already this format', 'webberzone-image-optimizer' ),
 		);
 		$skip    = (string) ( $entry['skip'] ?? '' );
 
