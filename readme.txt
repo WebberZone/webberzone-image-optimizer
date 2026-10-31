@@ -155,6 +155,7 @@ Release date: 1 November 2026
 * The Media Library Optimize link reported PHP errors as an interrupted connection.
 * The .htaccess Install and Remove buttons showed a JSON parse error when the server returned an error page.
 * Compress PNG originals could be turned on with WP-CLI or a direct option update when no PNG tool was installed, although the settings screen blocked it.
+* Already optimized on the Bulk Optimize screen could exceed Images in the library, and the size totals were inflated, when conversion records were left behind by attachments that no longer exist.
 
 = Earlier versions =
 

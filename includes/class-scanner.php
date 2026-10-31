@@ -101,13 +101,20 @@ class Scanner {
 			return (int) $cached;
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$mimes        = Helpers::SOURCE_MIME_TYPES;
+		$placeholders = implode( ',', array_fill( 0, count( $mimes ), '%s' ) );
+
+		// Join posts so records left behind by deleted attachments cannot push the count past the candidate count.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 		$count = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(DISTINCT post_id) FROM {$wpdb->postmeta} WHERE meta_key = %s",
-				Attachment_Meta::META_KEY
+				"SELECT COUNT(DISTINCT m.post_id) FROM {$wpdb->postmeta} m
+				INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id
+				WHERE m.meta_key = %s AND p.post_type = 'attachment' AND p.post_mime_type IN ({$placeholders})",
+				array_merge( array( Attachment_Meta::META_KEY ), $mimes )
 			)
 		);
+		// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
 		// Not invalidated per conversion: that would uncache it exactly during a bulk run.
 		set_transient( 'wzio_count_optimized', $count, self::OPTIMIZED_TTL );
@@ -145,7 +152,9 @@ class Scanner {
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$rows = (array) $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT meta_key, SUM( CAST( meta_value AS UNSIGNED ) ) AS total FROM {$wpdb->postmeta} WHERE meta_key IN ( {$placeholders} ) GROUP BY meta_key",
+				"SELECT m.meta_key, SUM( CAST( m.meta_value AS UNSIGNED ) ) AS total FROM {$wpdb->postmeta} m
+				INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id AND p.post_type = 'attachment'
+				WHERE m.meta_key IN ( {$placeholders} ) GROUP BY m.meta_key",
 				$keys
 			)
 		);
