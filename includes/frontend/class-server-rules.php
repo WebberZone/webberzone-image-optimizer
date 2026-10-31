@@ -215,7 +215,7 @@ class Server_Rules {
 	 * @return string HTML.
 	 */
 	public static function get_settings_description(): string {
-		$intro = '<p>' . esc_html__( 'Images referenced from a stylesheet cannot be rewritten in markup. To optimize those too, add one of the blocks below to your server configuration. Everything else on this tab works without server changes.', 'webberzone-image-optimizer' ) . '</p>'
+		$intro = '<p>' . esc_html__( 'Block background images covers backgrounds set in block styles. Images referenced from a stylesheet file cannot be rewritten in markup. To optimize those too, add one of the blocks below to your server configuration. Everything else on this tab works without server changes.', 'webberzone-image-optimizer' ) . '</p>'
 		. '<p>' . esc_html__( 'Both blocks send a Vary: Accept header. Do not remove it, or a cache can hand WebP to a browser that cannot display it.', 'webberzone-image-optimizer' ) . '</p>';
 
 		// Raw read: wzio_get_option() would recurse back into get_settings_defaults(), which builds this.
