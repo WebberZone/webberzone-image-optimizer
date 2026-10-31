@@ -136,6 +136,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 = 1.3.0 =
 
 Release date: 1 November 2026
+Release post: https://webberzone.com/announcements/image-optimizer-v1-3/
 
 **Added**
 
