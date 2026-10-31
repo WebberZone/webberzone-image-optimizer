@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, compress images, optimize images
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -60,6 +60,9 @@ The bulk screen works through a database-backed queue one batch at a time. Close
 * Memory guard that skips an image rather than crashing a batch
 * Per-image status and actions in the Media library, with a filter for optimized, not-yet-optimized, skipped and failed images
 * Bulk Optimize warns when images are queued but the background worker has stopped running, and gives the commands that recover it
+* WebP and AVIF for background images set in block styles, using CSS `image-set()`
+* Site Health tests and an Info section covering encoders, the queue and delivery settings
+* Abilities API support on WordPress 6.9+, so AI assistants and MCP clients can check status, run Bulk Optimize and change settings
 * Multisite aware: per-site queues, tables created for new sites automatically
 * WP-CLI: `wp wzio status`, `convert`, `queue`, `run`, `clean`
 * Filters throughout for developers
@@ -130,15 +133,15 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
-= 1.3.0-beta1 =
+= 1.3.0 =
 
-Release date: 30 October 2026
+Release date: 1 November 2026
 
 **Added**
 
-* Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
-* WebP uploads as a source for AVIF copies.
 * Block background images setting, on by default, which serves WebP and AVIF for background images set in block styles using CSS `image-set()`.
+* WebP uploads as a source for AVIF copies.
+* Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
 * Site Health tests for missing encoders, a missing queue table and a stalled background queue, and an Image Optimizer section in Site Health Info.
 
 **Changed**
@@ -153,47 +156,11 @@ Release date: 30 October 2026
 * The .htaccess Install and Remove buttons showed a JSON parse error when the server returned an error page.
 * Compress PNG originals could be turned on with WP-CLI or a direct option update when no PNG tool was installed, although the settings screen blocked it.
 
-= 1.2.1 =
-
-Release date: 10 October 2026
-
-**Added**
-
-* `wzio_png_tool_paths` filter for custom oxipng or pngquant locations.
-
-**Fixed**
-
-* PNG compression was unavailable, with PHP warnings, when `open_basedir` excluded the tool's folder.
-* Images already inside a `<picture>` element were wrapped in a second one.
-* The nginx rules served the original instead of WebP when AVIF was accepted but missing.
-* Whole-page rewriting wrapped images inside HTML comments and scripts.
-
-= 1.2.0 =
-
-Release date: 7 October 2026
-Release post: https://webberzone.com/announcements/image-optimizer-v1-2/
-
-**Added**
-
-* Optional original JPEG compression with configurable quality and PNG compression through local oxipng or pngquant tools, with verified backups and `wp wzio compress` support.
-* Restore originals actions in the Media Library and Edit Media screen, bulk restoration and `wp wzio restore-originals` to recover files and dimensions; backups and restore records are retained on uninstall by default.
-* Compression from verified backups when settings change, plus backup integration with WordPress's GD and Imagick image editors to avoid regenerating thumbnails from compressed main files.
-* Maximum image dimension and Disable upload scaling settings for new uploads.
-* Resize existing originals option and `wp wzio compress --resize` to shrink served main files with restorable dimensions; existing thumbnail files are retained, with oversized candidates omitted from WordPress-generated `srcset`.
-* Original compression results and resized dimensions in the Media Library, plus original savings, backup usage, resized-image counts and optimized-copy disk usage by format on Bulk Optimize and in `wp wzio status`.
-* Regenerate only images made with older settings option on Bulk Optimize and `--outdated` on `wp wzio convert` and `wp wzio queue`; copies made before settings tracking are left alone.
-
-**Fixed**
-
-* Bandwidth savings on Bulk Optimize and `wp wzio status` omitted images converted outside the queue and could be lost when queue records were cleared.
-* Image conversion could fail in background or command-line requests when `wp_tempnam()` was unavailable.
-* Optimized copies could remain on disk when an image was deleted during conversion.
-
 = Earlier versions =
 
 For the changelog of earlier versions, please refer to the [releases page on GitHub](https://github.com/WebberZone/webberzone-image-optimizer/releases).
 
 == Upgrade Notice ==
 
-= 1.3.0-beta1 =
+= 1.3.0 =
 Serves WebP and AVIF for block background images, converts WebP uploads to AVIF, and lets AI assistants run Bulk Optimize on WordPress 6.9+. Keeps Bulk Optimize running through server errors.
