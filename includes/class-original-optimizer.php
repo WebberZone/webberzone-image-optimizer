@@ -61,7 +61,7 @@ class Original_Optimizer {
 	/**
 	 * Keep PNG compression off in stored settings while no PNG tool is available.
 	 *
-	 * @since 1.2.2
+	 * @since 1.3.0
 	 *
 	 * @param mixed $value New settings.
 	 * @return mixed Settings to store.
@@ -79,7 +79,7 @@ class Original_Optimizer {
 	 *
 	 * Covers a value stored before the tool was removed or before the guard on writes existed.
 	 *
-	 * @since 1.2.2
+	 * @since 1.3.0
 	 *
 	 * @param mixed $value Stored value.
 	 * @return mixed Effective value.
