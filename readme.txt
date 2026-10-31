@@ -38,7 +38,7 @@ Images are wrapped in a `<picture>` element, so the *browser* chooses the format
 
 Responsive images are handled properly. Each format's `<source>` lists only the optimized `srcset` candidates that exist, with their descriptors preserved exactly. Missing intermediate copies are omitted, while a missing smallest, widest or highest-density copy withholds that format so the optimized set always covers the same range as the original set. The original `<img>` remains as the fallback.
 
-For images referenced from a stylesheet, where the browser is never offered a choice, the Delivery tab generates ready-to-paste Apache and nginx rules, complete with the `Vary: Accept` header those rules require.
+Background images set in block styles, such as Group and Cover block backgrounds, get a CSS `image-set()` alternative, which does the same job as `<picture>` in CSS. For images referenced from a stylesheet file, where the browser is never offered a choice, the Delivery tab generates ready-to-paste Apache and nginx rules, complete with the `Vary: Accept` header those rules require.
 
 = Bulk optimize your existing media library =
 
@@ -138,6 +138,7 @@ Release date: 30 October 2026
 
 * Abilities API support on WordPress 6.9 and later, so AI assistants and other MCP clients can check status, run Bulk Optimize, optimize one image and change settings.
 * WebP uploads as a source for AVIF copies.
+* Block background images setting, on by default, which serves WebP and AVIF for background images set in block styles using CSS `image-set()`.
 * Site Health tests for missing encoders, a missing queue table and a stalled background queue, and an Image Optimizer section in Site Health Info.
 
 **Changed**
@@ -195,4 +196,4 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 == Upgrade Notice ==
 
 = 1.3.0-beta1 =
-Lets AI assistants run Bulk Optimize and change settings on WordPress 6.9+. Keeps Bulk Optimize running through server errors and records the PHP error behind any image that fails.
+Serves WebP and AVIF for block background images, converts WebP uploads to AVIF, and lets AI assistants run Bulk Optimize on WordPress 6.9+. Keeps Bulk Optimize running through server errors.

@@ -66,6 +66,10 @@ class Rewriter {
 			Hook_Registry::add_filter( 'wp_get_attachment_image', array( $this, 'filter_attachment_image' ), 20, 2 );
 		}
 
+		if ( \wzio_get_option( 'rewrite_backgrounds', true ) ) {
+			Hook_Registry::add_filter( 'render_block', array( $this, 'filter_block_backgrounds' ), 20 );
+		}
+
 		if ( \wzio_get_option( 'rewrite_buffer', false ) && self::has_template_enhancement_buffer() ) {
 			Hook_Registry::add_filter( 'wp_template_enhancement_output_buffer', array( $this, 'filter_buffer' ), 20 );
 		}
@@ -168,6 +172,87 @@ class Rewriter {
 	 */
 	public function filter_attachment_image( $html, $attachment_id ) {
 		return $this->wrap( (string) $html, (int) $attachment_id );
+	}
+
+	/**
+	 * Offer modern formats for inline background images in rendered blocks.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string $block_content Rendered block markup.
+	 * @return string Markup.
+	 */
+	public function filter_block_backgrounds( $block_content ) {
+		$block_content = (string) $block_content;
+
+		if ( false === stripos( $block_content, 'url(' ) ) {
+			return $block_content;
+		}
+
+		$tags = new \WP_HTML_Tag_Processor( $block_content );
+
+		while ( $tags->next_tag() ) {
+			$style = $tags->get_attribute( 'style' );
+
+			// Parent blocks render their inner blocks again, so skip styles already rewritten.
+			if ( ! is_string( $style ) || false === stripos( $style, 'background' ) || false !== stripos( $style, 'image-set(' ) ) {
+				continue;
+			}
+
+			$rewritten = self::add_image_set( $style );
+
+			if ( $rewritten !== $style ) {
+				$tags->set_attribute( 'style', $rewritten );
+			}
+		}
+
+		return $tags->get_updated_html();
+	}
+
+	/**
+	 * Follow each single-image `background-image` declaration with an `image-set()` one.
+	 *
+	 * A browser that cannot parse `type()` inside `image-set()` drops the added
+	 * declaration and keeps the original. Formats are listed only when their file
+	 * exists, and the declaration is left alone when none does.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string $style Inline style.
+	 * @return string Style.
+	 */
+	public static function add_image_set( string $style ): string {
+		return (string) preg_replace_callback(
+			'/(^|;)(\s*background-image\s*:\s*url\(\s*([\'"]?)([^\'"()\s\\\\]+)\3\s*\)\s*(!important)?\s*)(?=;|$)/i',
+			static function ( array $matches ): string {
+				$url       = $matches[4];
+				$important = empty( $matches[5] ) ? '' : ' !important';
+				$mime      = wp_check_filetype( (string) strtok( $url, '?#' ) )['type'];
+
+				if ( ! Resolver::is_local( $url ) || ! in_array( $mime, Helpers::SOURCE_MIME_TYPES, true ) ) {
+					return $matches[0];
+				}
+
+				$set = array();
+
+				foreach ( Helpers::get_formats() as $format ) {
+					$sidecar = Resolver::resolve( $url, $format );
+
+					if ( '' !== $sidecar ) {
+						$set[] = sprintf( 'url("%1$s") type("%2$s")', $sidecar, Helpers::get_mime_type( $format ) );
+					}
+				}
+
+				if ( empty( $set ) ) {
+					return $matches[0];
+				}
+
+				$set[] = sprintf( 'url("%1$s") type("%2$s")', $url, $mime );
+
+				return $matches[1] . rtrim( $matches[2], " \t\n\r\0\x0B" ) . ';background-image:image-set(' . implode( ', ', $set ) . ')' . $important;
+			},
+			$style
+		);
 	}
 
 	/**

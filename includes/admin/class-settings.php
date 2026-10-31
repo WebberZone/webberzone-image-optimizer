@@ -362,6 +362,7 @@ class Settings {
 			'rewrite_content'             => 1,
 			'rewrite_template'            => 1,
 			'rewrite_buffer'              => 0,
+			'rewrite_backgrounds'         => 1,
 
 			// Advanced.
 			'batch_size'                  => 10,
@@ -618,28 +619,35 @@ class Settings {
 	public static function settings_delivery() {
 		$defaults = self::get_defaults();
 		$settings = array(
-			'enable_delivery'  => array(
+			'enable_delivery'     => array(
 				'id'      => 'enable_delivery',
 				'name'    => esc_html__( 'Serve optimized images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Wrap images in a picture element so the browser picks the format. The server never varies its response, so this is safe behind caches and CDNs.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['enable_delivery'],
 			),
-			'rewrite_content'  => array(
+			'rewrite_content'     => array(
 				'id'      => 'rewrite_content',
 				'name'    => esc_html__( 'Post content images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Rewrite images embedded in post and page content.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['rewrite_content'],
 			),
-			'rewrite_template' => array(
+			'rewrite_template'    => array(
 				'id'      => 'rewrite_template',
 				'name'    => esc_html__( 'Theme and block images', 'webberzone-image-optimizer' ),
 				'desc'    => esc_html__( 'Rewrite featured images, galleries and anything rendered through the WordPress image functions.', 'webberzone-image-optimizer' ),
 				'type'    => 'checkbox',
 				'default' => $defaults['rewrite_template'],
 			),
-			'rewrite_buffer'   => array(
+			'rewrite_backgrounds' => array(
+				'id'      => 'rewrite_backgrounds',
+				'name'    => esc_html__( 'Block background images', 'webberzone-image-optimizer' ),
+				'desc'    => esc_html__( 'Add an image-set() alternative to background images set in block styles, such as Group and Cover blocks, so the browser picks the format. Browsers without image-set() support keep the original.', 'webberzone-image-optimizer' ),
+				'type'    => 'checkbox',
+				'default' => $defaults['rewrite_backgrounds'],
+			),
+			'rewrite_buffer'      => array(
 				'id'       => 'rewrite_buffer',
 				'name'     => esc_html__( 'Whole page (buffered)', 'webberzone-image-optimizer' ),
 				'desc'     => \WebberZone\Image_Optimizer\Frontend\Rewriter::has_template_enhancement_buffer()
@@ -649,7 +657,7 @@ class Settings {
 				'default'  => $defaults['rewrite_buffer'],
 				'disabled' => ! \WebberZone\Image_Optimizer\Frontend\Rewriter::has_template_enhancement_buffer(),
 			),
-			'server_rules'     => array(
+			'server_rules'        => array(
 				'id'   => 'server_rules',
 				'name' => esc_html__( 'CSS background images', 'webberzone-image-optimizer' ),
 				'desc' => Server_Rules::get_settings_description(),

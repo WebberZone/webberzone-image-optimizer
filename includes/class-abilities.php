@@ -68,6 +68,7 @@ class Abilities {
 		'rewrite_content',
 		'rewrite_template',
 		'rewrite_buffer',
+		'rewrite_backgrounds',
 		'batch_size',
 		'background_queue',
 		'lazy_convert',
