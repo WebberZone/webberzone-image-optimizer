@@ -2,6 +2,9 @@ name: PHPStan
 
 on:
   push:
+    tags:
+      - 'v*'
+      - '[0-9]*'
   pull_request:
   workflow_dispatch: {}
 

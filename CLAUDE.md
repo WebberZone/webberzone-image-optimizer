@@ -47,11 +47,11 @@ vendor/bin/phpunit                 # single site
 WP_MULTISITE=1 vendor/bin/phpunit  # multisite
 ```
 
-`install.sh` uses GNU `sed`; on macOS its final rewrite of `wp-tests-config.php` fails, requiring the ABSPATH and DB lines to be filled in by hand. It works unmodified in CI, so don't run PHPUnit locally — `.github/workflows/unit-tests.yml` runs it on every push, and that's sufficient.
+`install.sh` uses GNU `sed`; on macOS its final rewrite of `wp-tests-config.php` fails, requiring the ABSPATH and DB lines to be filled in by hand. It works unmodified in CI, so don't run PHPUnit locally — `.github/workflows/phpunit.yml` runs it on every push, and that's sufficient.
 
 Keep PHPUnit tests to a minimum. Not every fix or issue needs one; add a test only for logic that is easy to break and hard to spot, and extend an existing test class before adding a new one.
 
-The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parseTestMethodAnnotations` was removed); run PHPUnit 9 locally, which `.github/workflows/unit-tests.yml` also pins. Test files are named for their class (`ConverterTest.php` → `ConverterTest`) because PHPUnit 10+ requires the match.
+The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parseTestMethodAnnotations` was removed); run PHPUnit 9 locally, which `.github/workflows/phpunit.yml` also pins. Test files are named for their class (`ConverterTest.php` → `ConverterTest`) because PHPUnit 10+ requires the match.
 
 ## Two decisions the whole design rests on
 
