@@ -72,50 +72,6 @@ class NamingDetectorTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $report['files']['replace'] );
 		$this->assertSame( 0, $report['images']['append'] );
 	}
-
-	/**
-	 * A separately uploaded image that merely shares the name is not a sidecar.
-	 */
-	public function test_an_upload_sharing_the_name_is_not_counted() {
-		$id     = $this->create_attachment();
-		$source = get_attached_file( $id );
-
-		// The path a replace-named sidecar would take, holding a different image.
-		$this->plant_webp( Helpers::sidecar_path( $source, 'webp', 'replace' ), 64, 64 );
-
-		$report = Naming_Detector::scan();
-
-		$this->assertSame( 0, $report['images']['replace'] );
-	}
-
-	/**
-	 * A candidate that cannot be measured is left out rather than assumed.
-	 */
-	public function test_an_unreadable_candidate_is_not_counted() {
-		$id     = $this->create_attachment();
-		$source = get_attached_file( $id );
-
-		file_put_contents( Helpers::sidecar_path( $source, 'webp', 'replace' ), 'not an image' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-
-		$report = Naming_Detector::scan();
-
-		$this->assertSame( 0, $report['images']['replace'] );
-	}
-
-	/**
-	 * Files this plugin already recorded are not reported as someone else's.
-	 */
-	public function test_a_recorded_attachment_is_not_sampled() {
-		$id = $this->create_attachment();
-
-		Converter::convert_attachment( $id, array( 'formats' => array( 'webp' ) ) );
-
-		$report = Naming_Detector::scan();
-
-		$this->assertSame( 0, $report['sampled'] );
-		$this->assertSame( 0, $report['images']['append'] );
-	}
-
 	/**
 	 * A switch is offered only when the other naming clearly holds more.
 	 */

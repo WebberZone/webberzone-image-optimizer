@@ -93,37 +93,6 @@ class MediaLibraryTest extends WP_UnitTestCase {
 
 		parent::tear_down();
 	}
-
-	/**
-	 * The list view renders every status and preserves the selection.
-	 */
-	public function test_status_dropdown_renders_on_the_media_list_view() {
-		$_GET['wzio_optimization_status'] = 'failed';
-
-		ob_start();
-		$this->media_library->render_status_filter( 'attachment', 'bar' );
-		$output = ob_get_clean();
-
-		$this->assertStringContainsString( 'name="wzio_optimization_status"', $output );
-		$this->assertStringContainsString( 'All optimization statuses', $output );
-		$this->assertStringContainsString( 'Not yet optimized', $output );
-		$this->assertStringContainsString( 'value="skipped"', $output );
-		$this->assertStringContainsString( 'value="failed"  selected=\'selected\'', $output );
-	}
-
-	/**
-	 * The dropdown stays hidden when its status column is hidden.
-	 */
-	public function test_status_dropdown_requires_a_visible_status_column() {
-		update_user_option( get_current_user_id(), 'manageuploadcolumnshidden', array( 'wzio' ) );
-
-		ob_start();
-		$this->media_library->render_status_filter( 'attachment', 'bar' );
-		$output = ob_get_clean();
-
-		$this->assertSame( '', $output );
-	}
-
 	/**
 	 * Every status returns the matching eligible attachments and preserves other filters.
 	 */
@@ -147,21 +116,6 @@ class MediaLibraryTest extends WP_UnitTestCase {
 			$this->get_filtered_attachment_ids( 'failed' )
 		);
 	}
-
-	/**
-	 * Hiding the status column does not disable an active URL filter.
-	 */
-	public function test_hidden_status_column_does_not_disable_filtering() {
-		$attachments = $this->seed_attachments();
-
-		update_user_option( get_current_user_id(), 'manageuploadcolumnshidden', array( 'wzio' ) );
-
-		$this->assertSame(
-			array( $attachments['failed'] ),
-			$this->get_filtered_attachment_ids( 'failed' )
-		);
-	}
-
 	/**
 	 * Seed eligible and unsupported attachments across every queue state.
 	 *

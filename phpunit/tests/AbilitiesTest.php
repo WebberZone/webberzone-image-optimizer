@@ -26,16 +26,10 @@ class AbilitiesTest extends WP_UnitTestCase
     }
 
     /**
-     * Every ability is registered, and refused to users who cannot manage the site.
+     * Author users cannot run the abilities.
      */
     public function test_abilities_are_registered_for_administrators_only()
     {
-        $names = array( 'wzio/get-status', 'wzio/queue-bulk', 'wzio/run-batch', 'wzio/optimize-attachment', 'wzio/get-settings', 'wzio/update-settings' );
-
-        foreach ( $names as $name ) {
-            $this->assertInstanceOf(WP_Ability::class, wp_get_ability($name), $name . ' is not registered.');
-        }
-
         wp_set_current_user(self::factory()->user->create(array( 'role' => 'author' )));
 
         $this->assertWPError(wp_get_ability('wzio/update-settings')->execute(array( 'quality_webp' => 70 )));

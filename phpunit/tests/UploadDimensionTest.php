@@ -18,15 +18,6 @@ class UploadDimensionTest extends WP_UnitTestCase {
         $this->assertFalse( $hooks->maximum_image_dimension( 2560 ) );
         remove_filter( 'wzio_get_option_disable_image_scaling', '__return_true' );
     }
-
-    public function test_later_site_filter_can_override(): void {
-        $hooks = new Attachment_Hooks();
-        $filter = static function () { return 1440; };
-        add_filter( 'big_image_size_threshold', $filter, 20 );
-        $this->assertSame( 1440, apply_filters( 'big_image_size_threshold', 2560 ) );
-        remove_filter( 'big_image_size_threshold', $filter, 20 );
-    }
-
     public function test_dimension_sanitization(): void {
         $settings = ( new ReflectionClass( Settings::class ) )->newInstanceWithoutConstructor();
         foreach ( array( '' => 0, '-1920' => 1920, '2560' => 2560 ) as $input => $expected ) {

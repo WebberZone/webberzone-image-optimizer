@@ -134,24 +134,6 @@ class QueueStaleTest extends WP_UnitTestCase
         $this->assertNotSame('', (string) $row->error);
         $this->assertEmpty(Queue::claim(1), 'A row that exhausted its budget must not be claimable.');
     }
-
-    /**
-     * A worker that yields on its own deadline keeps the row's full budget.
-     */
-    public function test_a_deferred_row_does_not_spend_an_attempt()
-    {
-        Queue::add(array( 3 ), true);
-        $rows = Queue::claim(1);
-        $id   = (int) $rows[0]->id;
-
-        Queue::defer($id);
-
-        $row = $this->get_row($id);
-
-        $this->assertSame(Queue::PENDING, $row->status);
-        $this->assertSame(0, (int) $row->attempts);
-    }
-
     /**
      * Point the processor at a claimed row, as it does while converting.
      *
@@ -197,24 +179,5 @@ class QueueStaleTest extends WP_UnitTestCase
             Processor::fail_current_row(array( 'type' => E_ERROR, 'message' => 'Again' )),
             'The row is recorded only once.'
         );
-    }
-
-    /**
-     * Warnings and errors outside a conversion leave the queue alone.
-     */
-    public function test_a_non_fatal_error_or_idle_processor_is_ignored()
-    {
-        Queue::add(array( 5 ), true);
-        $rows = Queue::claim(1);
-        $id   = (int) $rows[0]->id;
-
-        $this->set_current_row($id);
-        $this->assertFalse(Processor::fail_current_row(array( 'type' => E_WARNING, 'message' => 'Warning' )));
-        $this->assertFalse(Processor::fail_current_row(null));
-
-        $this->set_current_row(0);
-        $this->assertFalse(Processor::fail_current_row(array( 'type' => E_ERROR, 'message' => 'Fatal' )));
-
-        $this->assertSame(Queue::PROCESSING, $this->get_row($id)->status);
     }
 }

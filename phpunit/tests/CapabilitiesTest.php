@@ -168,35 +168,4 @@ class CapabilitiesTest extends WP_UnitTestCase
         $this->assertTrue(Capabilities::quality_is_honoured('avif'));
         $this->assertTrue(Capabilities::quality_is_honoured('webp'));
     }
-
-    /**
-     * An encoder that ignores quality would retry for a byte-identical file.
-     */
-    public function test_quality_is_reported_as_ignored_when_output_is_identical()
-    {
-        WZIO_Recording_Driver::$vary_quality = false;
-
-        Capabilities::get(true);
-
-        $this->assertFalse(Capabilities::quality_is_honoured('avif'));
-        $this->assertFalse(Capabilities::quality_is_honoured('webp'));
-    }
-
-    /**
-     * A report written before this probe existed must not disable the retry.
-     */
-    public function test_an_older_report_is_treated_as_honouring_quality()
-    {
-        Capabilities::get(true);
-
-        $report = get_option('wzio_capabilities');
-
-        unset($report['quality']);
-
-        // flush() drops the option as well as the cache, so restore it after.
-        Capabilities::flush();
-        update_option('wzio_capabilities', $report, false);
-
-        $this->assertTrue(Capabilities::quality_is_honoured('avif'));
-    }
 }

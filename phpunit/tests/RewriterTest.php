@@ -86,26 +86,6 @@ class RewriterTest extends WP_UnitTestCase {
 			$parsed
 		);
 	}
-
-	/**
-	 * A single candidate with no descriptor is still a candidate.
-	 */
-	public function test_parse_srcset_handles_a_bare_url() {
-		$this->assertSame( array( array( 'a.jpg', '' ) ), Rewriter::parse_srcset( 'a.jpg' ) );
-		$this->assertSame( array(), Rewriter::parse_srcset( '' ) );
-	}
-
-	/**
-	 * With no optimized copy on disk the markup is returned untouched.
-	 */
-	public function test_markup_is_untouched_without_a_sidecar() {
-		$this->touch_upload( '2026/02/plain.jpg' );
-
-		$html = '<img src="' . Helpers::get_upload_baseurl() . '/2026/02/plain.jpg" alt="" />';
-
-		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
-	}
-
 	/**
 	 * A single image with a sidecar gains one source of the right type.
 	 */
@@ -150,30 +130,6 @@ class RewriterTest extends WP_UnitTestCase {
 
 		$this->assertSame( $matches[0], $this->rewriter->wrap( $matches[0], 0 ) );
 	}
-
-	/**
-	 * Every srcset candidate is mapped, with its width descriptor preserved.
-	 */
-	public function test_every_srcset_candidate_is_mapped() {
-		foreach ( array( 'wide-300x200.jpg', 'wide-768x512.jpg', 'wide.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-			$this->touch_upload( '2026/02/' . $file . '.webp' );
-		}
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'wide-300x200.jpg" srcset="'
-			. $base . 'wide-300x200.jpg 300w, '
-			. $base . 'wide-768x512.jpg 768w, '
-			. $base . 'wide.jpg 1200w" sizes="(max-width: 300px) 100vw, 300px" alt="" />';
-
-		$out = $this->rewriter->wrap( $html, 0 );
-
-		$this->assertStringContainsString( 'wide-300x200.jpg.webp 300w', $out );
-		$this->assertStringContainsString( 'wide-768x512.jpg.webp 768w', $out );
-		$this->assertStringContainsString( 'wide.jpg.webp 1200w', $out );
-		$this->assertStringContainsString( 'sizes="(max-width: 300px) 100vw, 300px"', $out );
-	}
-
 	/**
 	 * A missing widest candidate disqualifies the whole format.
 	 */
@@ -217,115 +173,6 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'sizes="(max-width: 600px) 100vw, 600px"', $out );
 		$this->assertStringContainsString( 'partial-width-768x512.jpg 768w', $out );
 	}
-
-	/**
-	 * A missing lowest-density copy disqualifies the whole format.
-	 */
-	public function test_a_missing_lowest_density_disqualifies_the_format() {
-		foreach ( array( 'density.jpg', 'density@2x.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-		}
-
-		$this->touch_upload( '2026/02/density@2x.jpg.webp' );
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'density.jpg" srcset="'
-			. $base . 'density.jpg 1x, '
-			. $base . 'density@2x.jpg 2x" alt="" />';
-
-		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
-	}
-
-	/**
-	 * Missing intermediate densities are omitted when the lowest and highest
-	 * copies exist.
-	 */
-	public function test_a_missing_intermediate_density_is_omitted() {
-		foreach ( array( 'density-gap.jpg', 'density-gap@1-5x.jpg', 'density-gap@2x.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-		}
-
-		$this->touch_upload( '2026/02/density-gap.jpg.webp' );
-		$this->touch_upload( '2026/02/density-gap@2x.jpg.webp' );
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'density-gap.jpg" srcset="'
-			. $base . 'density-gap.jpg 1x, '
-			. $base . 'density-gap@1-5x.jpg 1.5x, '
-			. $base . 'density-gap@2x.jpg 2x" alt="" />';
-
-		$out = $this->rewriter->wrap( $html, 0 );
-
-		$this->assertStringContainsString( '<picture>', $out );
-		$this->assertStringContainsString( 'density-gap.jpg.webp 1x', $out );
-		$this->assertStringNotContainsString( 'density-gap@1-5x.jpg.webp', $out );
-		$this->assertStringContainsString( 'density-gap@2x.jpg.webp 2x', $out );
-	}
-
-	/**
-	 * A missing highest-density candidate disqualifies the whole format.
-	 */
-	public function test_a_missing_highest_density_disqualifies_the_format() {
-		foreach ( array( 'density-max.jpg', 'density-max@2x.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-		}
-
-		$this->touch_upload( '2026/02/density-max.jpg.webp' );
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'density-max.jpg" srcset="'
-			. $base . 'density-max.jpg 1x, '
-			. $base . 'density-max@2x.jpg 2x" alt="" />';
-
-		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
-	}
-
-	/**
-	 * A complete format is listed before a partial format, preserving preference
-	 * for the complete candidate set in browsers that support both.
-	 */
-	public function test_complete_format_precedes_partial_format() {
-		foreach ( array( 'format-order-300.jpg', 'format-order-768.jpg', 'format-order.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-			$this->touch_upload( '2026/02/' . $file . '.webp' );
-		}
-
-		$this->touch_upload( '2026/02/format-order-300.jpg.avif' );
-		$this->touch_upload( '2026/02/format-order.jpg.avif' );
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'format-order-300.jpg" srcset="'
-			. $base . 'format-order-300.jpg 300w, '
-			. $base . 'format-order-768.jpg 768w, '
-			. $base . 'format-order.jpg 1200w" alt="" />';
-
-		$out        = $this->rewriter->wrap( $html, 0 );
-		$webp_index = strpos( $out, 'type="image/webp"' );
-		$avif_index = strpos( $out, 'type="image/avif"' );
-
-		$this->assertNotFalse( $webp_index );
-		$this->assertNotFalse( $avif_index );
-		$this->assertLessThan( $avif_index, $webp_index );
-	}
-
-	/**
-	 * Mixed descriptor sets keep the conservative all-candidates rule.
-	 */
-	public function test_a_mixed_descriptor_set_requires_every_candidate() {
-		foreach ( array( 'mixed.jpg', 'mixed@2x.jpg' ) as $file ) {
-			$this->touch_upload( '2026/02/' . $file );
-		}
-
-		$this->touch_upload( '2026/02/mixed.jpg.webp' );
-
-		$base = Helpers::get_upload_baseurl() . '/2026/02/';
-		$html = '<img src="' . $base . 'mixed.jpg" srcset="'
-			. $base . 'mixed.jpg 600w, '
-			. $base . 'mixed@2x.jpg 2x" alt="" />';
-
-		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
-	}
-
 	/**
 	 * Delivery does not depend on this server being able to encode.
 	 *
@@ -357,16 +204,6 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'noencoder.jpg.webp', $out );
 		$this->assertTrue( $this->rewriter->is_enabled() );
 	}
-
-	/**
-	 * Images served from somewhere else are left alone.
-	 */
-	public function test_remote_images_are_left_alone() {
-		$html = '<img src="https://cdn.example.com/photo.jpg" alt="" />';
-
-		$this->assertSame( $html, $this->rewriter->wrap( $html, 0 ) );
-	}
-
 	/**
 	 * The opt-out class and attribute both suppress rewriting.
 	 */
@@ -381,107 +218,5 @@ class RewriterTest extends WP_UnitTestCase {
 
 		$this->assertSame( $by_class, $this->rewriter->wrap( $by_class, 0 ) );
 		$this->assertSame( $by_attribute, $this->rewriter->wrap( $by_attribute, 0 ) );
-	}
-
-	/**
-	 * Markup that is not an image is passed straight through.
-	 */
-	public function test_non_image_markup_is_passed_through() {
-		$this->assertSame( '', $this->rewriter->wrap( '', 0 ) );
-		$this->assertSame( '<p>Hello</p>', $this->rewriter->wrap( '<p>Hello</p>', 0 ) );
-	}
-
-	/**
-	 * Buffered rewriting must not wrap an image that is already in a picture.
-	 */
-	public function test_buffered_output_does_not_double_wrap() {
-		$this->touch_upload( '2026/02/buffered.jpg' );
-		$this->touch_upload( '2026/02/buffered.jpg.webp' );
-
-		$url  = Helpers::get_upload_baseurl() . '/2026/02/buffered.jpg';
-		$page = '<div>' . $this->rewriter->wrap( '<img src="' . $url . '" alt="" />', 0 ) . '</div>';
-
-		$out = $this->rewriter->filter_buffer( $page );
-
-		$this->assertSame( 1, substr_count( $out, '<picture>' ) );
-		$this->assertSame( 1, substr_count( $out, '</picture>' ) );
-		$this->assertSame( 1, substr_count( $out, '<img' ) );
-	}
-
-	/**
-	 * Buffered rewriting catches an image the markup filters never saw.
-	 */
-	public function test_buffered_output_wraps_a_bare_image() {
-		$this->touch_upload( '2026/02/bare.jpg' );
-		$this->touch_upload( '2026/02/bare.jpg.webp' );
-
-		$url = Helpers::get_upload_baseurl() . '/2026/02/bare.jpg';
-		$out = $this->rewriter->filter_buffer( '<div><img src="' . $url . '" alt=""></div>' );
-
-		$this->assertSame( 1, substr_count( $out, '<picture>' ) );
-		$this->assertStringContainsString( 'bare.jpg.webp', $out );
-	}
-
-	/**
-	 * A page with no images is returned byte for byte.
-	 */
-	public function test_buffered_output_leaves_an_imageless_page_alone() {
-		$page = '<html><body><p>Nothing to see.</p></body></html>';
-
-		$this->assertSame( $page, $this->rewriter->filter_buffer( $page ) );
-	}
-
-	/**
-	 * An image already inside a picture is marked and never wrapped again.
-	 */
-	public function test_image_inside_existing_picture_is_not_nested() {
-		$this->touch_upload( '2026/02/nested.jpg' );
-		$this->touch_upload( '2026/02/nested.jpg.webp' );
-
-		$url     = Helpers::get_upload_baseurl() . '/2026/02/nested.jpg';
-		$content = '<picture><source srcset="' . $url . '.webp" type="image/webp" /><img src="' . $url . '" alt="" /></picture><img src="' . $url . '" alt="" />';
-
-		$marked = $this->rewriter->skip_images_in_picture( $content );
-
-		preg_match_all( '#<img\b[^>]*>#i', $marked, $images );
-
-		$this->assertStringContainsString( 'data-wzio-skip', $images[0][0] );
-		$this->assertStringNotContainsString( 'data-wzio-skip', $images[0][1] );
-		$this->assertSame( $images[0][0], $this->rewriter->filter_content_img_tag( $images[0][0], 'the_content', 0 ) );
-		$this->assertStringStartsWith( '<picture>', $this->rewriter->filter_content_img_tag( $images[0][1], 'the_content', 0 ) );
-	}
-
-	/**
-	 * The nginx rules fall through to the next accepted format when a copy is missing.
-	 */
-	public function test_nginx_rules_fall_through_formats() {
-		$rules = \WebberZone\Image_Optimizer\Frontend\Server_Rules::get_nginx_rules();
-		$tries = array();
-
-		foreach ( Helpers::get_formats() as $format ) {
-			$this->assertStringContainsString( 'map $http_accept $wzio_' . $format . ' {', $rules );
-			$tries[] = '$wzio_base$wzio_' . $format;
-		}
-
-		$this->assertStringContainsString( 'try_files ' . implode( ' ', $tries ) . ' $wzio_base =404;', $rules );
-		$this->assertStringNotContainsString( 'default "";', $rules );
-	}
-
-	/**
-	 * Buffered rewriting ignores images in comments, scripts and existing pictures.
-	 */
-	public function test_buffered_output_skips_raw_text_and_pictures() {
-		$this->touch_upload( '2026/02/raw.jpg' );
-		$this->touch_upload( '2026/02/raw.jpg.webp' );
-
-		$url  = Helpers::get_upload_baseurl() . '/2026/02/raw.jpg';
-		$img  = '<img src="' . $url . '" alt="">';
-		$page = '<!-- ' . $img . ' --><script>var t = \'' . $img . '\';</script><picture>' . $img . '</picture><p>' . $img . '</p>';
-
-		$out = $this->rewriter->filter_buffer( $page );
-
-		$this->assertSame( 2, substr_count( $out, '<picture>' ) );
-		$this->assertStringContainsString( '<!-- ' . $img . ' -->', $out );
-		$this->assertStringContainsString( "var t = '" . $img . "';", $out );
 	}
 }

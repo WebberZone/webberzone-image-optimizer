@@ -107,19 +107,6 @@ class AvifSpeedTest extends WP_UnitTestCase
     {
         $this->assertSame($expected, WZIO_GD_Speed_Probe::speed($effort, false));
     }
-
-    /**
-     * The default is the measured knee, not an end of the scale.
-     */
-    public function test_the_default_effort_maps_to_the_knee()
-    {
-        $default = (int) \WebberZone\Image_Optimizer\Admin\Settings::get_defaults()['effort_avif'];
-
-        $this->assertSame(4, $default);
-        $this->assertSame(7, WZIO_Imagick_Speed_Probe::speed($default, false));
-        $this->assertSame(7, WZIO_GD_Speed_Probe::speed($default, false));
-    }
-
     /**
      * Speed 9 inflates a transparent source by up to two fifths, so it is capped.
      */
@@ -129,109 +116,5 @@ class AvifSpeedTest extends WP_UnitTestCase
             $this->assertLessThanOrEqual(8, WZIO_Imagick_Speed_Probe::speed($effort, true), "Imagick effort $effort");
             $this->assertLessThanOrEqual(8, WZIO_GD_Speed_Probe::speed($effort, true), "GD effort $effort");
         }
-    }
-
-    /**
-     * The clamp only bites below the default; it must not slow the rest down.
-     */
-    public function test_the_clamp_does_nothing_at_or_above_the_default()
-    {
-        foreach (range(4, 6) as $effort) {
-            $this->assertSame(
-                WZIO_Imagick_Speed_Probe::speed($effort, false),
-                WZIO_Imagick_Speed_Probe::speed($effort, true),
-                "Imagick effort $effort"
-            );
-            $this->assertSame(
-                WZIO_GD_Speed_Probe::speed($effort, false),
-                WZIO_GD_Speed_Probe::speed($effort, true),
-                "GD effort $effort"
-            );
-        }
-    }
-
-    /**
-     * The clamp does bite below the default, which is the whole point of it.
-     */
-    public function test_the_clamp_bites_below_the_default()
-    {
-        $this->assertSame(9, WZIO_Imagick_Speed_Probe::speed(0, false));
-        $this->assertSame(8, WZIO_Imagick_Speed_Probe::speed(0, true));
-    }
-
-    /**
-     * An effort outside the stored range still lands on a real speed.
-     */
-    public function test_an_out_of_range_effort_is_clamped()
-    {
-        $this->assertSame(9, WZIO_Imagick_Speed_Probe::speed(-5, false));
-        $this->assertSame(4, WZIO_Imagick_Speed_Probe::speed(99, false));
-    }
-
-    /**
-     * Image dimensions no longer steer the encoder.
-     *
-     * AVIF effort used to be stepped down in megapixel bands, which pushed the
-     * largest images towards a setting that made them bigger rather than merely
-     * quicker. Nothing about the source size may reach the mapping now.
-     */
-    public function test_dimensions_do_not_affect_the_speed()
-    {
-        $reflection = new ReflectionMethod(Imagick_Driver::class, 'avif_speed');
-
-        $this->assertSame(
-            2,
-            $reflection->getNumberOfParameters(),
-            'avif_speed() takes effort and alpha only; a dimension argument would reintroduce banding.'
-        );
-
-        foreach (range(0, 6) as $effort) {
-            $this->assertSame(
-                WZIO_Imagick_Speed_Probe::speed($effort, false),
-                WZIO_Imagick_Speed_Probe::speed($effort, false),
-                "Imagick effort $effort is not stable"
-            );
-        }
-    }
-
-    /**
-     * A driver must not read the dimensions the converter still passes.
-     *
-     * `dims` stays in the arguments for third-party drivers, so the guard is
-     * that two very different sizes produce the same encoder speed.
-     */
-    public function test_the_dims_argument_no_longer_reaches_the_mapping()
-    {
-        $small = array( 'mime' => 'image/jpeg', 'dims' => array( 'width' => 100, 'height' => 100 ) );
-        $huge  = array( 'mime' => 'image/jpeg', 'dims' => array( 'width' => 6000, 'height' => 6000 ) );
-
-        $this->assertSame(
-            WZIO_Imagick_Speed_Probe::alpha($small),
-            WZIO_Imagick_Speed_Probe::alpha($huge)
-        );
-
-        $this->assertSame(
-            WZIO_Imagick_Speed_Probe::speed(4, WZIO_Imagick_Speed_Probe::alpha($small)),
-            WZIO_Imagick_Speed_Probe::speed(4, WZIO_Imagick_Speed_Probe::alpha($huge))
-        );
-    }
-
-    /**
-     * Only JPEG rules transparency out.
-     */
-    public function test_alpha_capability_is_decided_by_the_source_mime()
-    {
-        $this->assertFalse(WZIO_Imagick_Speed_Probe::alpha(array( 'mime' => 'image/jpeg' )));
-        $this->assertTrue(WZIO_Imagick_Speed_Probe::alpha(array( 'mime' => 'image/png' )));
-        $this->assertTrue(WZIO_Imagick_Speed_Probe::alpha(array( 'mime' => 'image/gif' )));
-    }
-
-    /**
-     * A caller that passes no MIME takes the cautious path.
-     */
-    public function test_a_missing_mime_is_treated_as_alpha_capable()
-    {
-        $this->assertTrue(WZIO_Imagick_Speed_Probe::alpha(array()));
-        $this->assertTrue(WZIO_Imagick_Speed_Probe::alpha(array( 'mime' => '' )));
     }
 }

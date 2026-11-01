@@ -39,6 +39,17 @@ pnpm run build:assets   # Minify CSS/JS and generate RTL variants
 
 After editing any `.css` or `.js` under `includes/admin/`, run `pnpm run build:assets` to regenerate the `.min` and RTL files.
 
+## Unit tests
+
+Keep PHPUnit tests to a minimum. A test earns its place only if it would catch a regression that could ship unnoticed and hurt users:
+
+- security or privacy leaks, and abuse controls that cost money (rate limits, caps, bot refusal);
+- data loss or corruption (deletions, counts, imports, backups, migrations, multisite isolation);
+- stale or shared caches;
+- the primary output of a feature, with one representative test per behaviour.
+
+Do not add tests for wiring (hooks, routes, menus or assets registered), filters that only call `apply_filters`, "feature off does nothing", SQL text, query counts or private methods, or extra variants of a behaviour already covered. A bug fix extends an existing test or data provider rather than adding a new method, and only when the bug could plausibly recur.
+
 ### Unit tests
 
 ```bash
@@ -49,7 +60,6 @@ WP_MULTISITE=1 vendor/bin/phpunit  # multisite
 
 `install.sh` uses GNU `sed`; on macOS its final rewrite of `wp-tests-config.php` fails, requiring the ABSPATH and DB lines to be filled in by hand. It works unmodified in CI, so don't run PHPUnit locally — `.github/workflows/phpunit.yml` runs it on every push, and that's sufficient.
 
-Keep PHPUnit tests to a minimum. Not every fix or issue needs one; add a test only for logic that is easy to break and hard to spot, and extend an existing test class before adding a new one.
 
 The WordPress test suite does not support PHPUnit 10+ (`PHPUnit\Util\Test::parseTestMethodAnnotations` was removed); run PHPUnit 9 locally, which `.github/workflows/phpunit.yml` also pins. Test files are named for their class (`ConverterTest.php` → `ConverterTest`) because PHPUnit 10+ requires the match.
 

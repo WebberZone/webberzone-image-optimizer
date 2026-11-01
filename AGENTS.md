@@ -39,6 +39,17 @@ pnpm run build:assets   # Minify CSS/JS and generate RTL variants
 
 After editing any `.css` or `.js` under `includes/admin/`, run `pnpm run build:assets` to regenerate the `.min` and RTL files.
 
+## Unit tests
+
+Keep PHPUnit tests to a minimum. A test earns its place only if it would catch a regression that could ship unnoticed and hurt users:
+
+- security or privacy leaks, and abuse controls that cost money (rate limits, caps, bot refusal);
+- data loss or corruption (deletions, counts, imports, backups, migrations, multisite isolation);
+- stale or shared caches;
+- the primary output of a feature, with one representative test per behaviour.
+
+Do not add tests for wiring (hooks, routes, menus or assets registered), filters that only call `apply_filters`, "feature off does nothing", SQL text, query counts or private methods, or extra variants of a behaviour already covered. A bug fix extends an existing test or data provider rather than adding a new method, and only when the bug could plausibly recur.
+
 ### Unit tests
 
 ```bash

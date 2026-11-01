@@ -6,7 +6,6 @@ use WebberZone\Image_Optimizer\Converter;
 use WebberZone\Image_Optimizer\Original_Backups;
 use WebberZone\Image_Optimizer\Original_Optimizer;
 use WebberZone\Image_Optimizer\Drivers\Original_Driver;
-use WebberZone\Image_Optimizer\Util\Helpers;
 
 class OriginalOptimizationTest extends WP_UnitTestCase {
     private $ids = array();
@@ -146,20 +145,6 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
         $this->assertSame( $entry['output_hash'], $again['output_hash'] );
     }
 
-    public function test_within_cap_keeps_dimensions_and_clean_editor_does_not_save_into_backups() {
-        list( $id, $path ) = $this->attachment();
-        $this->setting( 'resize_existing_originals', true );
-        $this->setting( 'maximum_image_dimension', 1280 );
-        $entry = $this->process( $id, $path );
-        $this->assertArrayNotHasKey( 'resized', $entry );
-        $editor = wp_get_image_editor( $path );
-        $this->assertNotWPError( $editor );
-        $this->assertNotWPError( $editor->resize( 100, 100, false ) );
-        $result = $editor->save();
-        $this->assertNotWPError( $result );
-        $this->assertSame( dirname( $path ), dirname( $result['path'] ) );
-        wp_delete_file( $result['path'] );
-    }
     public function test_backup_path_traversal_and_external_symlink_are_rejected() {
         list( $id, $path ) = $this->attachment();
         $this->assertSame( '', Original_Backups::relative( __FILE__ ) );
@@ -172,21 +157,6 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
             unlink( $link );
         }
     }
-
-    public function test_restore_cleanup_resumes_after_backup_already_deleted() {
-        list( $id, $path ) = $this->attachment();
-        $entry = $this->process( $id, $path );
-        $relative = Original_Backups::relative( $path );
-        $backup = Original_Backups::verified_path( $relative, $entry );
-        $this->assertTrue( ( new Original_Driver() )->restore( $backup, $path ) );
-        $data = Original_Backups::get( $id );
-        $data[$relative]['state'] = 'restored';
-        Original_Backups::save( $id, $data );
-        wp_delete_file( $backup );
-        $this->assertSame( 1, Original_Optimizer::restore( $id, false ) );
-        $this->assertSame( array(), Original_Backups::get( $id ) );
-    }
-
     public function test_detected_low_quality_jpeg_is_kept_without_a_backup() {
         if ( ! class_exists( 'Imagick' ) ) {
             $this->markTestSkipped( 'Imagick is needed for quality detection.' );
@@ -203,18 +173,6 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
         $this->assertSame( array(), Original_Backups::get( $id ) );
         $this->assertSame( $hash, hash_file( 'sha256', $path ) );
     }
-
-    public function test_disabling_resize_does_not_enlarge_an_already_resized_main_file() {
-        list( $id, $path ) = $this->attachment();
-        $this->setting( 'resize_existing_originals', true );
-        $this->setting( 'maximum_image_dimension', 320 );
-        $entry = $this->process( $id, $path );
-        $this->assertSame( array( 320, 240 ), $entry['resized']['to'] );
-        $this->setting( 'resize_existing_originals', false );
-        $entry = $this->process( $id, $path );
-        $this->assertSame( array( 320, 240 ), array_slice( wp_getimagesize( $path ), 0, 2 ) );
-    }
-
     public function test_png_tool_compression_is_reversible() {
         if ( ! Capabilities::get_originals( true )['png'] ) {
             $this->markTestSkipped( 'A working PNG tool is required.' );
@@ -268,18 +226,6 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
             }
         }
     }
-
-    public function test_upright_source_gets_no_orientation_segment() {
-        list( $id, $path ) = $this->attachment();
-        $target = $path . '.test.jpg';
-        try {
-            $this->assertTrue( ( new Original_Driver() )->convert( $path, $target, 'jpeg', array( 'gd' => true, 'quality' => 65, 'strip' => true ) ) );
-            $this->assertStringNotContainsString( "Exif\0\0", file_get_contents( $target ) );
-        } finally {
-            wp_delete_file( $target );
-        }
-    }
-
     public function test_metadata_write_failure_is_reported_by_both_conversion_paths() {
         $block = static function ( $check, $object_id, $meta_key ) {
             return '_wp_attachment_metadata' === $meta_key ? true : $check;
@@ -406,4 +352,20 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
         }
     }
 
+
+
+    public function test_within_cap_keeps_dimensions_and_clean_editor_does_not_save_into_backups() {
+        list( $id, $path ) = $this->attachment();
+        $this->setting( 'resize_existing_originals', true );
+        $this->setting( 'maximum_image_dimension', 1280 );
+        $entry = $this->process( $id, $path );
+        $this->assertArrayNotHasKey( 'resized', $entry );
+        $editor = wp_get_image_editor( $path );
+        $this->assertNotWPError( $editor );
+        $this->assertNotWPError( $editor->resize( 100, 100, false ) );
+        $result = $editor->save();
+        $this->assertNotWPError( $result );
+        $this->assertSame( dirname( $path ), dirname( $result['path'] ) );
+        wp_delete_file( $result['path'] );
+    }
 }

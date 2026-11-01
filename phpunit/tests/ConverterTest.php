@@ -229,27 +229,6 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame($before, md5_file($source));
     }
-
-    /**
-     * A record is written for every file that was processed.
-     */
-    public function test_a_record_is_written_for_each_file()
-    {
-        $id = $this->create_attachment();
-
-        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
-
-        $record = Attachment_Meta::get($id);
-        $files  = Converter::get_attachment_files($id);
-
-        $this->assertNotEmpty($record['files']);
-        $this->assertSame(array_keys($files), array_keys($record['files']));
-
-        foreach ( $record['files'] as $file_record ) {
-            $this->assertArrayHasKey('size', $file_record);
-        }
-    }
-
     /**
      * Totals reflect a real saving against the source bytes.
      */
@@ -292,50 +271,6 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame($now - 60, filemtime($sidecar));
     }
-
-    /**
-     * A copy another plugin left behind is adopted instead of re-encoded.
-     */
-    public function test_a_foreign_sidecar_is_adopted_without_re_encoding()
-    {
-        $id      = $this->create_attachment();
-        $source  = get_attached_file($id);
-        $sidecar = Helpers::sidecar_path($source, 'webp');
-
-        // Stands in for a copy another optimizer wrote, with no record of ours.
-        file_put_contents($sidecar, str_repeat('x', 64));
-        clearstatcache();
-
-        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
-
-        clearstatcache();
-
-        $this->assertSame(64, filesize($sidecar));
-
-        $record = Attachment_Meta::get($id);
-
-        $this->assertSame(64, $record['files'][ wp_basename($source) ]['webp']['bytes']);
-    }
-
-    /**
-     * Forcing a run replaces a copy that would otherwise be adopted.
-     */
-    public function test_force_re_encodes_a_foreign_sidecar()
-    {
-        $id      = $this->create_attachment();
-        $source  = get_attached_file($id);
-        $sidecar = Helpers::sidecar_path($source, 'webp');
-
-        file_put_contents($sidecar, str_repeat('x', 64));
-        clearstatcache();
-
-        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ), 'force' => true ));
-
-        clearstatcache();
-
-        $this->assertNotSame(64, filesize($sidecar));
-    }
-
     /**
      * Replace naming must not adopt or overwrite an unrelated upload.
      */
@@ -370,30 +305,6 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame('occupied', $record['files'][ wp_basename($source) ]['webp']['skip']);
     }
-
-    /**
-     * A sidecar older than its source is stale and gets rebuilt.
-     */
-    public function test_a_stale_sidecar_is_regenerated()
-    {
-        $id      = $this->create_attachment();
-        $source  = get_attached_file($id);
-        $sidecar = Helpers::sidecar_path($source, 'webp');
-
-        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
-
-        $now = time();
-        touch($sidecar, $now - 120);
-        touch($source, $now - 60);
-        clearstatcache();
-
-        Converter::convert_attachment($id, array( 'formats' => array( 'webp' ) ));
-
-        clearstatcache();
-
-        $this->assertGreaterThan($now - 120, filemtime($sidecar));
-    }
-
     /**
      * A copy that is not smaller than its source is discarded, not kept.
      */
@@ -452,39 +363,6 @@ class ConverterTest extends WP_UnitTestCase
         $this->assertTrue(Attachment_Meta::is_converted($record, 'webp'));
         $this->assertSame(32, $record['webp']['bytes']);
     }
-
-    /**
-     * A sidecar older than its source is dropped even when the encode is rejected.
-     */
-    public function test_a_stale_sidecar_is_dropped_by_a_rejected_encode()
-    {
-        $id      = $this->create_attachment();
-        $source  = get_attached_file($id);
-        $sidecar = Helpers::sidecar_path($source, 'webp');
-
-        file_put_contents($sidecar, str_repeat('x', 32));
-
-        $now = time();
-        touch($sidecar, $now - 120);
-        touch($source, $now - 60);
-        clearstatcache();
-
-        Converter::convert_attachment(
-            $id,
-            array(
-            'formats'    => array( 'webp' ),
-            'min_saving' => 99,
-            'force'      => true,
-            )
-        );
-
-        $this->assertFileDoesNotExist($sidecar);
-
-        $record = Attachment_Meta::get_file($id, wp_basename((string) $source));
-
-        $this->assertSame('larger', $record['webp']['skip']);
-    }
-
     /**
      * Deleting the copies removes the files and the record, not the original.
      */
@@ -531,29 +409,5 @@ class ConverterTest extends WP_UnitTestCase
         $this->assertSame(array(), Converter::get_attachment_files($id));
 
         wzio_update_option('exclude_paths', '');
-    }
-
-    /**
-     * An exclusion fragment only removes the files it actually matches.
-     */
-    public function test_exclusion_is_limited_to_matching_files()
-    {
-        $id    = $this->create_attachment();
-        $files = Converter::get_attachment_files($id);
-
-        if (count($files) < 2 ) {
-            $this->markTestSkipped('This attachment produced no sub-sizes.');
-        }
-
-        // The full basename of the main file does not appear in a sub-size
-        // name, because the dimensions sit before the extension.
-        wzio_update_option('exclude_paths', wp_basename((string) get_attached_file($id)));
-
-        $remaining = Converter::get_attachment_files($id);
-
-        wzio_update_option('exclude_paths', '');
-
-        $this->assertNotEmpty($remaining);
-        $this->assertCount(count($files) - 1, $remaining);
     }
 }

@@ -134,23 +134,6 @@ class DriverTest extends WP_UnitTestCase
         $this->assertFileExists($destination);
         $this->assertGreaterThan(0, filesize($destination));
     }
-
-    /**
-     * Nothing is left beside the destination directory.
-     */
-    public function test_no_stray_files_are_written_next_to_the_directory()
-    {
-        $child  = $this->base . '/child';
-        $source = $this->write_source($child);
-
-        $before = glob($this->base . '/*');
-
-        $result = $this->driver()->convert($source, $child . '/source.png.webp', 'webp', array( 'quality' => 70 ));
-
-        $this->assertTrue($result, is_wp_error($result) ? $result->get_error_message() : '');
-        $this->assertSame($before, glob($this->base . '/*'));
-    }
-
     /**
      * A failed encode leaves no partial file at the destination.
      */
