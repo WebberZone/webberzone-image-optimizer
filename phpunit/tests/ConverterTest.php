@@ -229,6 +229,7 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame($before, md5_file($source));
     }
+
     /**
      * Totals reflect a real saving against the source bytes.
      */
@@ -271,6 +272,7 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame($now - 60, filemtime($sidecar));
     }
+
     /**
      * Replace naming must not adopt or overwrite an unrelated upload.
      */
@@ -305,6 +307,7 @@ class ConverterTest extends WP_UnitTestCase
 
         $this->assertSame('occupied', $record['files'][ wp_basename($source) ]['webp']['skip']);
     }
+
     /**
      * A copy that is not smaller than its source is discarded, not kept.
      */
@@ -363,6 +366,7 @@ class ConverterTest extends WP_UnitTestCase
         $this->assertTrue(Attachment_Meta::is_converted($record, 'webp'));
         $this->assertSame(32, $record['webp']['bytes']);
     }
+
     /**
      * Deleting the copies removes the files and the record, not the original.
      */

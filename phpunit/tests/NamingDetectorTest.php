@@ -72,6 +72,7 @@ class NamingDetectorTest extends WP_UnitTestCase {
 		$this->assertSame( 1, $report['files']['replace'] );
 		$this->assertSame( 0, $report['images']['append'] );
 	}
+
 	/**
 	 * A switch is offered only when the other naming clearly holds more.
 	 */

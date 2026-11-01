@@ -157,6 +157,7 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
             unlink( $link );
         }
     }
+
     public function test_detected_low_quality_jpeg_is_kept_without_a_backup() {
         if ( ! class_exists( 'Imagick' ) ) {
             $this->markTestSkipped( 'Imagick is needed for quality detection.' );
@@ -173,6 +174,7 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
         $this->assertSame( array(), Original_Backups::get( $id ) );
         $this->assertSame( $hash, hash_file( 'sha256', $path ) );
     }
+
     public function test_png_tool_compression_is_reversible() {
         if ( ! Capabilities::get_originals( true )['png'] ) {
             $this->markTestSkipped( 'A working PNG tool is required.' );
@@ -226,6 +228,7 @@ class OriginalOptimizationTest extends WP_UnitTestCase {
             }
         }
     }
+
     public function test_metadata_write_failure_is_reported_by_both_conversion_paths() {
         $block = static function ( $check, $object_id, $meta_key ) {
             return '_wp_attachment_metadata' === $meta_key ? true : $check;

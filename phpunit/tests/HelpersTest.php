@@ -29,6 +29,7 @@ class HelpersTest extends WP_UnitTestCase {
 			Helpers::sidecar_path( '/uploads/logo.png', 'webp' )
 		);
 	}
+
 	/**
 	 * Anything outside the uploads directory is not ours to touch.
 	 */
@@ -46,6 +47,7 @@ class HelpersTest extends WP_UnitTestCase {
 		$this->assertSame( '', Helpers::sanitize_relative_path( '2026/../../secret.jpg' ) );
 		$this->assertSame( '2026/01/example.jpg', Helpers::sanitize_relative_path( '/2026/01/example.jpg' ) );
 	}
+
 	/**
 	 * The memory guard rejects an image that cannot fit in the limit.
 	 *
@@ -66,6 +68,7 @@ class HelpersTest extends WP_UnitTestCase {
 			ini_set( 'memory_limit', (string) $original ); // phpcs:ignore WordPress.PHP.IniSet.memory_limit_Blacklisted
 		}
 	}
+
 	/**
 	 * The two target formats are offered smallest first.
 	 */

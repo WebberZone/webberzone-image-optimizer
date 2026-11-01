@@ -134,6 +134,7 @@ class QueueStaleTest extends WP_UnitTestCase
         $this->assertNotSame('', (string) $row->error);
         $this->assertEmpty(Queue::claim(1), 'A row that exhausted its budget must not be claimable.');
     }
+
     /**
      * Point the processor at a claimed row, as it does while converting.
      *

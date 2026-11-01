@@ -86,6 +86,7 @@ class RewriterTest extends WP_UnitTestCase {
 			$parsed
 		);
 	}
+
 	/**
 	 * A single image with a sidecar gains one source of the right type.
 	 */
@@ -130,6 +131,7 @@ class RewriterTest extends WP_UnitTestCase {
 
 		$this->assertSame( $matches[0], $this->rewriter->wrap( $matches[0], 0 ) );
 	}
+
 	/**
 	 * A missing widest candidate disqualifies the whole format.
 	 */
@@ -173,6 +175,7 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'sizes="(max-width: 600px) 100vw, 600px"', $out );
 		$this->assertStringContainsString( 'partial-width-768x512.jpg 768w', $out );
 	}
+
 	/**
 	 * Delivery does not depend on this server being able to encode.
 	 *
@@ -204,6 +207,7 @@ class RewriterTest extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'noencoder.jpg.webp', $out );
 		$this->assertTrue( $this->rewriter->is_enabled() );
 	}
+
 	/**
 	 * The opt-out class and attribute both suppress rewriting.
 	 */

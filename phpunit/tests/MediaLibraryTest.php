@@ -93,6 +93,7 @@ class MediaLibraryTest extends WP_UnitTestCase {
 
 		parent::tear_down();
 	}
+
 	/**
 	 * Every status returns the matching eligible attachments and preserves other filters.
 	 */
@@ -116,6 +117,7 @@ class MediaLibraryTest extends WP_UnitTestCase {
 			$this->get_filtered_attachment_ids( 'failed' )
 		);
 	}
+
 	/**
 	 * Seed eligible and unsupported attachments across every queue state.
 	 *

@@ -58,6 +58,7 @@ class CronHealthTest extends WP_UnitTestCase
 
         parent::tear_down();
     }
+
     /**
      * Work still queued a whole window later, with no run, is a stall.
      */
@@ -70,6 +71,7 @@ class CronHealthTest extends WP_UnitTestCase
             Cron_Health::determine_status(false, 1, 0, $observed_at, $observed_at + Cron_Health::STALL_AFTER)
         );
     }
+
     /**
      * DISABLE_WP_CRON names the reason once a stall is established.
      */

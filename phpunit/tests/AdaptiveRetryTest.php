@@ -226,6 +226,7 @@ class AdaptiveRetryTest extends WP_UnitTestCase
             )
         );
     }
+
     /**
      * A larger encode is retried once and records the quality that succeeded.
      */
@@ -243,6 +244,7 @@ class AdaptiveRetryTest extends WP_UnitTestCase
         $this->assertSame(70, $record['webp']['quality']);
         $this->assertLessThan($max_bytes, filesize(Helpers::sidecar_path($this->source, 'webp')));
     }
+
     /**
      * A failed retry remains bounded by the minimum-saving threshold.
      */
@@ -259,6 +261,7 @@ class AdaptiveRetryTest extends WP_UnitTestCase
         $this->assertSame(70, $record['webp']['quality']);
         $this->assertFileDoesNotExist(Helpers::sidecar_path($this->source, 'webp'));
     }
+
     /**
      * Totals report how many copies had to drop below the configured quality.
      */
@@ -305,6 +308,7 @@ class AdaptiveRetryTest extends WP_UnitTestCase
         $this->assertSame(3, $totals['files']);
         $this->assertSame(2, $totals['reduced']);
     }
+
     /**
      * A lossless miss falls back to one lossy encode at the configured quality.
      */

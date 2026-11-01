@@ -107,6 +107,7 @@ class AvifSpeedTest extends WP_UnitTestCase
     {
         $this->assertSame($expected, WZIO_GD_Speed_Probe::speed($effort, false));
     }
+
     /**
      * Speed 9 inflates a transparent source by up to two fifths, so it is capped.
      */

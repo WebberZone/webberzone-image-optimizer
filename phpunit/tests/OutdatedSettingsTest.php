@@ -80,6 +80,7 @@ class OutdatedSettingsTest extends WP_UnitTestCase
         $other['min_saving'] = 20;
         $this->assertSame( $a, Converter::fingerprint( 'webp', $other, 'image/jpeg' ) );
     }
+
     /**
      * A differing fingerprint is outdated and a matching one is not.
      */
@@ -150,6 +151,7 @@ class OutdatedSettingsTest extends WP_UnitTestCase
         $this->assertNotContains( $fresh, $page['ids'] );
         $this->assertNotContains( $plain, $page['ids'] );
     }
+
     public function test_rejected_encode_preserves_the_surviving_fingerprint(): void
     {
         $source = wp_tempnam('wzio-source');
@@ -183,6 +185,7 @@ class OutdatedSettingsTest extends WP_UnitTestCase
             wp_delete_file($source);
         }
     }
+
     public function test_queue_retains_selective_mode(): void
     {
         $id = self::factory()->attachment->create(array('post_mime_type' => 'image/jpeg'));

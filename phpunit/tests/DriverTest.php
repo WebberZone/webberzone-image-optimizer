@@ -134,6 +134,7 @@ class DriverTest extends WP_UnitTestCase
         $this->assertFileExists($destination);
         $this->assertGreaterThan(0, filesize($destination));
     }
+
     /**
      * A failed encode leaves no partial file at the destination.
      */
