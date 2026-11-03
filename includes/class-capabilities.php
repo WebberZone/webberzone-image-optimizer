@@ -230,6 +230,8 @@ class Capabilities {
 			return '';
 		}
 
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+
 		$path = wp_tempnam( 'wzio-probe.png' );
 
 		if ( ! $path ) {
