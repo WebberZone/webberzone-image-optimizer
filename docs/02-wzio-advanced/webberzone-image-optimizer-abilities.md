@@ -3,7 +3,7 @@ slug: webberzone-image-optimizer-abilities
 title: "Using WebberZone Image Optimizer with AI Assistants (Abilities API)"
 products: [image-optimizer]
 sections: ["02-wzio-advanced"]
-tags: [developer, webberzone-image-optimizer, abilities-api, ai]
+tags: [abilities-api, ai, developer, webberzone-image-optimizer]
 status: publish
 order: 4
 ---

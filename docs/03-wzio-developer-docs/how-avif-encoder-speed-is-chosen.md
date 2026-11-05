@@ -10,7 +10,7 @@ order: 1
 
 [kbtoc]
 
-The **AVIF encoder effort** setting is a 0–6 dial that belongs to [the plugin](https://webberzone.com/plugins/webberzone-image-optimizer/), not to any encoder. Each driver translates it into its own backend's native speed scale. The measurements behind that translation are recorded below, so the numbers do not have to be re-derived.
+The **AVIF encoder effort** setting is a 0 to 6 dial that belongs to [the plugin](https://webberzone.com/plugins/webberzone-image-optimizer/), not to any encoder. Each driver translates it into its own backend's native speed scale. The measurements behind that translation are recorded below, so the numbers do not have to be re-derived.
 
 ## The mapping
 
@@ -18,13 +18,13 @@ Both built-in drivers use the same table today, each holding its own private cop
 
 | Effort | Encoder speed | Character |
 |---|---|---|
-| 0–2 | 9 | Fastest |
+| 0 to 2 | 9 | Fastest |
 | 3 | 8 | |
-| **4** | **7** | **Default — the measured knee** |
+| **4** | **7** | **Default: the measured knee** |
 | 5 | 6 | |
 | 6 | 4 | Maximum compression |
 
-A source whose format can carry transparency — anything that is not JPEG — is capped at speed 8. The cap therefore does nothing at or above the default and only constrains the fast end of the dial.
+A source whose format can carry transparency (anything that is not JPEG) is capped at speed 8. The cap therefore does nothing at or above the default and only constrains the fast end of the dial.
 
 Both encoders count the opposite way from the plugin: 0 is the slowest and highest-compression setting, 9 the fastest. libavif nominally reaches 10, but 9 and 10 produce byte-identical output, so 9 is the ceiling.
 
@@ -42,7 +42,7 @@ Measured over a 57-image corpus of photographs, UI screenshots and transparent g
 
 Each step halves the CPU. Below speed 7 the file grows about 1.5% per step; at speed 8 it grows 3.8%, and at speed 9 nearly 9%. Speed 7 is where the returns stop being worth paying for.
 
-The previous mapping, `6 - effort`, put the default at speed 2. On the same corpus that cost 10,654 ms/MP for 0.0514 bytes/px — roughly **70 times the CPU of speed 7 for 5% smaller files**.
+The previous mapping, `6 - effort`, put the default at speed 2. On the same corpus that cost 10,654 ms/MP for 0.0514 bytes/px: roughly **70 times the CPU of speed 7 for 5% smaller files**.
 
 ## Why not speed 8
 
@@ -56,7 +56,7 @@ Speed 8 was the original candidate on CPU and size alone. A perceptual pass reje
 | Worst | −9.40 |
 | Regressing by more than 1 point | 78 of 150 |
 
-Speed 8 also produces *larger* files than speed 7 — 0.0544 to 0.0565 bytes/px on Imagick, 0.0735 to 0.0751 on GD. It is worse on quality and on size, buying only CPU, so there is no rate-distortion argument for it.
+Speed 8 also produces *larger* files than speed 7: 0.0544 to 0.0565 bytes/px on Imagick, 0.0735 to 0.0751 on GD. It is worse on quality and on size, buying only CPU, so there is no rate-distortion argument for it.
 
 The artifact class is fine isolated highlights on dark ground: night skies, bokeh, sparkle, small light text on dark. The worst case in the corpus was a starfield photograph.
 
@@ -66,7 +66,7 @@ Alpha is encoded as a separate plane and compresses far worse at speed. Relative
 
 | Speed | Lossless bytes | Lossy SSIMULACRA2 (alpha channel) |
 |---|---|---|
-| 7 | — | — |
+| 7 | Not applicable | Not applicable |
 | 8 | +3.8% | −4.2 |
 | 9 | **+42.6%** | **−122.8** |
 
@@ -76,7 +76,7 @@ Transparency itself survives at every speed. Comparing decoded alpha against the
 
 ## Why there is no megapixel banding
 
-Earlier versions stepped effort *down* for large images to bound encode time, which stepped speed *up*. Once the default sits on the knee, that pushes the largest images — the ones where AVIF pays off most — past it, making them substantially larger rather than merely quicker. The banding was removed rather than re-aimed.
+Earlier versions stepped effort *down* for large images to bound encode time, which stepped speed *up*. Once the default sits on the knee, that pushes the largest images (the ones where AVIF pays off most) past it, making them substantially larger rather than merely quicker. The banding was removed rather than re-aimed.
 
 `dims` is still passed to drivers for third-party use; no built-in driver reads it.
 
@@ -84,7 +84,7 @@ Worst-case cost without banding is bounded in practice: a 299-frame animated GIF
 
 ## Encoders that ignore quality
 
-Some ImageMagick builds discard the quality argument for AVIF entirely. On ImageMagick 7.1.2-27, qualities 20, 50, 80 and 95 produce byte-identical output, while `avifenc` on the same machine responds normally — so the fault is in the delegate, not the codec. Nothing the plugin can pass fixes it; `setImageCompressionQuality()`, `heic:quality` and `avif:quality` are all inert.
+Some ImageMagick builds discard the quality argument for AVIF entirely. On ImageMagick 7.1.2-27, qualities 20, 50, 80 and 95 produce byte-identical output, while `avifenc` on the same machine responds normally, so the fault is in the delegate, not the codec. Nothing the plugin can pass fixes it; `setImageCompressionQuality()`, `heic:quality` and `avif:quality` are all inert.
 
 `Capabilities` therefore encodes its probe image at two qualities and compares the results by content hash, recording the answer per format. `Converter` skips the lower-quality retry where quality is ignored, because the retry would spend a second full encode producing an identical file that fails the same size check.
 

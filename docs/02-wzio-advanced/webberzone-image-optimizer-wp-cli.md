@@ -31,11 +31,11 @@ wp wzio convert 7214
 wp wzio convert --formats=webp,avif --force
 ```
 
-- `<id>...` — attachment IDs to convert. Omit to convert everything not yet handled.
-- `--outdated` — select attachments whose copies have different recorded quality, effort, metadata stripping or PNG lossless/fallback settings, then re-encode affected copies. Copies without a settings record are left alone. This mode does not compress originals or detect every setting change. `--force` takes precedence when both flags are supplied.
-- `--force` — re-encode even when an up-to-date optimized copy already exists. Without it, it keeps and records an existing copy that is newer than its source and meets the minimum saving, including one written by another plugin.
-- `--formats=<formats>` — comma-separated list of formats to generate, overriding the settings.
-- `--dry-run` — report what would be converted without writing anything.
+- `<id>...`: attachment IDs to convert. Omit to convert everything not yet handled.
+- `--outdated`: select attachments whose copies have different recorded quality, effort, metadata stripping or PNG lossless/fallback settings, then re-encode affected copies. Copies without a settings record are left alone. This mode does not compress originals or detect every setting change. `--force` takes precedence when both flags are supplied.
+- `--force`: re-encode even when an up-to-date optimized copy already exists. Without it, it keeps and records an existing copy that is newer than its source and meets the minimum saving, including one written by another plugin.
+- `--formats=<formats>`: comma-separated list of formats to generate, overriding the settings.
+- `--dry-run`: report what would be converted without writing anything.
 
 If any copy needed a lower quality than configured to come out smaller than the original, the command says so at the end: "N optimized copies needed a lower quality than configured to come out smaller than the original." See **Minimum saving (%)** in [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/) for how that retry works.
 
@@ -49,9 +49,9 @@ wp wzio compress --ids=123,456
 wp wzio compress --resize
 ```
 
-- `--ids=<ids>` — comma-separated attachment IDs; omit to scan the whole library.
-- `--dry-run` — list candidates without changing files, records or the queue. Savings and encoding eligibility are determined during the actual run.
-- `--resize` — resize main files to the configured maximum dimension; requires a positive cap and scaling enabled. Without this flag, the command does not request resizing.
+- `--ids=<ids>`: comma-separated attachment IDs; omit to scan the whole library.
+- `--dry-run`: list candidates without changing files, records or the queue. Savings and encoding eligibility are determined during the actual run.
+- `--resize`: resize main files to the configured maximum dimension; requires a positive cap and scaling enabled. Without this flag, the command does not request resizing.
 
 ## `wp wzio restore-originals`
 
@@ -73,8 +73,8 @@ Adds every unconverted attachment to the background queue, the same queue the Bu
 wp wzio queue
 ```
 
-- `--outdated` — queue attachments with copies affected by the tracked encoding settings described under `wp wzio convert`. The worker re-encodes affected copies without compressing originals. `--force` takes precedence when both flags are supplied.
-- `--force` — re-queue attachments that already have a conversion record, and re-encode their copies when the queue processes them, the same as **Re-optimize images that are already done** on the Bulk Optimize screen.
+- `--outdated`: queue attachments with copies affected by the tracked encoding settings described under `wp wzio convert`. The worker re-encodes affected copies without compressing originals. `--force` takes precedence when both flags are supplied.
+- `--force`: re-queue attachments that already have a conversion record, and re-encode their copies when the queue processes them, the same as **Re-optimize images that are already done** on the Bulk Optimize screen.
 
 The scan walks the library in pages of 500 attachments with no time limit, unlike the Bulk Optimize screen, which has to build the queue across several time-bounded passes to stay inside the PHP request limit. Queuing also schedules the background worker, so the queue starts draining on its own if **Process the queue in the background** is enabled. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/).
 
@@ -87,8 +87,8 @@ wp wzio run
 wp wzio run --batch=25 --max-batches=10
 ```
 
-- `--batch=<size>` — attachments per batch. Defaults to the **Images per batch** setting on the Advanced tab.
-- `--max-batches=<count>` — stop after this many batches. Defaults to running until the queue is empty.
+- `--batch=<size>`: attachments per batch. Defaults to the **Images per batch** setting on the Advanced tab.
+- `--max-batches=<count>`: stop after this many batches. Defaults to running until the queue is empty.
 
 Each batch reports how many were converted, skipped and failed, and how many remain. Only one worker can hold the queue lock at a time. If a background batch is already running, the command exits with "Another worker holds the queue lock" rather than processing the same rows twice. Wait a moment and run it again.
 
@@ -101,7 +101,7 @@ wp wzio clean 7214
 wp wzio clean --yes
 ```
 
-- `<id>...` — attachment IDs to clean. Omit to clean every attachment that has a conversion record.
-- `--yes` — skip the confirmation prompt.
+- `<id>...`: attachment IDs to clean. Omit to clean every attachment that has a conversion record.
+- `--yes`: skip the confirmation prompt.
 
-With IDs, only those attachments' generated files are deleted and their queue rows removed. Without IDs, every generated file on the site is deleted and the entire queue table is emptied, including the completed rows — a full reset. The records of the deleted copies are removed with the files, so the **Bandwidth saved** and **Optimized copies occupy** totals on the Bulk Optimize screen no longer count them. Original-compression records and backups are kept.
+With IDs, only those attachments' generated files are deleted and their queue rows removed. Without IDs, every generated file on the site is deleted and the entire queue table is emptied, including the completed rows: a full reset. The records of the deleted copies are removed with the files, so the **Bandwidth saved** and **Optimized copies occupy** totals on the Bulk Optimize screen no longer count them. Original-compression records and backups are kept.

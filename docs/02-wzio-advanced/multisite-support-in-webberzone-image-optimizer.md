@@ -20,8 +20,8 @@ The plugin's queue table is created per site rather than shared across the netwo
 
 Network-activating the plugin creates the queue table on every existing site in the network, not just the site where you clicked Activate. This matters because WordPress only fires the activation hook once for a network activation.
 
-Sites created **after** the plugin is network-activated get their table automatically as well — there is no manual step for new sites.
+Sites created **after** the plugin is network-activated get their table automatically as well: there is no manual step for new sites.
 
 ## Settings
 
-Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Formats, quality and delivery choices set on one site have no effect on any other site in the network.
+Each site has its own **General**, **Quality**, **Delivery** and **Advanced** settings: see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Formats, quality and delivery choices set on one site have no effect on any other site in the network.

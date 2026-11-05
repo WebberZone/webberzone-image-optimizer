@@ -14,12 +14,12 @@ If your site already runs ShortPixel, Imagify, EWWW Image Optimizer or a similar
 
 ## Why no import is needed
 
-Every plugin that writes optimized copies to your own server — including this one — decides what to serve by looking for the file on disk. None of them consult a database record at the moment a page is rendered. That means the files themselves are the migration: once this plugin looks in the same place the previous one wrote to, those copies start being served.
+Every plugin that writes optimized copies to your own server (including this one) decides what to serve by looking for the file on disk. None of them consult a database record at the moment a page is rendered. That means the files themselves are the migration: once this plugin looks in the same place the previous one wrote to, those copies start being served.
 
 The one thing that has to line up is the file naming. There are two conventions in use:
 
-- **Append** — `photo.jpg` gains `photo.jpg.webp`. Used by Imagify, and the default in EWWW Image Optimizer and in this plugin.
-- **Replace** — `photo.jpg` gains `photo.webp`. The default in ShortPixel, and an option in EWWW Image Optimizer.
+- **Append**: `photo.jpg` gains `photo.jpg.webp`. Used by Imagify, and the default in EWWW Image Optimizer and in this plugin.
+- **Replace**: `photo.jpg` gains `photo.webp`. The default in ShortPixel, and an option in EWWW Image Optimizer.
 
 If the naming does not match, the existing copies are invisible to this plugin and your site quietly falls back to serving the original JPEG or PNG.
 
@@ -27,11 +27,11 @@ If the naming does not match, the existing copies are invisible to this plugin a
 
 The plugin checks for this. It samples up to 100 images that have no conversion record of its own, looks for copies under both conventions, and if it finds a substantial number under the convention you are *not* using, it offers to switch. The prompt appears on **Media → Library**, **Media → Bulk Optimize** and the settings screen, with a count of what it found and a single button.
 
-The scan runs after the page has been sent to your browser, so the first visit to one of those screens after activation shows no prompt — reload once and it is there.
+The scan runs after the page has been sent to your browser, so the first visit to one of those screens after activation shows no prompt: reload once and it is there.
 
-You can also set this by hand with **Optimized file naming** on the General tab — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Switching to Replace carries a caveat worth reading before you accept the prompt: if a folder ever holds both `photo.jpg` and `photo.png`, their optimized copies collide on a single `photo.webp`.
+You can also set this by hand with **Optimized file naming** on the General tab: see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Switching to Replace carries a caveat worth reading before you accept the prompt: if a folder ever holds both `photo.jpg` and `photo.png`, their optimized copies collide on a single `photo.webp`.
 
-The same naming can also collide with an image you uploaded yourself. If `photo.jpg` and an unrelated `photo.webp` both exist, the plugin compares the dimensions of the two files, recognizes that the WebP is not a copy of the JPEG, and leaves it alone — it is neither served in the JPEG's place nor overwritten.
+The same naming can also collide with an image you uploaded yourself. If `photo.jpg` and an unrelated `photo.webp` both exist, the plugin compares the dimensions of the two files, recognizes that the WebP is not a copy of the JPEG, and leaves it alone: it is neither served in the JPEG's place nor overwritten.
 
 ## The order to do it in
 
@@ -63,8 +63,8 @@ A leftover block points at the naming the old plugin used and runs ahead of anyt
 | ShortPixel Image Optimizer | Next to the original | Replace (`photo.webp`) by default |
 | Imagify | Next to the original | Append (`photo.jpg.webp`) |
 | EWWW Image Optimizer | Next to the original | Append by default, Replace optional |
-| Smush | Free version writes no local copies | — |
-| Optimole | Nothing local — images are served from its CDN | — |
+| Smush | Free version writes no local copies | Not applicable |
+| Optimole | Nothing local: images are served from its CDN | Not applicable |
 
 Smush's WebP and AVIF modules are paid features, so a site on the free version has nothing on disk to carry over. Smush Pro writes to a mirrored folder rather than next to the original, which this plugin does not read; those sites start from scratch. Optimole rewrites image URLs to its own CDN and stores nothing on your server.
 

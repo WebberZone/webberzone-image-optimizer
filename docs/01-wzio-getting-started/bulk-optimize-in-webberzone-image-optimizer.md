@@ -20,18 +20,18 @@ The screen works through a database-backed queue one batch at a time rather than
 
 Eight cards summarize your library:
 
-- **Original bytes saved** — bytes saved by original compression, compared with the backups.
-- **Backups occupy** — disk space used by original backups.
-- **Main images resized** — number of main files resized by original optimization.
-- **Images in the library** — total convertible attachments.
-- **Already optimized** — attachments with at least one generated file.
-- **Waiting in the queue** — attachments still pending.
-- **Bandwidth saved** — total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
-- **Optimized copies occupy** — disk space used by the generated copies, broken down by format (for example, "WebP 4 MB, AVIF 2 MB").
+- **Original bytes saved**: bytes saved by original compression, compared with the backups.
+- **Backups occupy**: disk space used by original backups.
+- **Main images resized**: number of main files resized by original optimization.
+- **Images in the library**: total convertible attachments.
+- **Already optimized**: attachments with at least one generated file.
+- **Waiting in the queue**: attachments still pending.
+- **Bandwidth saved**: total bytes saved. Once at least one image has been converted, shows the percentage saved of the total original size: "Bandwidth saved of X originally (Y%)".
+- **Optimized copies occupy**: disk space used by the generated copies, broken down by format (for example, "WebP 4 MB, AVIF 2 MB").
 
 <figure><img src="https://webberzone.com/wp-content/uploads/2026/10/03-savings-and-storage.webp" alt="Bulk Optimize statistics separating original savings, backup storage and optimized-copy disk usage."><figcaption>Example from the test library. Original compression is off, so original savings, backup usage and resized-image counts are zero; the other figures describe this library only.</figcaption></figure>
 
-**Images in the library** and **Already optimized** are counted across the whole library, so both are cached rather than recounted after every batch — the library total for an hour, the optimized total for a minute. **Bandwidth saved** and **Optimized copies occupy** are totaled from each image's own conversion record, so they include images converted on upload, from the Media Library or with WP-CLI, not only those processed by the queue. They are also cached for a minute. Uploading or deleting an image clears these caches immediately, as does starting a scan or clearing the queue. **Waiting in the queue** is read from the queue itself and is always current. If **Already optimized** looks a minute behind during a long run, that is the cache, not a stalled queue.
+**Images in the library** and **Already optimized** are counted across the whole library, so both are cached rather than recounted after every batch: the library total for an hour, the optimized total for a minute. **Bandwidth saved** and **Optimized copies occupy** are totaled from each image's own conversion record, so they include images converted on upload, from the Media Library or with WP-CLI, not only those processed by the queue. They are also cached for a minute. Uploading or deleting an image clears these caches immediately, as does starting a scan or clearing the queue. **Waiting in the queue** is read from the queue itself and is always current. If **Already optimized** looks a minute behind during a long run, that is the cache, not a stalled queue.
 
 **Start optimizing** builds the queue (if it is empty) and begins working through it. **Pause** stops the current run without losing progress. **Clear queue** removes attachments that are still waiting or in progress. Completed rows and existing copies are kept, and **Bandwidth saved** is unaffected.
 
@@ -53,7 +53,7 @@ An image that fails is retried a few times and then listed under **Images that c
 
 ## Configuring the run
 
-**Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen — see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/).
+**Images per batch** and **Process the queue in the background** are set on the Advanced tab of the settings screen: see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/).
 
 When images are queued but the background worker has stopped running, the screen shows a warning naming `DISABLE_WP_CRON` or a blocked loopback request as the likely cause, with the WP-CLI and system cron commands that recover it. The warning appears only after 15 minutes pass with no worker run, and clears as soon as one runs. See [How the Queue Works](https://webberzone.com/support/knowledgebase/how-the-queue-works-in-webberzone-image-optimizer/) for how the plugin tells a stalled queue from a quiet site.
 
