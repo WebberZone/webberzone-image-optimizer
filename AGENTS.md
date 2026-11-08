@@ -80,3 +80,7 @@ Do not revisit either without a concrete reason.
 - **Skip decisions are per file, not per attachment.** Mixed results inside one attachment are normal, especially with transparent PNGs.
 - **The queue table is per site** (`{$wpdb->prefix}wzio_queue`). `register_activation_hook` fires once for a network activation, so `Database::install_all()` loops sites and `wp_initialize_site` covers new ones.
 - **Nothing is ever encoded during a page render.** A front-end miss queues the attachment on `shutdown` and serves the original.
+
+## Versioning
+
+WordPress-style: once a version is released (matches `Stable tag`/git tag), all further changes — code, `@since`, changelog — go in the next version: `X.Y.(Z+1)` for fixes, `X.(Y+1).0` for features/deprecations. Never `X+1.0.0`. Full rule: [../AGENTS.md](../AGENTS.md#versioning).
