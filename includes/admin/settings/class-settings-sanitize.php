@@ -294,7 +294,7 @@ class Settings_Sanitize {
 	 * @return string Sanitized value
 	 */
 	public function sanitize_color_field( $value ) {
-		return sanitize_hex_color( $value );
+		return sanitize_hex_color( wp_unslash( $value ) );
 	}
 
 	/**
@@ -304,7 +304,7 @@ class Settings_Sanitize {
 	 * @return string Sanitized value
 	 */
 	public function sanitize_email_field( $value ) {
-		return sanitize_email( $value );
+		return sanitize_email( wp_unslash( $value ) );
 	}
 
 	/**
@@ -314,7 +314,7 @@ class Settings_Sanitize {
 	 * @return string Sanitized value
 	 */
 	public function sanitize_url_field( $value ) {
-		return esc_url_raw( $value );
+		return esc_url_raw( wp_unslash( $value ) );
 	}
 
 	/**
@@ -471,6 +471,7 @@ class Settings_Sanitize {
 		}
 
 		$stored_encrypted_key = $this->get_option( $key );
+		$value                = wp_unslash( $value );
 
 		// Empty input clears the stored value.
 		if ( '' === (string) $value ) {
