@@ -226,10 +226,6 @@ class Capabilities {
 	private static function write_probe_image(): string {
 		$binary = base64_decode( self::PROBE_IMAGE, true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode
 
-		if ( false === $binary ) {
-			return '';
-		}
-
 		require_once ABSPATH . 'wp-admin/includes/file.php';
 
 		$path = wp_tempnam( 'wzio-probe.png' );

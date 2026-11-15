@@ -133,6 +133,8 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.3.2 =
+
 = 1.3.1 =
 
 Release date: 3 November 2026
