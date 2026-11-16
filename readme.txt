@@ -135,6 +135,9 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.3.2 =
 
+**Added**
+
+* Save Changes button in settings navigation.
 = 1.3.1 =
 
 Release date: 3 November 2026
