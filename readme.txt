@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, compress images, optimize images
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -135,9 +135,16 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.3.2 =
 
+Release date: 20 November 2026
+
 **Added**
 
-* Save Changes button in settings navigation.
+* Save Changes button in the settings navigation.
+
+**Fixed**
+
+* Backslashes were stripped from settings values when they were saved.
+* A single-value setting that received an array, for example from a modified form submission, could trigger a PHP error on save.
 = 1.3.1 =
 
 Release date: 3 November 2026
@@ -177,5 +184,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.3.0 =
-Serves WebP and AVIF for block background images, converts WebP uploads to AVIF, and lets AI assistants run Bulk Optimize on WordPress 6.9+. Keeps Bulk Optimize running through server errors.
+= 1.3.2 =
+Keeps backslashes in settings values and adds a Save Changes button to the settings navigation. No action needed.
