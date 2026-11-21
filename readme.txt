@@ -145,6 +145,8 @@ Release date: 20 November 2026
 
 * Backslashes were stripped from settings values when they were saved.
 * A single-value setting that received an array, for example from a modified form submission, could trigger a PHP error on save.
+* The file name in the optimization details window is now escaped.
+
 = 1.3.1 =
 
 Release date: 3 November 2026

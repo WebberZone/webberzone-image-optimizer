@@ -522,7 +522,7 @@ class Media_Library {
 		$title  = sprintf(
 			/* translators: %s: file name. */
 			__( 'Optimization details for %s', 'webberzone-image-optimizer' ),
-			wp_basename( (string) get_attached_file( $attachment_id ) )
+			esc_html( wp_basename( (string) get_attached_file( $attachment_id ) ) )
 		);
 		$formats = array();
 
