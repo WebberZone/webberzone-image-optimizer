@@ -135,7 +135,7 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.3.2 =
 
-Release date: 20 November 2026
+Release date: 21 November 2026
 
 **Added**
 
@@ -145,7 +145,7 @@ Release date: 20 November 2026
 
 * Backslashes were stripped from settings values when they were saved.
 * A single-value setting that received an array, for example from a modified form submission, could trigger a PHP error on save.
-* The file name in the optimization details window is now escaped.
+* The file name in the optimization details window was not escaped.
 
 = 1.3.1 =
 
