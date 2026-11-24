@@ -2,9 +2,9 @@
 Tags: webp, avif, image optimization, compress images, optimize images
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 Requires at least: 6.6
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-2.0.txt
