@@ -25,20 +25,16 @@ If the naming does not match, the existing copies are invisible to this plugin a
 
 ## Matching the naming
 
-The plugin checks for this. It samples up to 100 images that have no conversion record of its own, looks for copies under both conventions, and if it finds a substantial number under the convention you are *not* using, it offers to switch. The prompt appears on **Media → Library**, **Media → Bulk Optimize** and the settings screen, with a count of what it found and a single button.
+Set **Optimized file naming** on the General tab to the convention your old plugin used: see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). The plugin does not detect this for you.
 
-The scan runs after the page has been sent to your browser, so the first visit to one of those screens after activation shows no prompt: reload once and it is there.
-
-You can also set this by hand with **Optimized file naming** on the General tab: see [Image Optimizer Settings](https://webberzone.com/support/knowledgebase/image-optimizer-settings/). Switching to Replace carries a caveat worth reading before you accept the prompt: if a folder ever holds both `photo.jpg` and `photo.png`, their optimized copies collide on a single `photo.webp`.
-
-The same naming can also collide with an image you uploaded yourself. If `photo.jpg` and an unrelated `photo.webp` both exist, the plugin compares the dimensions of the two files, recognizes that the WebP is not a copy of the JPEG, and leaves it alone: it is neither served in the JPEG's place nor overwritten.
+Switching to Replace carries a caveat: if a folder ever holds both `photo.jpg` and `photo.png`, their optimized copies collide on a single `photo.webp`. It can also collide with an image you exported yourself, such as a `photo.webp` or `photo.avif` next to `photo.jpg` or `photo.webp`. The plugin compares dimensions and leaves a file alone when they differ, but a same-sized file is treated as a copy and can be replaced, so use Replace only when you know the files in `uploads` were made by the old plugin.
 
 ## The order to do it in
 
 Do this before deactivating the old plugin, not after. While the old plugin is active it is still serving its own files through its own rewriting. The moment it is switched off, delivery falls to this plugin, and a naming mismatch at that point means an unoptimized site until you notice.
 
 1. Install and activate WebberZone Image Optimizer.
-2. Open **Media → Library**. If the naming prompt appears, read it and accept the switch.
+2. Set **Optimized file naming** to match the old plugin.
 3. Check a few pages on the front end and confirm the `<picture>` element is pointing at the existing WebP files.
 4. Deactivate the old plugin.
 5. Remove any server rules it installed.

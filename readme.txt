@@ -102,7 +102,7 @@ Smaller images mean fewer bytes to download, which is what PageSpeed Insights me
 
 = I am switching from another image optimizer. Do I have to convert everything again? =
 
-No. WebP and AVIF files left next to your originals by plugins such as ShortPixel, Imagify or EWWW Image Optimizer are served as they are. The plugin detects which naming those files use and offers to match it, and the bulk run only creates the formats that are missing. Do not use the old plugin's restore tool before switching, as that deletes its optimized copies. See [Migrating from another image optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
+No. WebP and AVIF files left next to your originals by plugins such as ShortPixel, Imagify or EWWW Image Optimizer are served as they are. Set *File naming* to the convention the old plugin used, and the bulk run only creates the formats that are missing. Do not use the old plugin's restore tool before switching, as that deletes its optimized copies. See [Migrating from another image optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
 
 = Should I enable AVIF? =
 
@@ -132,6 +132,14 @@ Yes. Because the format choice happens in the browser rather than on the server,
 2. Per-image savings and actions in the Edit Media screen
 
 == Changelog ==
+
+= 1.3.3 =
+
+Release date: 24 November 2026
+
+**Removed**
+
+* The notice that offered to switch to Replace file naming. It could not tell optimized copies from same-sized files you made yourself. Set *File naming* by hand when migrating.
 
 = 1.3.2 =
 
@@ -186,5 +194,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.3.2 =
-Keeps backslashes in settings values and adds a Save Changes button to the settings navigation. No action needed.
+= 1.3.3 =
+Removes the notice that offered to switch to Replace file naming, which could suggest a switch that overwrites your own files. Set File naming by hand if you migrate from another optimizer.

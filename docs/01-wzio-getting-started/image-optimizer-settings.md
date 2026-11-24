@@ -55,7 +55,7 @@ A lossy copy that misses the threshold is retried once at a lower quality. The r
 **Optimized file naming**
 Controls how the generated WebP/AVIF file is named. **Append the new extension** (`photo.jpg.webp`) is the safe default: every file has a unique name and nothing can collide. **Replace the extension** (`photo.webp`) produces shorter filenames but can collide if the same folder contains both `photo.jpg` and `photo.png`, silently overwriting one optimized copy with the other. Only choose Replace if you are sure your uploads never share a filename across extensions. Default: `append`.
 
-This setting also decides whether optimized copies written by a previous plugin are found. When the plugin detects copies named the other way round it offers to switch for you: see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
+This setting also decides whether optimized copies written by a previous plugin are found. Set it to match the old plugin's convention: see [Migrating from Another Image Optimizer](https://webberzone.com/support/knowledgebase/migrating-from-another-image-optimizer/).
 
 ## Quality
 
