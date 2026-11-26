@@ -382,6 +382,132 @@ class ConverterTest extends WP_UnitTestCase
         $this->assertFileDoesNotExist(Helpers::sidecar_path($source, 'webp'));
         $this->assertFileExists($source);
         $this->assertEmpty(Attachment_Meta::get($id)['files']);
+
+        wzio_update_option('sidecar_naming', 'replace');
+
+        $uploads = wp_upload_dir();
+        $shared  = $uploads['path'] . '/shared-' . wp_generate_password(6, false);
+        $webp    = $shared . '.webp';
+        $jpg     = $shared . '.jpg';
+
+        $image = imagecreatetruecolor(64, 64);
+        imagewebp($image, $webp, 80);
+        imagejpeg($image, $jpg, 90);
+        imagedestroy($image);
+
+        $webp_hash = md5_file($webp);
+
+        $this->create_webp_attachment($webp);
+
+        $jpg_id = $this->factory->attachment->create_object(
+            $jpg,
+            0,
+            array(
+            'post_mime_type' => 'image/jpeg',
+            'post_title'     => 'Shared jpeg',
+            )
+        );
+        wp_update_attachment_metadata($jpg_id, wp_generate_attachment_metadata($jpg_id, $jpg));
+        $this->attachments[] = $jpg_id;
+
+        Converter::convert_attachment($jpg_id, array( 'formats' => array( 'webp' ) ));
+
+        $record = Attachment_Meta::get_file($jpg_id, wp_basename($jpg));
+
+        $this->assertSame($webp_hash, md5_file($webp));
+        $this->assertFalse(Attachment_Meta::is_converted($record, 'webp'));
+        $this->assertSame('occupied', $record['webp']['skip']);
+
+        Converter::delete_sidecars($jpg_id);
+
+        $this->assertFileExists($webp);
+
+        $adopted_id = $this->create_attachment();
+        $adopted    = Helpers::sidecar_path((string) get_attached_file($adopted_id), 'webp');
+
+        file_put_contents($adopted, str_repeat('x', 32));
+
+        Converter::convert_attachment(
+            $adopted_id,
+            array(
+            'formats'    => array( 'webp' ),
+            'min_saving' => 99,
+            'force'      => true,
+            )
+        );
+
+        clearstatcache();
+
+        $record = Attachment_Meta::get_file($adopted_id, wp_basename((string) get_attached_file($adopted_id)));
+
+        $this->assertSame(32, filesize($adopted));
+        $this->assertTrue(Attachment_Meta::is_converted($record, 'webp'));
+
+        Converter::delete_sidecars($adopted_id);
+
+        $this->assertFileDoesNotExist($adopted);
+
+        $sized_id = $this->create_attachment();
+        $sized    = wp_get_attachment_metadata($sized_id);
+        $thumb    = $sized['sizes']['thumbnail']['file'];
+        $thumb_wp = dirname((string) get_attached_file($sized_id)) . '/' . preg_replace('/\.jpg$/', '.webp', $thumb);
+
+        $image = imagecreatetruecolor(150, 150);
+        imagewebp($image, $thumb_wp, 80);
+        imagedestroy($image);
+
+        $thumb_hash = md5_file($thumb_wp);
+
+        $this->create_webp_attachment(
+            $uploads['path'] . '/owner-' . wp_generate_password(6, false) . '.webp',
+            array( 'thumbnail' => array( 'file' => wp_basename($thumb_wp), 'width' => 150, 'height' => 150 ) )
+        );
+
+        Converter::convert_attachment($sized_id, array( 'formats' => array( 'webp' ) ));
+
+        $record = Attachment_Meta::get_file($sized_id, $thumb);
+
+        $this->assertSame($thumb_hash, md5_file($thumb_wp));
+        $this->assertSame('occupied', $record['webp']['skip']);
+
+        Converter::delete_sidecars($sized_id);
+
+        $this->assertFileExists($thumb_wp);
+    }
+
+    /**
+     * Create an attachment for a WebP file another user uploaded.
+     *
+     * @param  string               $file  Absolute path.
+     * @param  array<string, mixed> $sizes Sub-sizes to list in the metadata.
+     * @return int Attachment ID.
+     */
+    private function create_webp_attachment( $file, array $sizes = array() )
+    {
+        $attachment_id = $this->factory->attachment->create_object(
+            $file,
+            0,
+            array(
+            'post_mime_type' => 'image/webp',
+            'post_title'     => 'Foreign webp',
+            )
+        );
+
+        update_post_meta($attachment_id, '_wp_attached_file', _wp_relative_upload_path($file));
+        update_post_meta(
+            $attachment_id,
+            '_wp_attachment_metadata',
+            array(
+            'file'   => _wp_relative_upload_path($file),
+            'width'  => 64,
+            'height' => 64,
+            'sizes'  => $sizes,
+            )
+        );
+
+        $this->attachments[] = $attachment_id;
+
+        return $attachment_id;
     }
 
     /**

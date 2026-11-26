@@ -581,9 +581,16 @@ class Converter {
 		$dir = dirname( (string) reset( $files ) );
 
 		foreach ( array_keys( $orphans ) as $basename ) {
-			$path = $dir . '/' . $basename;
+			$path        = $dir . '/' . $basename;
+			$file_record = $orphans[ $basename ] ?? array();
+			$source      = is_readable( $path ) ? wp_getimagesize( $path ) : false;
+			$width       = is_array( $source ) ? (int) $source[0] : 0;
+			$height      = is_array( $source ) ? (int) $source[1] : 0;
 			foreach ( Helpers::get_formats() as $format ) {
-				Helpers::delete_file( Helpers::sidecar_path( $path, $format ) );
+				$sidecar = Helpers::sidecar_path( $path, $format );
+				if ( self::may_delete_sidecar( $sidecar, $attachment_id, $file_record, $format, $width, $height ) ) {
+					Helpers::delete_file( $sidecar );
+				}
 			}
 			Resolver::invalidate_path( $path );
 		}
@@ -698,6 +705,16 @@ class Converter {
 			// A kept copy survived an encode under the current settings, so it is current now.
 			if ( $force_format && isset( $existing[ $format ]['bytes'] ) ) {
 				$known_fp = self::fingerprint( $format, $args, $mime, $known_quality, $known_reduced );
+			}
+
+			if (
+				file_exists( $destination )
+				&& 'replace' === (string) \wzio_get_option( 'sidecar_naming', 'append' )
+				&& ! self::is_recorded_copy( $destination, $existing, $format )
+				&& self::is_owned_by_other_attachment( $destination, (int) ( $args['attachment_id'] ?? 0 ) )
+			) {
+				$record[ $format ] = Attachment_Meta::skipped_entry( 'occupied' );
+				continue;
 			}
 
 			if ( self::is_alien_file( $destination, $width, $height ) ) {
@@ -1183,6 +1200,176 @@ class Converter {
 	}
 
 	/**
+	 * Whether a sidecar on disk may be removed for this attachment.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string               $sidecar       Sidecar path.
+	 * @param  int                  $attachment_id Attachment ID.
+	 * @param  array<string, mixed> $file_record   Record for the source basename.
+	 * @param  string               $format        Target format slug.
+	 * @param  int                  $width         Source width.
+	 * @param  int                  $height        Source height.
+	 * @param  bool|null            $replace       Whether Replace naming is on. Null reads the setting.
+	 * @return bool
+	 */
+	private static function may_delete_sidecar( string $sidecar, int $attachment_id, array $file_record, string $format, int $width, int $height, ?bool $replace = null ): bool {
+		if ( ! file_exists( $sidecar ) || ! self::is_recorded_copy( $sidecar, $file_record, $format ) ) {
+			return false;
+		}
+
+		if ( self::is_alien_file( $sidecar, $width, $height ) ) {
+			return false;
+		}
+
+		if ( null === $replace ) {
+			$replace = 'replace' === (string) \wzio_get_option( 'sidecar_naming', 'append' );
+		}
+
+		return ! ( $replace && self::is_owned_by_other_attachment( $sidecar, $attachment_id ) );
+	}
+
+	/**
+	 * Whether uninstall or restore may remove a recorded sidecar file.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string               $sidecar       Sidecar path.
+	 * @param  int                  $attachment_id Attachment ID.
+	 * @param  array<string, mixed> $file_record   Record for the source basename.
+	 * @param  string               $format        Target format slug.
+	 * @param  int                  $width         Source width.
+	 * @param  int                  $height        Source height.
+	 * @param  bool                 $replace       Whether Replace naming is on.
+	 * @return bool
+	 */
+	public static function sidecar_delete_permitted( string $sidecar, int $attachment_id, array $file_record, string $format, int $width, int $height, bool $replace ): bool {
+		return self::may_delete_sidecar( $sidecar, $attachment_id, $file_record, $format, $width, $height, $replace );
+	}
+
+	/**
+	 * Look up which attachment owns an uploads path.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string $path Absolute path within the uploads directory.
+	 * @return int Attachment ID, or 0 when none.
+	 */
+	private static function attachment_id_for_upload_path( string $path ): int {
+		$relative = self::relative_upload_path( $path );
+		if ( '' === $relative ) {
+			return 0;
+		}
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s LIMIT 1",
+				$relative
+			)
+		);
+	}
+
+	/**
+	 * Whether a file on disk is the copy the record says this plugin wrote.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string               $path        Sidecar path.
+	 * @param  array<string, mixed> $file_record Record for the source basename.
+	 * @param  string               $format      Target format slug.
+	 * @return bool
+	 */
+	private static function is_recorded_copy( string $path, array $file_record, string $format ): bool {
+		if ( ! Attachment_Meta::is_converted( $file_record, $format ) ) {
+			return false;
+		}
+
+		clearstatcache( true, $path );
+
+		return (int) filesize( $path ) === (int) $file_record[ $format ]['bytes'];
+	}
+
+	/**
+	 * Path of a file relative to the uploads directory.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string $path Absolute path.
+	 * @return string Relative path, or an empty string outside the uploads directory.
+	 */
+	private static function relative_upload_path( string $path ): string {
+		$path = wp_normalize_path( $path );
+		$base = wp_normalize_path( (string) wp_upload_dir()['basedir'] );
+
+		if ( 0 !== strpos( $path, $base ) ) {
+			return '';
+		}
+
+		return ltrim( substr( $path, strlen( $base ) ), '/' );
+	}
+
+	/**
+	 * Whether another attachment owns a file, as its upload or as one of its sizes.
+	 *
+	 * @since 1.3.4
+	 *
+	 * @param  string $path          Absolute file path.
+	 * @param  int    $attachment_id Attachment that wants the path.
+	 * @return bool
+	 */
+	private static function is_owned_by_other_attachment( string $path, int $attachment_id ): bool {
+		$owner = self::attachment_id_for_upload_path( $path );
+
+		if ( $owner > 0 ) {
+			return $owner !== $attachment_id;
+		}
+
+		$relative = self::relative_upload_path( $path );
+		if ( '' === $relative ) {
+			return false;
+		}
+
+		$dir  = dirname( $relative );
+		$name = wp_basename( $relative );
+
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$candidates = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT m.post_id FROM {$wpdb->postmeta} m INNER JOIN {$wpdb->postmeta} f ON f.post_id = m.post_id AND f.meta_key = '_wp_attached_file' WHERE m.meta_key = '_wp_attachment_metadata' AND m.meta_value LIKE %s AND f.meta_value LIKE %s ORDER BY m.post_id DESC LIMIT 50",
+				'%' . $wpdb->esc_like( '"' . $name . '"' ) . '%',
+				'.' === $dir ? '%' : $wpdb->esc_like( $dir . '/' ) . '%'
+			)
+		);
+
+		foreach ( $candidates as $candidate ) {
+			if ( (int) $candidate === $attachment_id ) {
+				continue;
+			}
+
+			$meta = get_post_meta( (int) $candidate, '_wp_attachment_metadata', true );
+			if ( ! is_array( $meta ) || empty( $meta['file'] ) || dirname( (string) $meta['file'] ) !== $dir ) {
+				continue;
+			}
+
+			$names = array( wp_basename( (string) $meta['file'] ), (string) ( $meta['original_image'] ?? '' ) );
+			foreach ( (array) ( $meta['sizes'] ?? array() ) as $size ) {
+				$names[] = is_array( $size ) ? (string) ( $size['file'] ?? '' ) : '';
+			}
+
+			if ( in_array( $name, $names, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Remove sidecars while excluding concurrent source replacement and restore.
 	 *
 	 * @param  int $attachment_id Attachment ID.
@@ -1214,10 +1401,16 @@ class Converter {
 		}
 
 		foreach ( $basenames as $basename ) {
+			$file_record = $record['files'][ $basename ] ?? array();
+			$source_path = $files[ $basename ] ?? ( $dir . '/' . $basename );
+			$image_size  = is_readable( $source_path ) ? wp_getimagesize( $source_path ) : false;
+			$width       = is_array( $image_size ) ? (int) $image_size[0] : 0;
+			$height      = is_array( $image_size ) ? (int) $image_size[1] : 0;
+
 			foreach ( Helpers::get_formats() as $format ) {
 				$sidecar = Helpers::sidecar_path( $dir . '/' . $basename, $format );
 
-				if ( file_exists( $sidecar ) && Helpers::delete_file( $sidecar ) ) {
+				if ( file_exists( $sidecar ) && self::may_delete_sidecar( $sidecar, $attachment_id, $file_record, $format, $width, $height ) && Helpers::delete_file( $sidecar ) ) {
 					++$deleted;
 				}
 			}

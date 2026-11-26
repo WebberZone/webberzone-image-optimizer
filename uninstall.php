@@ -70,6 +70,8 @@ function wzio_uninstall_site() {
 	if ( $delete_files ) {
 		$sidecar_naming = ( $settings['sidecar_naming'] ?? 'append' ) === 'replace' ? 'replace' : 'append';
 
+		require_once __DIR__ . '/includes/autoloader.php';
+
 		// A filesystem-wide filename scan can remove a file created by another
 		// plugin or uploaded by the administrator. Restrict removal to successful
 		// conversion records created by this plugin instead.
@@ -106,7 +108,19 @@ function wzio_uninstall_site() {
 						? preg_replace( '/\.[^.\/\\\\]+$/', '', $source ) . '.' . $format
 						: $source . '.' . $format;
 
-					wp_delete_file( $sidecar );
+					if (
+						\WebberZone\Image_Optimizer\Converter::sidecar_delete_permitted(
+							$sidecar,
+							(int) $row->post_id,
+							$file_record,
+							$format,
+							0,
+							0,
+							'replace' === $sidecar_naming
+						)
+					) {
+						wp_delete_file( $sidecar );
+					}
 				}
 			}
 		}

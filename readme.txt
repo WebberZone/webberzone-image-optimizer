@@ -133,6 +133,12 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 == Changelog ==
 
+= 1.3.4 =
+
+**Fixed**
+
+* With Replace file naming, removing or restoring an image could delete, or a conversion could overwrite, another image's file that shared the same name.
+
 = 1.3.3 =
 
 Release date: 24 November 2026
