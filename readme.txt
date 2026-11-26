@@ -2,7 +2,7 @@
 Tags: webp, avif, image optimization, compress images, optimize images
 Contributors: webberzone, ajay
 Donate link: https://wzn.io/donate-wz
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 Requires at least: 6.6
 Tested up to: 7.2
 Requires PHP: 7.4
@@ -135,6 +135,8 @@ Yes. Because the format choice happens in the browser rather than on the server,
 
 = 1.3.4 =
 
+Release date: 26 November 2026
+
 **Fixed**
 
 * With Replace file naming, removing or restoring an image could delete, or a conversion could overwrite, another image's file that shared the same name.
@@ -200,5 +202,5 @@ For the changelog of earlier versions, please refer to the [releases page on Git
 
 == Upgrade Notice ==
 
-= 1.3.3 =
-Removes the notice that offered to switch to Replace file naming, which could suggest a switch that overwrites your own files. Set File naming by hand if you migrate from another optimizer.
+= 1.3.4 =
+With Replace file naming, removing or restoring an image no longer deletes another image's file, and a conversion no longer overwrites it. No action needed.
